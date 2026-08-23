@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1787492497 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
+	<GL/glut.h>
+	<cstdlib>
+	<cstdio>
+
