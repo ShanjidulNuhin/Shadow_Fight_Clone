@@ -44,3 +44,12 @@ void Renderer::drawRect(float x, float y, float width, float height,
         glVertex2f(x,         y + height);
     glEnd();
 }
+
+void Renderer::drawText(float x, float y, const char* text,
+                        float r, float g, float b) const {
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+}

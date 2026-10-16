@@ -14,6 +14,7 @@ int fpsFrames = 0;
 InputManager input;
 Renderer renderer(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
 Player player(100.0f, 400.0f);
+
 void display() {
     renderer.beginFrame();
 
@@ -22,6 +23,11 @@ void display() {
                       0.30f, 0.20f, 0.12f);
 
     player.draw(renderer);
+
+    // debug label: what is the player doing right now?
+    char label[64];
+    std::snprintf(label, sizeof(label), "State: %s", player.getStateName());
+    renderer.drawText(10.0f, Config::WORLD_HEIGHT - 25.0f, label, 1.0f, 1.0f, 1.0f);
 
     renderer.endFrame();
 }
