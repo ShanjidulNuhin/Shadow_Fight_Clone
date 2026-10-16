@@ -42,6 +42,10 @@
 		</Compiler>
 		<Unit filename="Animation.cpp" />
 		<Unit filename="Animation.h" />
+		<Unit filename="Collision.cpp" />
+		<Unit filename="Collision.h" />
+		<Unit filename="CombatSystem.cpp" />
+		<Unit filename="CombatSystem.h" />
 		<Unit filename="Config.h" />
 		<Unit filename="Fighter.cpp" />
 		<Unit filename="Fighter.h" />

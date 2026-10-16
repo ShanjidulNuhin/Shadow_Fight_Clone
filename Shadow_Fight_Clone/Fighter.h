@@ -1,6 +1,8 @@
 #ifndef FIGHTER_H
 #define FIGHTER_H
 
+#include "Collision.h"   // for Rect
+
 class Renderer;   // forward declaration: we only need the name here
 
 // What a fighter is doing right now. Only one at a time.
@@ -10,7 +12,8 @@ enum class FighterState {
     JUMP,     // in the air, moving up
     FALL,     // in the air, moving down
     CROUCH,
-    PUNCH
+    PUNCH,
+    HIT       // stunned after being hit
 };
 
 // Every attack goes through these three phases, in order.
@@ -33,9 +36,35 @@ public:
     void jump();                           // only works while standing on the ground
     void setCrouching(bool wantsToCrouch); // call every frame; only works on the ground
     void startPunch();                     // only works while standing or walking
-    void applyPhysics(float deltaTime);    // gravity + landing; call once per frame
+    void applyPhysics(float deltaTime);    // gravity, knockback, landing; call once per frame
     void updateState(float deltaTime);     // decide the current state; call last each frame
 
+    void setColor(float r, float g, float b);
+    void setFacingRight(bool faceRight);
+
+    // Hurtbox: the area where this fighter can be hit (its body).
+    Rect getHurtbox() const;
+
+    // Hitbox: the area where this fighter's attack can hit someone.
+    // Returns false (and leaves outBox alone) unless an attack is in its ACTIVE phase
+    // and hasn't already hit someone.
+    bool getHitbox(Rect& outBox) const;
+
+    // --- combat ---
+    int  getAttackDamage() const;          // how much damage the current attack deals
+    void onAttackConnected();              // call when this fighter's attack has landed
+
+    // Called when this fighter gets hit: damage + stun + knockback.
+    // pushDirection: +1 = pushed to the right, -1 = pushed to the left.
+    void receiveHit(int damage, float pushDirection);
+
+    void takeDamage(int amount);
+    void restoreHealth();
+    int  getHealth() const;
+    int  getMaxHealth() const;
+    bool isDead() const;
+
+    bool         canAct() const;           // false while attacking or stunned
     bool         isAttacking() const;
     AttackPhase  getAttackPhase() const;
     FighterState getState() const;
@@ -44,6 +73,8 @@ public:
     void draw(const Renderer& renderer) const;
 
 private:
+    void keepInsideWorld();
+
     float x;
     float y;
     float width;
@@ -52,12 +83,17 @@ private:
     float crouchHeight;
     float moveSpeed;       // pixels per second
     float velocityY;       // vertical speed in pixels per second (+ = up)
+    float knockbackVelocityX;   // sideways push from a hit (+ = right), fades to 0
     float moveDirection;   // -1, 0 or +1: what the fighter tried to do this frame
     bool  facingRight;
     bool  onGround;
     bool  crouching;
     FighterState state;
     float stateTime;       // seconds spent in the current state
+    float colorR, colorG, colorB;   // body colour
+    int   health;
+    int   maxHealth;
+    bool  attackHasHit;    // has the current swing already hit someone?
 };
 
 #endif

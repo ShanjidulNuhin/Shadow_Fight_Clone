@@ -35,6 +35,11 @@ Pose getPose(FighterState state, float stateTime) {
 
         case FighterState::PUNCH:
             break;   // the punching arm is drawn by Fighter::draw; the body stays normal
+
+        case FighterState::HIT:
+            pose.scaleX = 1.08f;   // squashed by the impact
+            pose.scaleY = 0.92f;
+            break;
     }
 
     return pose;

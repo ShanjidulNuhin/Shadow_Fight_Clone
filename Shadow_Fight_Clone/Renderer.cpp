@@ -45,6 +45,18 @@ void Renderer::drawRect(float x, float y, float width, float height,
     glEnd();
 }
 
+void Renderer::drawRectOutline(float x, float y, float width, float height,
+                               float r, float g, float b) const {
+    glColor3f(r, g, b);
+    glLineWidth(2.0f);
+    glBegin(GL_LINE_LOOP);
+        glVertex2f(x,         y);
+        glVertex2f(x + width, y);
+        glVertex2f(x + width, y + height);
+        glVertex2f(x,         y + height);
+    glEnd();
+}
+
 void Renderer::drawText(float x, float y, const char* text,
                         float r, float g, float b) const {
     glColor3f(r, g, b);

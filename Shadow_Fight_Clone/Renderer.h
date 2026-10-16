@@ -19,6 +19,10 @@ public:
     void drawRect(float x, float y, float width, float height,
                   float r, float g, float b) const;
 
+    // Just the border of a rectangle (used for debug boxes).
+    void drawRectOutline(float x, float y, float width, float height,
+                         float r, float g, float b) const;
+
     // (x, y) is the bottom-left of the first letter.
     void drawText(float x, float y, const char* text,
                   float r, float g, float b) const;
