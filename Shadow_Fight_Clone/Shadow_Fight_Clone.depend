@@ -1,7 +1,35 @@
 # depslib dependency file v1.0
-1791988180 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
-	<windows.h>
+1792133260 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
 	<GL/glut.h>
 	<cstdlib>
 	<cstdio>
+	"Config.h"
+	"InputManager.h"
+	"Renderer.h"
+	"Player.h"
+
+1792132382 source:e:\c++\shadow_fight_clone\shadow_fight_clone\inputmanager.cpp
+	"InputManager.h"
+	<cctype>
+
+1792132381 e:\c++\shadow_fight_clone\shadow_fight_clone\inputmanager.h
+
+1792132618 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
+	"Renderer.h"
+	<windows.h>
+	<GL/glut.h>
+
+1792132616 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
+
+1792133263 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+	"Fighter.h"
+	"Renderer.h"
+	"Config.h"
+
+1792133262 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
+
+1792133273 e:\c++\shadow_fight_clone\shadow_fight_clone\config.h
+
+1792133079 e:\c++\shadow_fight_clone\shadow_fight_clone\player.h
+	"Fighter.h"
 

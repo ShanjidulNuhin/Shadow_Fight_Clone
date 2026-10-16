@@ -1,66 +1,40 @@
-#include <windows.h>
 #include <GL/glut.h>
 #include <cstdlib>
 #include <cstdio>
+#include "Config.h"
+#include "InputManager.h"
+#include "Renderer.h"
+#include "Player.h"
 
-const int WIN_W = 800;
-const int WIN_H = 600;
-const float SQUARE_SIZE = 50.0f;
+int lastTime = 0;
+int fpsTimer = 0;
+int fpsFrames = 0;
 
-float squareX = 100.0f;
-float squareSpeed = 250.0f;   // pixels per second
-
-int lastTime = 0;             // time of the previous frame (ms)
-int fpsTimer = 0;             // ms accumulated since last FPS update
-int fpsFrames = 0;            // frames counted since last FPS update
-
-// Asks the graphics driver to sync buffer swaps to the monitor refresh rate.
-// If the driver doesn't support it, nothing happens (the game still works).
-void enableVSync() {
-    typedef BOOL (WINAPI *SwapIntervalFunc)(int);
-    SwapIntervalFunc wglSwapInterval =
-        (SwapIntervalFunc)wglGetProcAddress("wglSwapIntervalEXT");
-    if (wglSwapInterval) {
-        wglSwapInterval(1);
-    }
-}
-
+// GLUT callbacks can't carry objects, so these are shared instances for now.
+InputManager input;
+Renderer renderer(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
+Player player(100.0f, 400.0f);
 void display() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    renderer.beginFrame();
 
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-        glVertex2f(squareX,               280.0f);
-        glVertex2f(squareX + SQUARE_SIZE, 280.0f);
-        glVertex2f(squareX + SQUARE_SIZE, 280.0f + SQUARE_SIZE);
-        glVertex2f(squareX,               280.0f + SQUARE_SIZE);
-    glEnd();
+    // ground
+    renderer.drawRect(0, 0, Config::WORLD_WIDTH, Config::GROUND_HEIGHT,
+                      0.30f, 0.20f, 0.12f);
 
-    glutSwapBuffers();
+    player.draw(renderer);
+
+    renderer.endFrame();
 }
 
-// Called by GLUT whenever it has nothing else to do (i.e. constantly).
 void idle() {
     int now = glutGet(GLUT_ELAPSED_TIME);
     int elapsedMs = now - lastTime;
     float deltaTime = elapsedMs / 1000.0f;
     lastTime = now;
-
     if (deltaTime > 0.25f) deltaTime = 0.25f;
 
-    // --- game update ---
-    squareX += squareSpeed * deltaTime;
+    player.update(input, deltaTime);
 
-    if (squareX + SQUARE_SIZE > WIN_W) {
-        squareX = WIN_W - SQUARE_SIZE;
-        squareSpeed = -squareSpeed;
-    }
-    if (squareX < 0) {
-        squareX = 0;
-        squareSpeed = -squareSpeed;
-    }
-
-    // --- FPS counter shown in the window title ---
     fpsFrames++;
     fpsTimer += elapsedMs;
     if (fpsTimer >= 1000) {
@@ -74,31 +48,32 @@ void idle() {
     glutPostRedisplay();
 }
 
-void keyboard(unsigned char key, int x, int y) {
-    if (key == 27) std::exit(0);
+void keyboardDown(unsigned char key, int, int) {
+    if (key == 27) std::exit(0);   // ESC
+    input.keyDown(key);
+}
+
+void keyboardUp(unsigned char key, int, int) {
+    input.keyUp(key);
 }
 
 void reshape(int w, int h) {
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, WIN_W, 0, WIN_H);
-    glMatrixMode(GL_MODELVIEW);
+    renderer.resize(w, h);
 }
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(WIN_W, WIN_H);
+    glutInitWindowSize(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
     glutCreateWindow("Shadow Fight");
 
-    enableVSync();   // must come AFTER the window (OpenGL context) exists
-
-    glClearColor(0.12f, 0.12f, 0.12f, 1.0f);
+    renderer.init();
+    glutIgnoreKeyRepeat(1);
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
-    glutKeyboardFunc(keyboard);
+    glutKeyboardFunc(keyboardDown);
+    glutKeyboardUpFunc(keyboardUp);
     glutIdleFunc(idle);
 
     lastTime = glutGet(GLUT_ELAPSED_TIME);
