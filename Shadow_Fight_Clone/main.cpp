@@ -7,6 +7,7 @@
 #include "InputManager.h"
 #include "Renderer.h"
 #include "Player.h"
+#include "Enemy.h"
 
 int lastTime = 0;
 int fpsTimer = 0;
@@ -18,7 +19,7 @@ bool showDebugBoxes = true;    // press H to toggle
 InputManager input;
 Renderer renderer(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
 Player player(100.0f, Config::GROUND_HEIGHT);
-Fighter dummy(550.0f, Config::GROUND_HEIGHT, 50.0f, 100.0f);   // a training dummy
+Enemy enemy(550.0f, Config::GROUND_HEIGHT);
 
 // Green outline = hurtbox (where it can be hit). Red outline = hitbox (where it hits).
 void drawDebugBoxes(const Fighter& fighter) {
@@ -48,6 +49,20 @@ void drawHealthBar(float x, float y, float width, float height,
     renderer.drawText(x, y + height + 6.0f, label, 1.0f, 1.0f, 1.0f);
 }
 
+// A thin energy bar. It turns gold when there is enough energy for a special attack.
+void drawEnergyBar(float x, float y, float width, float height, const Fighter& fighter) {
+    float fraction = fighter.getEnergy() / fighter.getMaxEnergy();
+    bool specialReady = fighter.getEnergy() >= Attacks::SPECIAL.energyCost;
+
+    renderer.drawRect(x, y, width, height, 0.05f, 0.10f, 0.25f);   // empty part: dark blue
+    if (specialReady) {
+        renderer.drawRect(x, y, width * fraction, height, 1.0f, 0.8f, 0.2f);   // gold: special ready
+    } else {
+        renderer.drawRect(x, y, width * fraction, height, 0.3f, 0.6f, 1.0f);   // blue: still charging
+    }
+    renderer.drawRectOutline(x, y, width, height, 1.0f, 1.0f, 1.0f);
+}
+
 void display() {
     renderer.beginFrame();
 
@@ -56,11 +71,11 @@ void display() {
                       0.30f, 0.20f, 0.12f);
 
     player.draw(renderer);
-    dummy.draw(renderer);
+    enemy.draw(renderer);
 
     if (showDebugBoxes) {
         drawDebugBoxes(player);
-        drawDebugBoxes(dummy);
+        drawDebugBoxes(enemy);
     }
 
     // debug label: what is the player doing right now?
@@ -68,15 +83,19 @@ void display() {
     std::snprintf(label, sizeof(label), "State: %s", player.getStateName());
     renderer.drawText(10.0f, Config::WORLD_HEIGHT - 25.0f, label, 1.0f, 1.0f, 1.0f);
 
-    // health bars: player on the left, dummy on the right
+    // health bars: player on the left, enemy on the right
     drawHealthBar(10.0f, Config::WORLD_HEIGHT - 75.0f, 300.0f, 20.0f, player, "PLAYER");
     drawHealthBar(Config::WORLD_WIDTH - 310.0f, Config::WORLD_HEIGHT - 75.0f, 300.0f, 20.0f,
-                  dummy, "DUMMY");
+                  enemy, "ENEMY");
+
+    // energy bars, just under the health bars
+    drawEnergyBar(10.0f, Config::WORLD_HEIGHT - 92.0f, 300.0f, 10.0f, player);
+    drawEnergyBar(Config::WORLD_WIDTH - 310.0f, Config::WORLD_HEIGHT - 92.0f, 300.0f, 10.0f, enemy);
 
     // controls reminder, on the ground strip
-    renderer.drawText(10.0f, 62.0f, "A/D move   W/Space jump   S crouch   J punch   K kick   I block",
+    renderer.drawText(10.0f, 62.0f, "A/D move  W/Space jump  S crouch  J punch  K kick  L special  I block",
                       1.0f, 1.0f, 1.0f);
-    renderer.drawText(10.0f, 36.0f, "P / O: dummy punches / kicks   H: debug boxes   R: refill health",
+    renderer.drawText(10.0f, 36.0f, "P / O / U: enemy punches / kicks / special   H: debug boxes   R: refill",
                       1.0f, 1.0f, 0.6f);
 
     renderer.endFrame();
@@ -91,14 +110,12 @@ void idle() {
 
     player.update(input, deltaTime);
 
-    // The dummy just stands there, but it still needs gravity and a state.
-    dummy.moveHorizontal(0.0f, deltaTime);
-    dummy.applyPhysics(deltaTime);
-    dummy.updateState(deltaTime);
+    // The enemy looks at the player and walks toward them.
+    enemy.update(player, deltaTime);
 
     // Did either fighter's attack land on the other?
-    CombatSystem::resolveAttack(player, dummy);
-    CombatSystem::resolveAttack(dummy, player);
+    CombatSystem::resolveAttack(player, enemy);
+    CombatSystem::resolveAttack(enemy, player);
 
     fpsFrames++;
     fpsTimer += elapsedMs;
@@ -118,12 +135,15 @@ void keyboardDown(unsigned char key, int, int) {
     if (key == 'h' || key == 'H') showDebugBoxes = !showDebugBoxes;
     if (key == 'r' || key == 'R') {            // testing aid: refill everyone's health
         player.restoreHealth();
-        dummy.restoreHealth();
+        enemy.restoreHealth();
+        player.restoreEnergy();
+        enemy.restoreEnergy();
     }
-    if (key == 'p' || key == 'P' || key == 'o' || key == 'O') {   // testing aid: dummy attacks you
-        dummy.setFacingRight(player.getHurtbox().x > dummy.getHurtbox().x);
-        if (key == 'o' || key == 'O') dummy.startKick();
-        else                          dummy.startPunch();
+    if (key == 'p' || key == 'P' || key == 'o' || key == 'O' || key == 'u' || key == 'U') {
+        // testing aid: force the enemy to attack (it already faces you by itself)
+        if (key == 'o' || key == 'O')      enemy.startKick();
+        else if (key == 'u' || key == 'U') enemy.startSpecial();
+        else                               enemy.startPunch();
     }
     input.keyDown(key);
 }
@@ -144,9 +164,6 @@ int main(int argc, char** argv) {
 
     renderer.init();
     glutIgnoreKeyRepeat(1);
-
-    dummy.setColor(0.95f, 0.55f, 0.20f);   // orange, so it's easy to tell apart
-    dummy.setFacingRight(false);           // face the player
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);

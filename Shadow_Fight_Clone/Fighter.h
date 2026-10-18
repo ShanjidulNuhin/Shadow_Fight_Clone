@@ -16,6 +16,7 @@ enum class FighterState {
     BLOCK,    // guarding
     PUNCH,
     KICK,
+    SPECIAL,  // the big, energy-powered attack
     HIT       // stunned after being hit
 };
 
@@ -41,6 +42,7 @@ public:
     void setBlocking(bool wantsToBlock);   // call every frame; only works while standing
     void startPunch();                     // only works while standing or walking
     void startKick();                      // only works while standing or walking
+    void startSpecial();                   // standing or walking, AND enough energy
     void applyPhysics(float deltaTime);    // gravity, knockback, landing; call once per frame
     void updateState(float deltaTime);     // decide the current state; call last each frame
 
@@ -70,6 +72,10 @@ public:
     int  getHealth() const;
     int  getMaxHealth() const;
     bool isDead() const;
+
+    void  restoreEnergy();
+    float getEnergy() const;
+    float getMaxEnergy() const;
 
     bool         canAct() const;           // false while attacking or stunned
     bool         isAttacking() const;
@@ -104,6 +110,8 @@ private:
     float colorR, colorG, colorB;   // body colour
     int   health;
     int   maxHealth;
+    float energy;          // spent by special attacks, refills over time
+    float maxEnergy;
     bool  attackHasHit;    // has the current swing already hit someone?
 };
 

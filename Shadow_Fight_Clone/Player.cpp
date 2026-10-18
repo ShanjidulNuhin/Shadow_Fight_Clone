@@ -15,6 +15,7 @@ void Player::update(const InputManager& input, float deltaTime) {
 
     if (input.isKeyDown('j')) startPunch();
     if (input.isKeyDown('k')) startKick();
+    if (input.isKeyDown('l')) startSpecial();   // needs enough energy
 
     setCrouching(input.isKeyDown('s'));
     setBlocking(input.isKeyDown('i'));   // hold I to guard

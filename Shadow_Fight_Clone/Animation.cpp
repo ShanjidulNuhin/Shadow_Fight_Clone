@@ -42,6 +42,12 @@ Pose getPose(FighterState state, float stateTime) {
         case FighterState::KICK:
             break;   // the attacking limb is drawn by Fighter::draw; the body stays normal
 
+        case FighterState::SPECIAL:
+            // trembling with power
+            pose.scaleX = 1.0f + 0.06f * std::sin(stateTime * 50.0f);
+            pose.scaleY = 1.0f - 0.03f * std::sin(stateTime * 50.0f);
+            break;
+
         case FighterState::HIT:
             pose.scaleX = 1.08f;   // squashed by the impact
             pose.scaleY = 0.92f;

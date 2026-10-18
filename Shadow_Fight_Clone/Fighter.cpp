@@ -9,6 +9,9 @@ namespace {
 
     const int   MAX_HEALTH = 100;
 
+    const float MAX_ENERGY   = 100.0f;
+    const float ENERGY_REGEN = 10.0f;        // energy gained per second
+
     // Getting hit
     const float KNOCKBACK_DECEL = 1600.0f;   // how fast a knockback fades (pixels/second^2)
 
@@ -16,6 +19,16 @@ namespace {
     const int   BLOCK_DAMAGE_PERCENT  = 20;     // a blocked hit still deals 20% damage
     const float BLOCK_KNOCKBACK_SPEED = 150.0f; // and pushes only a little
     const float BLOCK_FLASH_TIME      = 0.15f;  // how long the shield flashes after a block
+
+    // Which attack data belongs to which state (nullptr = that state isn't an attack).
+    const AttackData* attackDataFor(FighterState s) {
+        switch (s) {
+            case FighterState::PUNCH:   return &Attacks::PUNCH;
+            case FighterState::KICK:    return &Attacks::KICK;
+            case FighterState::SPECIAL: return &Attacks::SPECIAL;
+            default:                    return nullptr;
+        }
+    }
 }
 
 Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
@@ -27,7 +40,8 @@ Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
       state(FighterState::IDLE), stateTime(0.0f), hitStunDuration(0.0f),
       blockFlashTimer(0.0f),
       colorR(1.0f), colorG(1.0f), colorB(1.0f),
-      health(MAX_HEALTH), maxHealth(MAX_HEALTH), attackHasHit(false) {
+      health(MAX_HEALTH), maxHealth(MAX_HEALTH),
+      energy(MAX_ENERGY), maxEnergy(MAX_ENERGY), attackHasHit(false) {
 }
 
 void Fighter::keepInsideWorld() {
@@ -76,12 +90,20 @@ void Fighter::setBlocking(bool wantsToBlock) {
 }
 
 void Fighter::startAttack(FighterState attackState) {
+    const AttackData* data = attackDataFor(attackState);
+    if (data == nullptr) return;
+
     // only from a calm, grounded state (not crouching, not mid-air, not already attacking)
-    if (state == FighterState::IDLE || state == FighterState::WALK) {
-        state = attackState;
-        stateTime = 0.0f;
-        attackHasHit = false;      // a fresh swing that hasn't hit anyone yet
-    }
+    if (state != FighterState::IDLE && state != FighterState::WALK) return;
+    if (!onGround) return;     // the state can lag one frame behind, so check the ground too
+
+    // can we afford it?
+    if (energy < data->energyCost) return;
+    energy -= data->energyCost;
+
+    state = attackState;
+    stateTime = 0.0f;
+    attackHasHit = false;      // a fresh swing that hasn't hit anyone yet
 }
 
 void Fighter::startPunch() {
@@ -90,6 +112,10 @@ void Fighter::startPunch() {
 
 void Fighter::startKick() {
     startAttack(FighterState::KICK);
+}
+
+void Fighter::startSpecial() {
+    startAttack(FighterState::SPECIAL);
 }
 
 void Fighter::applyPhysics(float deltaTime) {
@@ -123,6 +149,10 @@ void Fighter::applyPhysics(float deltaTime) {
 
 void Fighter::updateState(float deltaTime) {
     if (blockFlashTimer > 0.0f) blockFlashTimer -= deltaTime;
+
+    // energy slowly refills
+    energy += ENERGY_REGEN * deltaTime;
+    if (energy > maxEnergy) energy = maxEnergy;
 
     const AttackData* attack = getCurrentAttack();
     FighterState newState;
@@ -181,9 +211,7 @@ bool Fighter::getHitbox(Rect& outBox) const {
 }
 
 const AttackData* Fighter::getCurrentAttack() const {
-    if (state == FighterState::PUNCH) return &Attacks::PUNCH;
-    if (state == FighterState::KICK)  return &Attacks::KICK;
-    return nullptr;
+    return attackDataFor(state);
 }
 
 void Fighter::onAttackConnected() {
@@ -241,12 +269,24 @@ bool Fighter::isDead() const {
     return health <= 0;
 }
 
+void Fighter::restoreEnergy() {
+    energy = maxEnergy;
+}
+
+float Fighter::getEnergy() const {
+    return energy;
+}
+
+float Fighter::getMaxEnergy() const {
+    return maxEnergy;
+}
+
 bool Fighter::canAct() const {
     return !isAttacking() && state != FighterState::HIT;
 }
 
 bool Fighter::isAttacking() const {
-    return state == FighterState::PUNCH || state == FighterState::KICK;
+    return getCurrentAttack() != nullptr;
 }
 
 AttackPhase Fighter::getAttackPhase() const {
@@ -264,26 +304,30 @@ FighterState Fighter::getState() const {
 
 const char* Fighter::getStateName() const {
     switch (state) {
-        case FighterState::IDLE:   return "IDLE";
-        case FighterState::WALK:   return "WALK";
-        case FighterState::JUMP:   return "JUMP";
-        case FighterState::FALL:   return "FALL";
-        case FighterState::CROUCH: return "CROUCH";
-        case FighterState::BLOCK:  return "BLOCK";
-        case FighterState::PUNCH:  return "PUNCH";
-        case FighterState::KICK:   return "KICK";
-        case FighterState::HIT:    return "HIT";
+        case FighterState::IDLE:    return "IDLE";
+        case FighterState::WALK:    return "WALK";
+        case FighterState::JUMP:    return "JUMP";
+        case FighterState::FALL:    return "FALL";
+        case FighterState::CROUCH:  return "CROUCH";
+        case FighterState::BLOCK:   return "BLOCK";
+        case FighterState::PUNCH:   return "PUNCH";
+        case FighterState::KICK:    return "KICK";
+        case FighterState::SPECIAL: return "SPECIAL";
+        case FighterState::HIT:     return "HIT";
     }
     return "UNKNOWN";
 }
 
 void Fighter::draw(const Renderer& renderer) const {
     Pose pose = Animation::getPose(state, stateTime);
+    AttackPhase phase = getAttackPhase();
 
-    // normal body colour, but flash red while stunned
+    // normal body colour, but flash red while stunned, and glow while charging a special
     float bodyR = colorR, bodyG = colorG, bodyB = colorB;
     if (state == FighterState::HIT) {
         bodyR = 1.0f; bodyG = 0.25f; bodyB = 0.25f;
+    } else if (state == FighterState::SPECIAL && phase == AttackPhase::STARTUP) {
+        bodyR = 0.6f; bodyG = 0.9f; bodyB = 1.0f;
     }
 
     // The body, scaled around its bottom-centre so the feet stay in place.
@@ -311,17 +355,19 @@ void Fighter::draw(const Renderer& renderer) const {
         }
     }
 
-    // the attacking limb (fist or foot): its length and colour show the phase of the attack
+    // the attacking limb (fist, foot, or special blast): length and colour show the phase
     const AttackData* attack = getCurrentAttack();
     if (attack != nullptr) {
-        AttackPhase phase = getAttackPhase();
-
         float limbLength = attack->reach * 0.25f;            // winding up
         float limbR = colorR, limbG = colorG, limbB = colorB;
         if (phase == AttackPhase::RECOVERY) limbLength = attack->reach * 0.55f;
         if (phase == AttackPhase::ACTIVE) {
             limbLength = attack->reach;                      // fully extended...
-            limbR = 1.0f; limbG = 0.35f; limbB = 0.35f;      // ...and red: the dangerous moment
+            if (state == FighterState::SPECIAL) {
+                limbR = 1.0f; limbG = 0.7f; limbB = 0.1f;    // ...golden for the special
+            } else {
+                limbR = 1.0f; limbG = 0.35f; limbB = 0.35f;  // ...red: the dangerous moment
+            }
         }
 
         float limbThickness = attack->hitboxHeight * 0.6f;
