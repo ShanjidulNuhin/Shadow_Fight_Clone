@@ -33,8 +33,14 @@ Pose getPose(FighterState state, float stateTime) {
             pose.scaleX = 1.10f;
             break;
 
+        case FighterState::BLOCK:
+            pose.scaleX = 0.95f;   // hunched behind the guard
+            pose.scaleY = 0.97f;
+            break;
+
         case FighterState::PUNCH:
-            break;   // the punching arm is drawn by Fighter::draw; the body stays normal
+        case FighterState::KICK:
+            break;   // the attacking limb is drawn by Fighter::draw; the body stays normal
 
         case FighterState::HIT:
             pose.scaleX = 1.08f;   // squashed by the impact

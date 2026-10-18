@@ -14,8 +14,10 @@ void Player::update(const InputManager& input, float deltaTime) {
     if (input.isKeyDown('w') || input.isKeyDown(' ')) jump();
 
     if (input.isKeyDown('j')) startPunch();
+    if (input.isKeyDown('k')) startKick();
 
     setCrouching(input.isKeyDown('s'));
+    setBlocking(input.isKeyDown('i'));   // hold I to guard
 
     moveHorizontal(direction, deltaTime);
     applyPhysics(deltaTime);

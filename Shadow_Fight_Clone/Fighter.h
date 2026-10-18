@@ -1,7 +1,8 @@
 #ifndef FIGHTER_H
 #define FIGHTER_H
 
-#include "Collision.h"   // for Rect
+#include "Collision.h"    // for Rect
+#include "AttackData.h"   // for AttackData
 
 class Renderer;   // forward declaration: we only need the name here
 
@@ -12,7 +13,9 @@ enum class FighterState {
     JUMP,     // in the air, moving up
     FALL,     // in the air, moving down
     CROUCH,
+    BLOCK,    // guarding
     PUNCH,
+    KICK,
     HIT       // stunned after being hit
 };
 
@@ -35,7 +38,9 @@ public:
 
     void jump();                           // only works while standing on the ground
     void setCrouching(bool wantsToCrouch); // call every frame; only works on the ground
+    void setBlocking(bool wantsToBlock);   // call every frame; only works while standing
     void startPunch();                     // only works while standing or walking
+    void startKick();                      // only works while standing or walking
     void applyPhysics(float deltaTime);    // gravity, knockback, landing; call once per frame
     void updateState(float deltaTime);     // decide the current state; call last each frame
 
@@ -51,12 +56,14 @@ public:
     bool getHitbox(Rect& outBox) const;
 
     // --- combat ---
-    int  getAttackDamage() const;          // how much damage the current attack deals
+    // The attack being performed right now, or nullptr if not attacking.
+    const AttackData* getCurrentAttack() const;
     void onAttackConnected();              // call when this fighter's attack has landed
 
-    // Called when this fighter gets hit: damage + stun + knockback.
+    // Called when this fighter gets hit. If it is blocking AND facing the attacker,
+    // the hit is mostly absorbed; otherwise: full damage + stun + knockback.
     // pushDirection: +1 = pushed to the right, -1 = pushed to the left.
-    void receiveHit(int damage, float pushDirection);
+    void receiveHit(const AttackData& attack, float pushDirection);
 
     void takeDamage(int amount);
     void restoreHealth();
@@ -74,6 +81,7 @@ public:
 
 private:
     void keepInsideWorld();
+    void startAttack(FighterState attackState);
 
     float x;
     float y;
@@ -88,8 +96,11 @@ private:
     bool  facingRight;
     bool  onGround;
     bool  crouching;
+    bool  blocking;
     FighterState state;
     float stateTime;       // seconds spent in the current state
+    float hitStunDuration; // how long the current HIT state lasts
+    float blockFlashTimer; // > 0 right after a successful block (for the visual flash)
     float colorR, colorG, colorB;   // body colour
     int   health;
     int   maxHealth;

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1792150213 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
+1792301143 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
 	<GL/glut.h>
 	<cstdlib>
 	<cstdio>
@@ -23,28 +23,29 @@
 
 1792149830 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
 
-1792150438 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1792301074 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
 	"Config.h"
 
-1792150426 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
+1792301045 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
 	"Collision.h"
+	"AttackData.h"
 
 1792133273 e:\c++\shadow_fight_clone\shadow_fight_clone\config.h
 
 1792133079 e:\c++\shadow_fight_clone\shadow_fight_clone\player.h
 	"Fighter.h"
 
-1792150453 source:e:\c++\shadow_fight_clone\shadow_fight_clone\animation.cpp
+1792301103 source:e:\c++\shadow_fight_clone\shadow_fight_clone\animation.cpp
 	"Animation.h"
 	<cmath>
 
 1792134022 e:\c++\shadow_fight_clone\shadow_fight_clone\animation.h
 	"Fighter.h"
 
-1792134339 source:e:\c++\shadow_fight_clone\shadow_fight_clone\player.cpp
+1792301119 source:e:\c++\shadow_fight_clone\shadow_fight_clone\player.cpp
 	"Player.h"
 	"InputManager.h"
 
@@ -55,8 +56,10 @@
 
 1792150134 e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.h
 
-1792150484 source:e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
+1792301088 source:e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
 	"CombatSystem.h"
 	"Fighter.h"
 	"Collision.h"
+
+1792301015 e:\c++\shadow_fight_clone\shadow_fight_clone\attackdata.h
 

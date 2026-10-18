@@ -18,7 +18,7 @@ bool showDebugBoxes = true;    // press H to toggle
 InputManager input;
 Renderer renderer(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
 Player player(100.0f, Config::GROUND_HEIGHT);
-Fighter dummy(550.0f, Config::GROUND_HEIGHT, 50.0f, 100.0f);   // a training dummy to punch
+Fighter dummy(550.0f, Config::GROUND_HEIGHT, 50.0f, 100.0f);   // a training dummy
 
 // Green outline = hurtbox (where it can be hit). Red outline = hitbox (where it hits).
 void drawDebugBoxes(const Fighter& fighter) {
@@ -73,6 +73,12 @@ void display() {
     drawHealthBar(Config::WORLD_WIDTH - 310.0f, Config::WORLD_HEIGHT - 75.0f, 300.0f, 20.0f,
                   dummy, "DUMMY");
 
+    // controls reminder, on the ground strip
+    renderer.drawText(10.0f, 62.0f, "A/D move   W/Space jump   S crouch   J punch   K kick   I block",
+                      1.0f, 1.0f, 1.0f);
+    renderer.drawText(10.0f, 36.0f, "P / O: dummy punches / kicks   H: debug boxes   R: refill health",
+                      1.0f, 1.0f, 0.6f);
+
     renderer.endFrame();
 }
 
@@ -90,8 +96,9 @@ void idle() {
     dummy.applyPhysics(deltaTime);
     dummy.updateState(deltaTime);
 
-    // Did the player's punch land on the dummy?
+    // Did either fighter's attack land on the other?
     CombatSystem::resolveAttack(player, dummy);
+    CombatSystem::resolveAttack(dummy, player);
 
     fpsFrames++;
     fpsTimer += elapsedMs;
@@ -112,6 +119,11 @@ void keyboardDown(unsigned char key, int, int) {
     if (key == 'r' || key == 'R') {            // testing aid: refill everyone's health
         player.restoreHealth();
         dummy.restoreHealth();
+    }
+    if (key == 'p' || key == 'P' || key == 'o' || key == 'O') {   // testing aid: dummy attacks you
+        dummy.setFacingRight(player.getHurtbox().x > dummy.getHurtbox().x);
+        if (key == 'o' || key == 'O') dummy.startKick();
+        else                          dummy.startPunch();
     }
     input.keyDown(key);
 }

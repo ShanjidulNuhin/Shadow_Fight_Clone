@@ -11,6 +11,9 @@ bool resolveAttack(Fighter& attacker, Fighter& defender) {
     Rect hitbox;
     if (!attacker.getHitbox(hitbox)) return false;
 
+    const AttackData* attack = attacker.getCurrentAttack();
+    if (attack == nullptr) return false;
+
     // Does that hitbox touch the defender's hurtbox?
     Rect defenderBody = defender.getHurtbox();
     if (!Collision::overlaps(hitbox, defenderBody)) return false;
@@ -21,7 +24,7 @@ bool resolveAttack(Fighter& attacker, Fighter& defender) {
     float defenderCenter = defenderBody.x + defenderBody.width / 2.0f;
     float pushDirection = (defenderCenter > attackerCenter) ? 1.0f : -1.0f;
 
-    defender.receiveHit(attacker.getAttackDamage(), pushDirection);
+    defender.receiveHit(*attack, pushDirection);
 
     // Use up this swing so it can't hit again.
     attacker.onAttackConnected();

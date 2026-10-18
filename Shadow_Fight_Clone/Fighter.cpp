@@ -9,21 +9,13 @@ namespace {
 
     const int   MAX_HEALTH = 100;
 
-    // Punch timing, in seconds
-    const float PUNCH_STARTUP   = 0.08f;
-    const float PUNCH_ACTIVE    = 0.10f;
-    const float PUNCH_RECOVERY  = 0.17f;
-    const float PUNCH_TOTAL     = PUNCH_STARTUP + PUNCH_ACTIVE + PUNCH_RECOVERY;
-
-    // Punch shape and power
-    const float PUNCH_REACH         = 50.0f;  // how far the fist sticks out from the body
-    const float PUNCH_HITBOX_HEIGHT = 24.0f;
-    const int   PUNCH_DAMAGE        = 10;
-
     // Getting hit
-    const float HIT_STUN_TIME      = 0.30f;    // seconds the victim can't act
-    const float KNOCKBACK_SPEED    = 400.0f;   // initial sideways speed (pixels/second)
-    const float KNOCKBACK_DECEL    = 1600.0f;  // how fast that speed fades (pixels/second^2)
+    const float KNOCKBACK_DECEL = 1600.0f;   // how fast a knockback fades (pixels/second^2)
+
+    // Blocking
+    const int   BLOCK_DAMAGE_PERCENT  = 20;     // a blocked hit still deals 20% damage
+    const float BLOCK_KNOCKBACK_SPEED = 150.0f; // and pushes only a little
+    const float BLOCK_FLASH_TIME      = 0.15f;  // how long the shield flashes after a block
 }
 
 Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
@@ -31,7 +23,9 @@ Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
       standingHeight(bodyHeight), crouchHeight(bodyHeight * CROUCH_HEIGHT_RATIO),
       moveSpeed(250.0f), velocityY(0.0f), knockbackVelocityX(0.0f),
       moveDirection(0.0f), facingRight(true),
-      onGround(false), crouching(false), state(FighterState::IDLE), stateTime(0.0f),
+      onGround(false), crouching(false), blocking(false),
+      state(FighterState::IDLE), stateTime(0.0f), hitStunDuration(0.0f),
+      blockFlashTimer(0.0f),
       colorR(1.0f), colorG(1.0f), colorB(1.0f),
       health(MAX_HEALTH), maxHealth(MAX_HEALTH), attackHasHit(false) {
 }
@@ -42,7 +36,8 @@ void Fighter::keepInsideWorld() {
 }
 
 void Fighter::moveHorizontal(float direction, float deltaTime) {
-    if (!canAct()) direction = 0.0f;   // can't walk or turn around mid-attack or while stunned
+    // can't walk or turn around while attacking, stunned, or holding a guard
+    if (!canAct() || blocking) direction = 0.0f;
     moveDirection = direction;
 
     float speed = crouching ? moveSpeed * CROUCH_SPEED_RATIO : moveSpeed;
@@ -74,13 +69,27 @@ void Fighter::setCrouching(bool wantsToCrouch) {
     }
 }
 
-void Fighter::startPunch() {
+void Fighter::setBlocking(bool wantsToBlock) {
+    // only while standing on the ground and free to act
+    if (!canAct() || crouching || !onGround) wantsToBlock = false;
+    blocking = wantsToBlock;
+}
+
+void Fighter::startAttack(FighterState attackState) {
     // only from a calm, grounded state (not crouching, not mid-air, not already attacking)
     if (state == FighterState::IDLE || state == FighterState::WALK) {
-        state = FighterState::PUNCH;
+        state = attackState;
         stateTime = 0.0f;
         attackHasHit = false;      // a fresh swing that hasn't hit anyone yet
     }
+}
+
+void Fighter::startPunch() {
+    startAttack(FighterState::PUNCH);
+}
+
+void Fighter::startKick() {
+    startAttack(FighterState::KICK);
 }
 
 void Fighter::applyPhysics(float deltaTime) {
@@ -113,14 +122,19 @@ void Fighter::applyPhysics(float deltaTime) {
 }
 
 void Fighter::updateState(float deltaTime) {
+    if (blockFlashTimer > 0.0f) blockFlashTimer -= deltaTime;
+
+    const AttackData* attack = getCurrentAttack();
     FighterState newState;
 
-    if (state == FighterState::HIT && stateTime < HIT_STUN_TIME) {
+    if (state == FighterState::HIT && stateTime < hitStunDuration) {
         newState = FighterState::HIT;     // still stunned: nothing else can happen yet
-    } else if (state == FighterState::PUNCH && stateTime < PUNCH_TOTAL) {
-        newState = FighterState::PUNCH;   // attack still in progress: nothing interrupts it
+    } else if (attack != nullptr && stateTime < attack->totalTime()) {
+        newState = state;                 // attack still in progress: nothing interrupts it
     } else if (!onGround) {
         newState = (velocityY > 0.0f) ? FighterState::JUMP : FighterState::FALL;
+    } else if (blocking) {
+        newState = FighterState::BLOCK;
     } else if (crouching) {
         newState = FighterState::CROUCH;
     } else if (moveDirection != 0.0f) {
@@ -154,33 +168,55 @@ Rect Fighter::getHurtbox() const {
 
 bool Fighter::getHitbox(Rect& outBox) const {
     if (attackHasHit) return false;                          // this swing already landed
+
+    const AttackData* attack = getCurrentAttack();
+    if (attack == nullptr) return false;
     if (getAttackPhase() != AttackPhase::ACTIVE) return false;
 
-    outBox.width  = PUNCH_REACH;
-    outBox.height = PUNCH_HITBOX_HEIGHT;
-    outBox.x = facingRight ? (x + width) : (x - PUNCH_REACH);
-    outBox.y = y + height * 0.6f - 5.0f;   // around the height of the fist
+    outBox.width  = attack->reach;
+    outBox.height = attack->hitboxHeight;
+    outBox.x = facingRight ? (x + width) : (x - attack->reach);
+    outBox.y = y + attack->hitboxOffsetY;   // measured up from the attacker's feet
     return true;
 }
 
-int Fighter::getAttackDamage() const {
-    return PUNCH_DAMAGE;   // only one attack so far
+const AttackData* Fighter::getCurrentAttack() const {
+    if (state == FighterState::PUNCH) return &Attacks::PUNCH;
+    if (state == FighterState::KICK)  return &Attacks::KICK;
+    return nullptr;
 }
 
 void Fighter::onAttackConnected() {
     attackHasHit = true;
 }
 
-void Fighter::receiveHit(int damage, float pushDirection) {
-    takeDamage(damage);
+void Fighter::receiveHit(const AttackData& attack, float pushDirection) {
+    // Where is the attacker? If we are pushed to the right (+1), it hit us from the left.
+    bool attackerIsOnRight = (pushDirection < 0.0f);
+    bool facingAttacker = (attackerIsOnRight == facingRight);
 
-    // Being hit interrupts whatever we were doing, even a punch in progress.
+    // A guard only works against attacks coming from the front.
+    if (blocking && facingAttacker) {
+        int chipDamage = attack.damage * BLOCK_DAMAGE_PERCENT / 100;
+        if (chipDamage < 1) chipDamage = 1;
+        takeDamage(chipDamage);
+
+        knockbackVelocityX = pushDirection * BLOCK_KNOCKBACK_SPEED;
+        blockFlashTimer = BLOCK_FLASH_TIME;
+        return;   // no stun, no interruption: we keep our guard up
+    }
+
+    takeDamage(attack.damage);
+
+    // Being hit interrupts whatever we were doing, even an attack in progress.
     state = FighterState::HIT;
     stateTime = 0.0f;
-    knockbackVelocityX = pushDirection * KNOCKBACK_SPEED;
+    hitStunDuration = attack.hitStun;
+    knockbackVelocityX = pushDirection * attack.knockbackSpeed;
 
-    // a stunned fighter is never crouching
+    // a stunned fighter is neither crouching nor blocking
     crouching = false;
+    blocking = false;
     height = standingHeight;
 }
 
@@ -206,18 +242,19 @@ bool Fighter::isDead() const {
 }
 
 bool Fighter::canAct() const {
-    return state != FighterState::PUNCH && state != FighterState::HIT;
+    return !isAttacking() && state != FighterState::HIT;
 }
 
 bool Fighter::isAttacking() const {
-    return state == FighterState::PUNCH;
+    return state == FighterState::PUNCH || state == FighterState::KICK;
 }
 
 AttackPhase Fighter::getAttackPhase() const {
-    if (state != FighterState::PUNCH)               return AttackPhase::NONE;
-    if (stateTime < PUNCH_STARTUP)                  return AttackPhase::STARTUP;
-    if (stateTime < PUNCH_STARTUP + PUNCH_ACTIVE)   return AttackPhase::ACTIVE;
-    if (stateTime < PUNCH_TOTAL)                    return AttackPhase::RECOVERY;
+    const AttackData* attack = getCurrentAttack();
+    if (attack == nullptr)                                  return AttackPhase::NONE;
+    if (stateTime < attack->startup)                        return AttackPhase::STARTUP;
+    if (stateTime < attack->startup + attack->active)       return AttackPhase::ACTIVE;
+    if (stateTime < attack->totalTime())                    return AttackPhase::RECOVERY;
     return AttackPhase::NONE;
 }
 
@@ -232,7 +269,9 @@ const char* Fighter::getStateName() const {
         case FighterState::JUMP:   return "JUMP";
         case FighterState::FALL:   return "FALL";
         case FighterState::CROUCH: return "CROUCH";
+        case FighterState::BLOCK:  return "BLOCK";
         case FighterState::PUNCH:  return "PUNCH";
+        case FighterState::KICK:   return "KICK";
         case FighterState::HIT:    return "HIT";
     }
     return "UNKNOWN";
@@ -260,22 +299,34 @@ void Fighter::draw(const Renderer& renderer) const {
     float eyeY = drawY + drawH - eyeSize - 8.0f;
     renderer.drawRect(eyeX, eyeY, eyeSize, eyeSize, 0.1f, 0.1f, 0.1f);
 
-    // punching arm: its length and colour show which phase of the attack we're in
-    if (state == FighterState::PUNCH) {
+    // guard: a blue shield bar in front of the body, which flashes bright when it absorbs a hit
+    if (state == FighterState::BLOCK) {
+        bool flashing = blockFlashTimer > 0.0f;
+        float shieldWidth = flashing ? 14.0f : 8.0f;
+        float shieldX = facingRight ? (drawX + drawW + 2.0f) : (drawX - 2.0f - shieldWidth);
+        if (flashing) {
+            renderer.drawRect(shieldX, drawY - 4.0f, shieldWidth, drawH + 8.0f, 1.0f, 1.0f, 0.7f);
+        } else {
+            renderer.drawRect(shieldX, drawY - 4.0f, shieldWidth, drawH + 8.0f, 0.3f, 0.6f, 1.0f);
+        }
+    }
+
+    // the attacking limb (fist or foot): its length and colour show the phase of the attack
+    const AttackData* attack = getCurrentAttack();
+    if (attack != nullptr) {
         AttackPhase phase = getAttackPhase();
 
-        float armLength = 20.0f;
-        float armR = colorR, armG = colorG, armB = colorB;
-        if (phase == AttackPhase::STARTUP)  armLength = 12.0f;
-        if (phase == AttackPhase::RECOVERY) armLength = 28.0f;
+        float limbLength = attack->reach * 0.25f;            // winding up
+        float limbR = colorR, limbG = colorG, limbB = colorB;
+        if (phase == AttackPhase::RECOVERY) limbLength = attack->reach * 0.55f;
         if (phase == AttackPhase::ACTIVE) {
-            armLength = PUNCH_REACH;           // fully extended...
-            armR = 1.0f; armG = 0.35f; armB = 0.35f;   // ...and red: the dangerous moment
+            limbLength = attack->reach;                      // fully extended...
+            limbR = 1.0f; limbG = 0.35f; limbB = 0.35f;      // ...and red: the dangerous moment
         }
 
-        const float armThickness = 14.0f;
-        float armY = drawY + drawH * 0.6f;
-        float armX = facingRight ? (drawX + drawW) : (drawX - armLength);
-        renderer.drawRect(armX, armY, armLength, armThickness, armR, armG, armB);
+        float limbThickness = attack->hitboxHeight * 0.6f;
+        float limbY = drawY + attack->hitboxOffsetY + (attack->hitboxHeight - limbThickness) / 2.0f;
+        float limbX = facingRight ? (drawX + drawW) : (drawX - limbLength);
+        renderer.drawRect(limbX, limbY, limbLength, limbThickness, limbR, limbG, limbB);
     }
 }
