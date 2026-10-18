@@ -1,6 +1,7 @@
 #include <GL/glut.h>
 #include <cstdlib>
 #include <cstdio>
+#include <ctime>
 #include "Config.h"
 #include "Collision.h"
 #include "CombatSystem.h"
@@ -83,6 +84,13 @@ void display() {
     std::snprintf(label, sizeof(label), "State: %s", player.getStateName());
     renderer.drawText(10.0f, Config::WORLD_HEIGHT - 25.0f, label, 1.0f, 1.0f, 1.0f);
 
+    // what is the enemy's brain doing, and what is its body doing?
+    char enemyLabel[64];
+    std::snprintf(enemyLabel, sizeof(enemyLabel), "AI: %s (%s)",
+                  enemy.getAIStateName(), enemy.getStateName());
+    renderer.drawText(Config::WORLD_WIDTH - 310.0f, Config::WORLD_HEIGHT - 25.0f,
+                      enemyLabel, 1.0f, 1.0f, 1.0f);
+
     // health bars: player on the left, enemy on the right
     drawHealthBar(10.0f, Config::WORLD_HEIGHT - 75.0f, 300.0f, 20.0f, player, "PLAYER");
     drawHealthBar(Config::WORLD_WIDTH - 310.0f, Config::WORLD_HEIGHT - 75.0f, 300.0f, 20.0f,
@@ -95,7 +103,7 @@ void display() {
     // controls reminder, on the ground strip
     renderer.drawText(10.0f, 62.0f, "A/D move  W/Space jump  S crouch  J punch  K kick  L special  I block",
                       1.0f, 1.0f, 1.0f);
-    renderer.drawText(10.0f, 36.0f, "P / O / U: enemy punches / kicks / special   H: debug boxes   R: refill",
+    renderer.drawText(10.0f, 36.0f, "H: debug boxes   R: refill health and energy",
                       1.0f, 1.0f, 0.6f);
 
     renderer.endFrame();
@@ -110,7 +118,7 @@ void idle() {
 
     player.update(input, deltaTime);
 
-    // The enemy looks at the player and walks toward them.
+    // The enemy's brain decides what to do (approach, attack, wait...).
     enemy.update(player, deltaTime);
 
     // Did either fighter's attack land on the other?
@@ -139,12 +147,6 @@ void keyboardDown(unsigned char key, int, int) {
         player.restoreEnergy();
         enemy.restoreEnergy();
     }
-    if (key == 'p' || key == 'P' || key == 'o' || key == 'O' || key == 'u' || key == 'U') {
-        // testing aid: force the enemy to attack (it already faces you by itself)
-        if (key == 'o' || key == 'O')      enemy.startKick();
-        else if (key == 'u' || key == 'U') enemy.startSpecial();
-        else                               enemy.startPunch();
-    }
     input.keyDown(key);
 }
 
@@ -157,6 +159,8 @@ void reshape(int w, int h) {
 }
 
 int main(int argc, char** argv) {
+    std::srand((unsigned)std::time(nullptr));   // seed the random numbers the enemy uses
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
