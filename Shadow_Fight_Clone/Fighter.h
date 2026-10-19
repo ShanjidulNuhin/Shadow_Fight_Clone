@@ -77,6 +77,7 @@ public:
     float getEnergy() const;
     float getMaxEnergy() const;
 
+    bool         isInvulnerable() const;   // true for a short time after recovering from a hit
     bool         canAct() const;           // false while attacking or stunned
     bool         isAttacking() const;
     AttackPhase  getAttackPhase() const;
@@ -107,6 +108,7 @@ private:
     float stateTime;       // seconds spent in the current state
     float hitStunDuration; // how long the current HIT state lasts
     float blockFlashTimer; // > 0 right after a successful block (for the visual flash)
+    float invulnerableTimer; // > 0 while protected after recovering from a hit
     float colorR, colorG, colorB;   // body colour
     int   health;
     int   maxHealth;

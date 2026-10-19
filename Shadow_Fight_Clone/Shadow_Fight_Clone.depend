@@ -25,13 +25,13 @@
 
 1792149830 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
 
-1792324410 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1792410129 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
 	"Config.h"
 
-1792324392 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
+1792410126 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
 	"Collision.h"
 	"AttackData.h"
 
@@ -58,18 +58,18 @@
 
 1792150134 e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.h
 
-1792301088 source:e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
+1792410151 source:e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
 	"CombatSystem.h"
 	"Fighter.h"
 	"Collision.h"
 
 1792324373 e:\c++\shadow_fight_clone\shadow_fight_clone\attackdata.h
 
-1792390898 source:e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.cpp
+1792410173 source:e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.cpp
 	"Enemy.h"
 	<cmath>
 	<cstdlib>
 
-1792390888 e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.h
+1792410161 e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.h
 	"Fighter.h"
 

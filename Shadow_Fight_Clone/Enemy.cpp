@@ -17,6 +17,16 @@ namespace {
     const float ARRIVAL_PAUSE      = 0.3f;    // short pause after walking up to you
     const int   HESITATION_PERCENT = 25;      // chance of "second thoughts" before an attack
 
+    // Defending
+    const int   DEFEND_PERCENT   = 45;     // chance to try to guard against each attack it notices
+    const float MIN_REACTION     = 0.05f;  // how long it takes to get the guard up (seconds)
+    const float MAX_REACTION     = 0.15f;
+    const float GUARD_URGE_PER_SECOND = 0.15f;  // chance per second to raise its guard on its own
+    const float GUARD_URGE_RANGE      = 70.0f;  // ...but only when you are this close
+    const float MIN_GUARD_TIME   = 0.4f;   // how long it keeps the guard up
+    const float MAX_GUARD_TIME   = 1.0f;
+    const float NOTICE_MARGIN    = 15.0f;  // it notices attacks that reach within this much of it
+
     // Attacks only count as "in range" if the gap is a little SHORTER than their reach.
     const float REACH_MARGIN = 5.0f;
 
@@ -33,7 +43,8 @@ namespace {
 Enemy::Enemy(float startX, float startY)
     : Fighter(startX, startY, 50.0f, 100.0f),
       aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY),
-      preferredGap(45.0f), lastAttack(AttackChoice::NONE) {
+      preferredGap(45.0f), lastAttack(AttackChoice::NONE),
+      targetWasAttacking(false), guardPending(false), reactionTimer(0.0f), guardTimer(0.0f) {
     setColor(0.95f, 0.55f, 0.20f);   // orange, so it's easy to tell apart from the player
     setFacingRight(false);           // starts out facing left, toward the player
 }
@@ -49,6 +60,43 @@ float Enemy::randomCooldown() const {
     if (roll < 25) return 0.3f + randomFraction() * 0.3f;   // 25%: quick follow-up
     if (roll < 75) return 1.0f + randomFraction() * 1.0f;   // 50%: normal
     return 2.2f + randomFraction() * 1.0f;                  // 25%: slow
+}
+
+// Notice when the target starts an attack nearby, and sometimes decide to guard.
+// It does not react instantly: the guard only goes up after a short reaction time,
+// so fast attacks can still hit it, while slow ones are often blocked.
+void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
+    const AttackData* theirAttack = target.getCurrentAttack();
+    bool targetIsAttacking = (theirAttack != nullptr);
+
+    // A brand-new attack, close enough to reach us?
+    if (targetIsAttacking && !targetWasAttacking &&
+        gap < theirAttack->reach + NOTICE_MARGIN &&
+        !guardPending && guardTimer <= 0.0f && canAct()) {
+        if (std::rand() % 100 < DEFEND_PERCENT) {
+            guardPending  = true;
+            reactionTimer = MIN_REACTION + randomFraction() * (MAX_REACTION - MIN_REACTION);
+        }
+    }
+    targetWasAttacking = targetIsAttacking;
+
+    // Now and then it raises its guard on its own, just because you're close.
+    if (!guardPending && guardTimer <= 0.0f && canAct() && gap < GUARD_URGE_RANGE) {
+        float roll = std::rand() / (float)RAND_MAX;          // 0.0 .. 1.0
+        if (roll < GUARD_URGE_PER_SECOND * deltaTime) {
+            guardTimer = MIN_GUARD_TIME + randomFraction() * (MAX_GUARD_TIME - MIN_GUARD_TIME);
+        }
+    }
+
+    // Count down the reaction time; then the guard goes up for a while.
+    if (guardPending) {
+        reactionTimer -= deltaTime;
+        if (reactionTimer <= 0.0f) {
+            guardPending = false;
+            guardTimer = MIN_GUARD_TIME + randomFraction() * (MAX_GUARD_TIME - MIN_GUARD_TIME);
+        }
+    }
+    if (guardTimer > 0.0f) guardTimer -= deltaTime;
 }
 
 // Pick an attack that makes sense RIGHT NOW (or NONE if nothing is worth trying).
@@ -105,6 +153,8 @@ void Enemy::update(const Fighter& target, float deltaTime) {
 
     if (attackCooldown > 0.0f) attackCooldown -= deltaTime;
 
+    watchForAttacks(target, gap, deltaTime);
+
     // ---- the brain: pick ONE thing to do this frame ----
     float walkDirection = 0.0f;
 
@@ -116,6 +166,8 @@ void Enemy::update(const Fighter& target, float deltaTime) {
         aiState = AIState::HIT;                  // stunned: wait for the body to recover
     } else if (isAttacking()) {
         aiState = AIState::ATTACK;               // mid-swing: let it finish
+    } else if (guardTimer > 0.0f) {
+        aiState = AIState::DEFEND;               // guard up: stand still and block
     } else {
         bool attackedThisFrame = false;
 
@@ -158,6 +210,7 @@ void Enemy::update(const Fighter& target, float deltaTime) {
         }
     }
 
+    setBlocking(aiState == AIState::DEFEND);     // (only works on the ground, when free to act)
     moveHorizontal(walkDirection, deltaTime);
 
     // Walking backwards turns the body around, so look at the target again.
@@ -176,6 +229,7 @@ const char* Enemy::getAIStateName() const {
         case AIState::IDLE:     return "IDLE";
         case AIState::APPROACH: return "APPROACH";
         case AIState::RETREAT:  return "RETREAT";
+        case AIState::DEFEND:   return "DEFEND";
         case AIState::ATTACK:   return "ATTACK";
         case AIState::HIT:      return "HIT";
         case AIState::DEAD:     return "DEAD";

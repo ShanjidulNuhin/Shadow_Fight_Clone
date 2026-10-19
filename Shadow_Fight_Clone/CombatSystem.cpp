@@ -6,6 +6,7 @@ namespace CombatSystem {
 
 bool resolveAttack(Fighter& attacker, Fighter& defender) {
     if (defender.isDead()) return false;
+    if (defender.isInvulnerable()) return false;   // protected: the attack passes through
 
     // Does the attacker have a live hitbox right now?
     Rect hitbox;

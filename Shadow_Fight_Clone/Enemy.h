@@ -9,6 +9,7 @@ enum class AIState {
     IDLE,       // waiting for its next move
     APPROACH,   // walking toward the player
     RETREAT,    // backing away to get some space
+    DEFEND,     // holding its guard up
     ATTACK,     // swinging an attack
     HIT,        // stunned: the brain waits until the body recovers
     DEAD        // out of health: does nothing
@@ -32,11 +33,18 @@ private:
     AttackChoice chooseAttack(const Fighter& target, float gap) const;
     float        randomCooldown() const;
     void         pickNewSpacing();
+    void         watchForAttacks(const Fighter& target, float gap, float deltaTime);
 
     AIState      aiState;
     float        attackCooldown;   // seconds until the enemy may attack again
     float        preferredGap;     // the distance it wants to stand at right now (changes often)
     AttackChoice lastAttack;       // what it did last time (so it can avoid repeating itself)
+
+    // defending
+    bool  targetWasAttacking;  // was the target attacking last frame? (to notice a NEW attack)
+    bool  guardPending;        // decided to defend, but still "reacting"
+    float reactionTimer;       // time left before the guard goes up
+    float guardTimer;          // time left holding the guard up
 };
 
 #endif

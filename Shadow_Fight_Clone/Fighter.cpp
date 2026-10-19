@@ -20,6 +20,10 @@ namespace {
     const float BLOCK_KNOCKBACK_SPEED = 150.0f; // and pushes only a little
     const float BLOCK_FLASH_TIME      = 0.15f;  // how long the shield flashes after a block
 
+    // Protection after a hit, so nobody can be stunned over and over forever.
+    const float RECOVERY_INVULNERABILITY = 0.5f;  // seconds of protection once the stun ends
+    const float BLINK_INTERVAL           = 0.07f; // how fast the body blinks while protected
+
     // Which attack data belongs to which state (nullptr = that state isn't an attack).
     const AttackData* attackDataFor(FighterState s) {
         switch (s) {
@@ -38,7 +42,7 @@ Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
       moveDirection(0.0f), facingRight(true),
       onGround(false), crouching(false), blocking(false),
       state(FighterState::IDLE), stateTime(0.0f), hitStunDuration(0.0f),
-      blockFlashTimer(0.0f),
+      blockFlashTimer(0.0f), invulnerableTimer(0.0f),
       colorR(1.0f), colorG(1.0f), colorB(1.0f),
       health(MAX_HEALTH), maxHealth(MAX_HEALTH),
       energy(MAX_ENERGY), maxEnergy(MAX_ENERGY), attackHasHit(false) {
@@ -149,6 +153,7 @@ void Fighter::applyPhysics(float deltaTime) {
 
 void Fighter::updateState(float deltaTime) {
     if (blockFlashTimer > 0.0f) blockFlashTimer -= deltaTime;
+    if (invulnerableTimer > 0.0f) invulnerableTimer -= deltaTime;
 
     // energy slowly refills
     energy += ENERGY_REGEN * deltaTime;
@@ -174,6 +179,9 @@ void Fighter::updateState(float deltaTime) {
     }
 
     if (newState != state) {
+        // The stun just ended: a short window where we can't be hit again.
+        if (state == FighterState::HIT) invulnerableTimer = RECOVERY_INVULNERABILITY;
+
         state = newState;
         stateTime = 0.0f;          // entered a new state: restart its animation clock
     } else {
@@ -281,6 +289,10 @@ float Fighter::getMaxEnergy() const {
     return maxEnergy;
 }
 
+bool Fighter::isInvulnerable() const {
+    return invulnerableTimer > 0.0f;
+}
+
 bool Fighter::canAct() const {
     return !isAttacking() && state != FighterState::HIT;
 }
@@ -328,6 +340,11 @@ void Fighter::draw(const Renderer& renderer) const {
         bodyR = 1.0f; bodyG = 0.25f; bodyB = 0.25f;
     } else if (state == FighterState::SPECIAL && phase == AttackPhase::STARTUP) {
         bodyR = 0.6f; bodyG = 0.9f; bodyB = 1.0f;
+    }
+
+    // blink (darker, then normal, then darker...) while protected from hits
+    if (isInvulnerable() && ((int)(invulnerableTimer / BLINK_INTERVAL) % 2 == 0)) {
+        bodyR *= 0.45f; bodyG *= 0.45f; bodyB *= 0.45f;
     }
 
     // The body, scaled around its bottom-centre so the feet stay in place.
