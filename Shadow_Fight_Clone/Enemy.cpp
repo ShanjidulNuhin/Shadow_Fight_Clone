@@ -3,38 +3,88 @@
 #include <cstdlib>
 
 namespace {
-    const float WALK_SPEED_RATIO = 0.6f;   // the enemy walks at 60% of full speed
-    const float PREFERRED_GAP    = 45.0f;  // how close it likes to stand (empty space between bodies)
+    const float WALK_SPEED_RATIO    = 0.6f;   // approaching: 60% of full walking speed
+    const float RETREAT_SPEED_RATIO = 0.4f;   // backing away: slower still
 
-    // Attacking
-    const float FIRST_ATTACK_DELAY = 1.5f; // breathing room at the start of the fight
-    const float REACTION_TIME      = 0.5f; // after arriving next to you, it waits this long
-    const float MIN_COOLDOWN       = 1.2f; // wait between attacks: a random time in this range
-    const float MAX_COOLDOWN       = 2.4f;
+    // Spacing: the distance (empty space between bodies) it likes to fight at.
+    // A new random value in this range is picked after every attack.
+    const float MIN_SPACING   = 30.0f;
+    const float MAX_SPACING   = 62.0f;
+    const float SPACING_BAND  = 4.0f;         // closer than (spacing - band) => back away a little
+
+    // Timing
+    const float FIRST_ATTACK_DELAY = 1.5f;    // breathing room at the start of the fight
+    const float ARRIVAL_PAUSE      = 0.3f;    // short pause after walking up to you
+    const int   HESITATION_PERCENT = 25;      // chance of "second thoughts" before an attack
+
+    // Attacks only count as "in range" if the gap is a little SHORTER than their reach.
+    const float REACH_MARGIN = 5.0f;
 
     // A random number from 0.0 up to 1.0
     float randomFraction() {
         return (std::rand() % 1000) / 1000.0f;
     }
+
+    bool isInTheAir(const Fighter& f) {
+        return f.getState() == FighterState::JUMP || f.getState() == FighterState::FALL;
+    }
 }
 
 Enemy::Enemy(float startX, float startY)
     : Fighter(startX, startY, 50.0f, 100.0f),
-      aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY) {
+      aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY),
+      preferredGap(45.0f), lastAttack(AttackChoice::NONE) {
     setColor(0.95f, 0.55f, 0.20f);   // orange, so it's easy to tell apart from the player
     setFacingRight(false);           // starts out facing left, toward the player
 }
 
-void Enemy::startRandomAttack() {
-    int roll = std::rand() % 100;    // 0..99
+void Enemy::pickNewSpacing() {
+    preferredGap = MIN_SPACING + randomFraction() * (MAX_SPACING - MIN_SPACING);
+}
 
-    if (roll < 10 && getEnergy() >= Attacks::SPECIAL.energyCost) {
-        startSpecial();              // 10% of the time, if it has the energy
-    } else if (roll < 45) {
-        startKick();                 // 35%
-    } else {
-        startPunch();                // the rest: about 55%
+// Time to wait after an attack. Sometimes short (a quick follow-up), usually
+// medium, sometimes long (a slow, hesitant enemy). The player can't rely on a rhythm.
+float Enemy::randomCooldown() const {
+    int roll = std::rand() % 100;
+    if (roll < 25) return 0.3f + randomFraction() * 0.3f;   // 25%: quick follow-up
+    if (roll < 75) return 1.0f + randomFraction() * 1.0f;   // 50%: normal
+    return 2.2f + randomFraction() * 1.0f;                  // 25%: slow
+}
+
+// Pick an attack that makes sense RIGHT NOW (or NONE if nothing is worth trying).
+Enemy::AttackChoice Enemy::chooseAttack(const Fighter& target, float gap) const {
+    // Swinging at someone who is jumping is mostly wasted: wait for them to land.
+    if (isInTheAir(target)) return AttackChoice::NONE;
+
+    // Each attack is only an option if the target is within its reach.
+    int punchWeight   = 0;
+    int kickWeight    = 0;
+    int specialWeight = 0;
+    if (gap < Attacks::PUNCH.reach - REACH_MARGIN) punchWeight = 50;
+    if (gap < Attacks::KICK.reach  - REACH_MARGIN) kickWeight  = 35;
+    if (gap < Attacks::SPECIAL.reach - REACH_MARGIN &&
+        getEnergy() >= Attacks::SPECIAL.energyCost) specialWeight = 15;
+
+    // A punch flies over the head of a crouching player: use kicks instead.
+    if (target.getState() == FighterState::CROUCH) {
+        punchWeight = 0;
+        kickWeight *= 2;
     }
+
+    // Avoid doing the same thing twice in a row (it only gets 40% of its normal chance).
+    if (lastAttack == AttackChoice::PUNCH)   punchWeight   = punchWeight   * 4 / 10;
+    if (lastAttack == AttackChoice::KICK)    kickWeight    = kickWeight    * 4 / 10;
+    if (lastAttack == AttackChoice::SPECIAL) specialWeight = specialWeight * 4 / 10;
+
+    int total = punchWeight + kickWeight + specialWeight;
+    if (total <= 0) return AttackChoice::NONE;
+
+    // Weighted dice roll: bigger weight = bigger slice of the 0..total range.
+    int roll = std::rand() % total;
+    if (roll < punchWeight) return AttackChoice::PUNCH;
+    roll -= punchWeight;
+    if (roll < kickWeight)  return AttackChoice::KICK;
+    return AttackChoice::SPECIAL;
 }
 
 void Enemy::update(const Fighter& target, float deltaTime) {
@@ -66,23 +116,53 @@ void Enemy::update(const Fighter& target, float deltaTime) {
         aiState = AIState::HIT;                  // stunned: wait for the body to recover
     } else if (isAttacking()) {
         aiState = AIState::ATTACK;               // mid-swing: let it finish
-    } else if (gap > PREFERRED_GAP) {
-        aiState = AIState::APPROACH;             // too far: walk closer
-        walkDirection = directionToTarget * WALK_SPEED_RATIO;
-        if (attackCooldown < REACTION_TIME) attackCooldown = REACTION_TIME;   // short pause on arrival
-    } else if (attackCooldown <= 0.0f) {
-        startRandomAttack();                     // close enough and ready: attack!
-        if (isAttacking()) {
-            aiState = AIState::ATTACK;
-            attackCooldown = MIN_COOLDOWN + randomFraction() * (MAX_COOLDOWN - MIN_COOLDOWN);
-        } else {
-            aiState = AIState::IDLE;             // couldn't start one (e.g. still landing): try next frame
-        }
     } else {
-        aiState = AIState::IDLE;                 // close enough, waiting for the cooldown
+        bool attackedThisFrame = false;
+
+        // 1) Is it time to attack?
+        if (attackCooldown <= 0.0f) {
+            AttackChoice choice = chooseAttack(target, gap);
+
+            if (choice == AttackChoice::NONE) {
+                // Nothing in reach. If the target is on the ground, decide to stand closer.
+                if (!isInTheAir(target)) preferredGap = MIN_SPACING + randomFraction() * 15.0f;
+            } else if (std::rand() % 100 < HESITATION_PERCENT) {
+                attackCooldown = 0.2f + randomFraction() * 0.4f;   // second thoughts: wait a bit more
+            } else {
+                if (choice == AttackChoice::PUNCH)   startPunch();
+                if (choice == AttackChoice::KICK)    startKick();
+                if (choice == AttackChoice::SPECIAL) startSpecial();
+
+                if (isAttacking()) {                 // (starting can fail, e.g. while still landing)
+                    aiState = AIState::ATTACK;
+                    lastAttack = choice;
+                    attackCooldown = randomCooldown();
+                    pickNewSpacing();                // next fight position will be different
+                    attackedThisFrame = true;
+                }
+            }
+        }
+
+        // 2) Otherwise, adjust the distance to wherever it wants to stand.
+        if (!attackedThisFrame) {
+            if (gap > preferredGap) {
+                aiState = AIState::APPROACH;
+                walkDirection = directionToTarget * WALK_SPEED_RATIO;
+                if (attackCooldown < ARRIVAL_PAUSE) attackCooldown = ARRIVAL_PAUSE;
+            } else if (gap < preferredGap - SPACING_BAND) {
+                aiState = AIState::RETREAT;
+                walkDirection = -directionToTarget * RETREAT_SPEED_RATIO;
+            } else {
+                aiState = AIState::IDLE;
+            }
+        }
     }
 
     moveHorizontal(walkDirection, deltaTime);
+
+    // Walking backwards turns the body around, so look at the target again.
+    if (canAct()) setFacingRight(directionToTarget > 0.0f);
+
     applyPhysics(deltaTime);
     updateState(deltaTime);
 }
@@ -95,6 +175,7 @@ const char* Enemy::getAIStateName() const {
     switch (aiState) {
         case AIState::IDLE:     return "IDLE";
         case AIState::APPROACH: return "APPROACH";
+        case AIState::RETREAT:  return "RETREAT";
         case AIState::ATTACK:   return "ATTACK";
         case AIState::HIT:      return "HIT";
         case AIState::DEAD:     return "DEAD";
