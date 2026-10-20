@@ -96,6 +96,7 @@ void Fighter::setBlocking(bool wantsToBlock) {
 void Fighter::startAttack(FighterState attackState) {
     const AttackData* data = attackDataFor(attackState);
     if (data == nullptr) return;
+    if (isDead()) return;      // the dead don't fight
 
     // only from a calm, grounded state (not crouching, not mid-air, not already attacking)
     if (state != FighterState::IDLE && state != FighterState::WALK) return;
@@ -162,7 +163,9 @@ void Fighter::updateState(float deltaTime) {
     const AttackData* attack = getCurrentAttack();
     FighterState newState;
 
-    if (state == FighterState::HIT && stateTime < hitStunDuration) {
+    if (isDead()) {
+        newState = FighterState::DEAD;    // out of health: nothing else matters
+    } else if (state == FighterState::HIT && stateTime < hitStunDuration) {
         newState = FighterState::HIT;     // still stunned: nothing else can happen yet
     } else if (attack != nullptr && stateTime < attack->totalTime()) {
         newState = state;                 // attack still in progress: nothing interrupts it
@@ -227,6 +230,8 @@ void Fighter::onAttackConnected() {
 }
 
 void Fighter::receiveHit(const AttackData& attack, float pushDirection) {
+    if (isDead()) return;      // can't hit someone who is already down
+
     // Where is the attacker? If we are pushed to the right (+1), it hit us from the left.
     bool attackerIsOnRight = (pushDirection < 0.0f);
     bool facingAttacker = (attackerIsOnRight == facingRight);
@@ -243,6 +248,17 @@ void Fighter::receiveHit(const AttackData& attack, float pushDirection) {
     }
 
     takeDamage(attack.damage);
+
+    // The killing blow: fall over instead of just being stunned.
+    if (isDead()) {
+        state = FighterState::DEAD;
+        stateTime = 0.0f;
+        knockbackVelocityX = pushDirection * attack.knockbackSpeed;
+        crouching = false;
+        blocking = false;
+        height = standingHeight;
+        return;
+    }
 
     // Being hit interrupts whatever we were doing, even an attack in progress.
     state = FighterState::HIT;
@@ -294,7 +310,8 @@ bool Fighter::isInvulnerable() const {
 }
 
 bool Fighter::canAct() const {
-    return !isAttacking() && state != FighterState::HIT;
+    return !isAttacking() && state != FighterState::HIT &&
+           state != FighterState::DEAD && !isDead();
 }
 
 bool Fighter::isAttacking() const {
@@ -326,6 +343,7 @@ const char* Fighter::getStateName() const {
         case FighterState::KICK:    return "KICK";
         case FighterState::SPECIAL: return "SPECIAL";
         case FighterState::HIT:     return "HIT";
+        case FighterState::DEAD:    return "DEAD";
     }
     return "UNKNOWN";
 }
@@ -342,8 +360,10 @@ void Fighter::draw(const Renderer& renderer) const {
         bodyR = 0.6f; bodyG = 0.9f; bodyB = 1.0f;
     }
 
-    // blink (darker, then normal, then darker...) while protected from hits
-    if (isInvulnerable() && ((int)(invulnerableTimer / BLINK_INTERVAL) % 2 == 0)) {
+    if (state == FighterState::DEAD) {
+        bodyR *= 0.4f; bodyG *= 0.4f; bodyB *= 0.4f;      // a dark, lifeless body
+    } else if (isInvulnerable() && ((int)(invulnerableTimer / BLINK_INTERVAL) % 2 == 0)) {
+        // blink (darker, then normal, then darker...) while protected from hits
         bodyR *= 0.45f; bodyG *= 0.45f; bodyB *= 0.45f;
     }
 
@@ -354,11 +374,13 @@ void Fighter::draw(const Renderer& renderer) const {
     float drawY = y + pose.offsetY;
     renderer.drawRect(drawX, drawY, drawW, drawH, bodyR, bodyG, bodyB);
 
-    // small dark "eye" on the front so we can see which way we're facing
-    const float eyeSize = 10.0f;
-    float eyeX = facingRight ? (drawX + drawW - eyeSize - 4.0f) : (drawX + 4.0f);
-    float eyeY = drawY + drawH - eyeSize - 8.0f;
-    renderer.drawRect(eyeX, eyeY, eyeSize, eyeSize, 0.1f, 0.1f, 0.1f);
+    // small dark "eye" on the front so we can see which way we're facing (not when dead)
+    if (state != FighterState::DEAD) {
+        const float eyeSize = 10.0f;
+        float eyeX = facingRight ? (drawX + drawW - eyeSize - 4.0f) : (drawX + 4.0f);
+        float eyeY = drawY + drawH - eyeSize - 8.0f;
+        renderer.drawRect(eyeX, eyeY, eyeSize, eyeSize, 0.1f, 0.1f, 0.1f);
+    }
 
     // guard: a blue shield bar in front of the body, which flashes bright when it absorbs a hit
     if (state == FighterState::BLOCK) {

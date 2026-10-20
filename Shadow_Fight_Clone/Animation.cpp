@@ -52,6 +52,15 @@ Pose getPose(FighterState state, float stateTime) {
             pose.scaleX = 1.08f;   // squashed by the impact
             pose.scaleY = 0.92f;
             break;
+
+        case FighterState::DEAD: {
+            // fall over in half a second: the body gets wide and flat, and stays that way
+            float t = stateTime / 0.5f;
+            if (t > 1.0f) t = 1.0f;
+            pose.scaleX = 1.0f + 1.0f * t;     // up to twice as wide
+            pose.scaleY = 1.0f - 0.75f * t;    // down to a quarter of the height
+            break;
+        }
     }
 
     return pose;

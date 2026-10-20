@@ -17,7 +17,8 @@ enum class FighterState {
     PUNCH,
     KICK,
     SPECIAL,  // the big, energy-powered attack
-    HIT       // stunned after being hit
+    HIT,      // stunned after being hit
+    DEAD      // out of health: lying on the ground, can't do anything
 };
 
 // Every attack goes through these three phases, in order.
@@ -78,7 +79,7 @@ public:
     float getMaxEnergy() const;
 
     bool         isInvulnerable() const;   // true for a short time after recovering from a hit
-    bool         canAct() const;           // false while attacking or stunned
+    bool         canAct() const;           // false while attacking, stunned or dead
     bool         isAttacking() const;
     AttackPhase  getAttackPhase() const;
     FighterState getState() const;
