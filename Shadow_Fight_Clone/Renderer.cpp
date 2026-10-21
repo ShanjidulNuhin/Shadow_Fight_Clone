@@ -57,6 +57,31 @@ void Renderer::drawRectOutline(float x, float y, float width, float height,
     glEnd();
 }
 
+void Renderer::drawTextCentered(float centerX, float y, const char* text,
+                                float r, float g, float b, bool large) const {
+    void* font = large ? GLUT_BITMAP_TIMES_ROMAN_24 : GLUT_BITMAP_HELVETICA_18;
+    int textWidth = glutBitmapLength(font, (const unsigned char*)text);
+
+    glColor3f(r, g, b);
+    glRasterPos2f(centerX - textWidth / 2.0f, y);
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(font, *c);
+    }
+}
+
+void Renderer::drawOverlay(float r, float g, float b, float alpha) const {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(r, g, b, alpha);
+    glBegin(GL_QUADS);
+        glVertex2f(0,                  0);
+        glVertex2f((float)worldW,      0);
+        glVertex2f((float)worldW,      (float)worldH);
+        glVertex2f(0,                  (float)worldH);
+    glEnd();
+    glDisable(GL_BLEND);
+}
+
 void Renderer::drawText(float x, float y, const char* text,
                         float r, float g, float b) const {
     glColor3f(r, g, b);

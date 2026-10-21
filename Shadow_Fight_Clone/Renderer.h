@@ -27,6 +27,13 @@ public:
     void drawText(float x, float y, const char* text,
                   float r, float g, float b) const;
 
+    // Text centred horizontally on centerX. large = a bigger font for titles.
+    void drawTextCentered(float centerX, float y, const char* text,
+                          float r, float g, float b, bool large) const;
+
+    // A see-through colour laid over the whole screen (to dim the scene behind a menu).
+    void drawOverlay(float r, float g, float b, float alpha) const;
+
 private:
     int worldW;
     int worldH;

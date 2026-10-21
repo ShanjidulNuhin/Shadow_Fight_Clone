@@ -52,12 +52,16 @@
 		<Unit filename="Enemy.h" />
 		<Unit filename="Fighter.cpp" />
 		<Unit filename="Fighter.h" />
+		<Unit filename="Game.cpp" />
+		<Unit filename="Game.h" />
 		<Unit filename="InputManager.cpp" />
 		<Unit filename="InputManager.h" />
 		<Unit filename="Player.cpp" />
 		<Unit filename="Player.h" />
 		<Unit filename="Renderer.cpp" />
 		<Unit filename="Renderer.h" />
+		<Unit filename="UI.cpp" />
+		<Unit filename="UI.h" />
 		<Unit filename="main.cpp" />
 		<Extensions />
 	</Project>
