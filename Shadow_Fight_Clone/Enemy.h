@@ -3,29 +3,25 @@
 
 #include "Fighter.h"
 
-// What the enemy's brain is currently trying to do.
-// (This is separate from FighterState, which is what the BODY is doing.)
 enum class AIState {
-    IDLE,       // waiting for its next move
-    APPROACH,   // walking toward the player
-    RETREAT,    // backing away to get some space
-    DEFEND,     // holding its guard up
-    ATTACK,     // swinging an attack
-    HIT,        // stunned: the brain waits until the body recovers
-    DEAD        // out of health: does nothing
+    IDLE,
+    APPROACH,
+    RETREAT,
+    DEFEND,
+    JUMP,
+    ATTACK,
+    HIT,
+    DEAD
 };
 
-// The computer-controlled opponent. It is a Fighter, so it moves, jumps, attacks,
-// blocks and takes hits exactly like the Player does. Enemy only adds the "brain".
 class Enemy : public Fighter {
 public:
     Enemy(float startX, float startY);
 
-    // Decide what to do this frame (looking at the target), then move and update.
     void update(const Fighter& target, float deltaTime);
 
     AIState     getAIState() const;
-    const char* getAIStateName() const;   // e.g. "APPROACH", handy for debugging
+    const char* getAIStateName() const;
 
 private:
     enum class AttackChoice { NONE, PUNCH, KICK, SPECIAL };
@@ -36,15 +32,19 @@ private:
     void         watchForAttacks(const Fighter& target, float gap, float deltaTime);
 
     AIState      aiState;
-    float        attackCooldown;   // seconds until the enemy may attack again
-    float        preferredGap;     // the distance it wants to stand at right now (changes often)
-    AttackChoice lastAttack;       // what it did last time (so it can avoid repeating itself)
+    float        attackCooldown;
+    float        preferredGap;
+    AttackChoice lastAttack;
 
+    // jumping
+    bool  dodgePending;
+    float dodgeTimer;
+    float airDrift;
     // defending
-    bool  targetWasAttacking;  // was the target attacking last frame? (to notice a NEW attack)
-    bool  guardPending;        // decided to defend, but still "reacting"
-    float reactionTimer;       // time left before the guard goes up
-    float guardTimer;          // time left holding the guard up
+    bool  targetWasAttacking;
+    bool  guardPending;
+    float reactionTimer;
+    float guardTimer;
 };
 
 #endif
