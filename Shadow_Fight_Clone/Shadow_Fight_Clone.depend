@@ -1,16 +1,11 @@
 # depslib dependency file v1.0
-1792546570 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
+1792608564 source:e:\c++\shadow_fight_clone\shadow_fight_clone\main.cpp
 	<GL/glut.h>
 	<cstdlib>
 	<cstdio>
 	<ctime>
 	"Config.h"
-	"Collision.h"
-	"CombatSystem.h"
-	"InputManager.h"
-	"Renderer.h"
-	"Player.h"
-	"Enemy.h"
+	"Game.h"
 
 1792132382 source:e:\c++\shadow_fight_clone\shadow_fight_clone\inputmanager.cpp
 	"InputManager.h"
@@ -18,7 +13,7 @@
 
 1792132381 e:\c++\shadow_fight_clone\shadow_fight_clone\inputmanager.h
 
-1792149834 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
+1792608552 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
 	"Renderer.h"
 	<windows.h>
 	<GL/glut.h>
@@ -35,7 +30,7 @@
 	"Collision.h"
 	"AttackData.h"
 
-1792133273 e:\c++\shadow_fight_clone\shadow_fight_clone\config.h
+1792732272 e:\c++\shadow_fight_clone\shadow_fight_clone\config.h
 
 1792133079 e:\c++\shadow_fight_clone\shadow_fight_clone\player.h
 	"Fighter.h"
@@ -73,4 +68,14 @@
 
 1792547375 e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.h
 	"Fighter.h"
+
+1792732312 e:\c++\shadow_fight_clone\shadow_fight_clone\game.h
+	"InputManager.h"
+	"Renderer.h"
+	"UI.h"
+	"Player.h"
+	"Enemy.h"
+
+1792732283 e:\c++\shadow_fight_clone\shadow_fight_clone\ui.h
+	"Renderer.h"
 

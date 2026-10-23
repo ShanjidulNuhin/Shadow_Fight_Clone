@@ -10,6 +10,9 @@ namespace Config {
     // Physics (units: pixels and seconds; +y is UP, so gravity is negative)
     const float GRAVITY    = -2000.0f;   // pixels per second, per second
     const float JUMP_SPEED = 750.0f;     // upward speed at the moment of the jump
+
+    // Match rules
+    const int   ROUNDS_TO_WIN = 2;       // first to win this many rounds wins the match (best of 3)
 }
 
 #endif
