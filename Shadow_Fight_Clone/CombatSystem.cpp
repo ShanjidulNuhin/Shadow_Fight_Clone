@@ -1,11 +1,13 @@
 #include "CombatSystem.h"
 #include "Fighter.h"
 #include "Collision.h"
+#include "Effects.h"
 #include <cmath>
+#include <algorithm>
 
 namespace CombatSystem {
 
-bool resolveAttack(Fighter& attacker, Fighter& defender) {
+bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
     if (defender.isDead()) return false;
     if (defender.isInvulnerable()) return false;
     Rect hitbox;
@@ -22,7 +24,31 @@ bool resolveAttack(Fighter& attacker, Fighter& defender) {
     float defenderCenter = defenderBody.x + defenderBody.width / 2.0f;
     float pushDirection = (defenderCenter > attackerCenter) ? 1.0f : -1.0f;
 
+    // Calculate exact impact coordinate
+    float hitX = (hitbox.x + hitbox.width * 0.5f + defenderBody.x + defenderBody.width * 0.5f) * 0.5f;
+    float overlapYMin = std::max(hitbox.y, defenderBody.y);
+    float overlapYMax = std::min(hitbox.y + hitbox.height, defenderBody.y + defenderBody.height);
+    float hitY = (overlapYMin + overlapYMax) * 0.5f;
+
+    bool wasBlocking = (defender.getState() == FighterState::BLOCK) && attack->blockable;
+
     defender.receiveHit(*attack, pushDirection);
+
+    // Determine visual spark style
+    if (effects != nullptr) {
+        SparkStyle style = SparkStyle::PUNCH;
+        if (defender.isDead()) {
+            style = SparkStyle::KO;
+        } else if (wasBlocking) {
+            style = SparkStyle::BLOCK;
+        } else if (attack == &Attacks::KICK) {
+            style = SparkStyle::KICK;
+        } else if (attack == &Attacks::SPECIAL) {
+            style = SparkStyle::SPECIAL;
+        }
+
+        effects->triggerHit(hitX, hitY, pushDirection, style);
+    }
 
     attacker.onAttackConnected();
     return true;
@@ -69,4 +95,4 @@ void separateFighters(Fighter& a, float aXBefore, Fighter& b, float bXBefore) {
     }
 }
 
-}
+} // namespace CombatSystem

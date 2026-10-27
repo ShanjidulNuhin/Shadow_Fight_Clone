@@ -35,6 +35,17 @@ void Renderer::endFrame() {
     glutSwapBuffers();
 }
 
+void Renderer::setCameraOffset(float offsetX, float offsetY) {
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(offsetX, offsetY, 0.0f);
+}
+
+void Renderer::resetCamera() {
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
 void Renderer::drawRect(float x, float y, float width, float height,
                         float r, float g, float b) const {
     glColor3f(r, g, b);
@@ -87,6 +98,31 @@ void Renderer::drawGradientRect(float x, float y, float width, float height,
         glVertex2f(x + width, y);
         glColor4f(rTop, gTop, bTop, aTop);
         glVertex2f(x + width, y + height);
+        glVertex2f(x,         y + height);
+    glEnd();
+
+    if (hasAlpha) {
+        glDisable(GL_BLEND);
+    }
+}
+
+void Renderer::drawGradientRectH(float x, float y, float width, float height,
+                                 float rLeft, float gLeft, float bLeft, float aLeft,
+                                 float rRight, float gRight, float bRight, float aRight) const {
+    bool hasAlpha = (aLeft < 0.999f || aRight < 0.999f);
+    if (hasAlpha) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    glBegin(GL_QUADS);
+        glColor4f(rLeft, gLeft, bLeft, aLeft);
+        glVertex2f(x,         y);
+        glColor4f(rRight, gRight, bRight, aRight);
+        glVertex2f(x + width, y);
+        glColor4f(rRight, gRight, bRight, aRight);
+        glVertex2f(x + width, y + height);
+        glColor4f(rLeft, gLeft, bLeft, aLeft);
         glVertex2f(x,         y + height);
     glEnd();
 

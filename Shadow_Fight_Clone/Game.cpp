@@ -23,6 +23,7 @@ Game::Game()
       renderer(Config::WORLD_WIDTH, Config::WORLD_HEIGHT),
       ui(renderer),
       background(),
+      effects(),
       player(PLAYER_START_X, Config::GROUND_HEIGHT),
       enemy(ENEMY_START_X, Config::GROUND_HEIGHT),
       state(GameState::MENU),
@@ -52,6 +53,8 @@ void Game::startRound() {
     player = Player(PLAYER_START_X, Config::GROUND_HEIGHT);
     enemy  = Enemy(ENEMY_START_X, Config::GROUND_HEIGHT);
 
+    effects.reset();
+
     roundResult     = RoundResult::NONE;
     roundIntroTimer = ROUND_INTRO_TIME;
     roundOverTimer  = 0.0f;
@@ -77,8 +80,9 @@ void Game::endRound() {
 }
 
 void Game::update(float deltaTime) {
-    // Always advance ambient background animations (mist drift, star twinkle, flame flicker)
+    // Always advance ambient background and active visual effects
     background.update(deltaTime);
+    effects.update(deltaTime);
 
     // Only the fight and the K.O. moment advance combat. In the menu, while paused and on the
     // game-over screen, gameplay simulation is frozen.
@@ -107,9 +111,9 @@ void Game::updateFight(float deltaTime) {
     // Solid bodies: fighters can't walk through each other (jump over instead!).
     CombatSystem::separateFighters(player, playerXBefore, enemy, enemyXBefore);
 
-    // Did either fighter's attack land on the other?
-    CombatSystem::resolveAttack(player, enemy);
-    CombatSystem::resolveAttack(enemy, player);
+    // Did either fighter's attack land on the other? Triggers hit sparks & screen shake
+    CombatSystem::resolveAttack(player, enemy, &effects);
+    CombatSystem::resolveAttack(enemy, player, &effects);
 
     // Did that hit knock someone out?
     if (player.isDead() || enemy.isDead()) {
@@ -142,7 +146,7 @@ void Game::drawScene() {
     // 1. Cinematic arena environment: moonlit sky, mountains, silhouettes, mist & stone floor
     background.draw(renderer);
 
-    // 2. Fighters
+    // 2. Silhouette Fighters
     player.draw(renderer);
     enemy.draw(renderer);
 
@@ -156,8 +160,22 @@ void Game::drawScene() {
 void Game::draw() {
     renderer.beginFrame();
 
+    // 1. Apply multi-axis screen shake to the world camera
+    renderer.setCameraOffset(effects.getShakeX(), effects.getShakeY());
+
+    // 2. Draw background and fighters in world coordinates
     drawScene();
 
+    // 3. Draw particles, sparks, dust, and shockwaves in world coordinates
+    effects.drawParticles(renderer);
+
+    // 4. Reset camera offset for HUD and vignette
+    renderer.resetCamera();
+
+    // 5. Draw cinematic corner vignette
+    effects.drawVignette(renderer);
+
+    // 6. Draw UI / HUD on top (always crisp, stable and unshakeable)
     switch (state) {
         case GameState::MENU:
             ui.drawMenu();

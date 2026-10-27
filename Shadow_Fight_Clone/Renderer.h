@@ -16,6 +16,10 @@ public:
     void beginFrame();                     // clear the screen
     void endFrame();                       // show what was drawn
 
+    // Camera / screen offset for cinematic screen shake
+    void setCameraOffset(float offsetX, float offsetY);
+    void resetCamera();
+
     void drawRect(float x, float y, float width, float height,
                   float r, float g, float b) const;
 
@@ -31,6 +35,11 @@ public:
     void drawGradientRect(float x, float y, float width, float height,
                           float rBottom, float gBottom, float bBottom, float aBottom,
                           float rTop, float gTop, float bTop, float aTop) const;
+
+    // Horizontal gradient rectangle (left to right)
+    void drawGradientRectH(float x, float y, float width, float height,
+                           float rLeft, float gLeft, float bLeft, float aLeft,
+                           float rRight, float gRight, float bRight, float aRight) const;
 
     // Filled circle (used for moon, halos, lantern glow, particles, joints)
     void drawCircle(float cx, float cy, float radius,

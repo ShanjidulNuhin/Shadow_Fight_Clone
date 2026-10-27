@@ -13,13 +13,13 @@
 
 1792132381 e:\c++\shadow_fight_clone\shadow_fight_clone\inputmanager.h
 
-1793126386 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
+1793127491 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
 	"Renderer.h"
 	<windows.h>
 	<GL/glut.h>
 	<cmath>
 
-1793126358 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
+1793127468 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
 
 1793127081 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
@@ -56,13 +56,15 @@
 1792149795 source:e:\c++\shadow_fight_clone\shadow_fight_clone\collision.cpp
 	"Collision.h"
 
-1792545868 e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.h
+1793127559 e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.h
 
-1792545950 source:e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
+1793127577 source:e:\c++\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
 	"CombatSystem.h"
 	"Fighter.h"
 	"Collision.h"
+	"Effects.h"
 	<cmath>
+	<algorithm>
 
 1792545031 e:\c++\shadow_fight_clone\shadow_fight_clone\attackdata.h
 
@@ -74,13 +76,14 @@
 1792547375 e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.h
 	"Fighter.h"
 
-1793125855 e:\c++\shadow_fight_clone\shadow_fight_clone\game.h
+1793127593 e:\c++\shadow_fight_clone\shadow_fight_clone\game.h
 	"InputManager.h"
 	"Renderer.h"
 	"UI.h"
 	"Player.h"
 	"Enemy.h"
 	"Background.h"
+	"Effects.h"
 
 1792732283 e:\c++\shadow_fight_clone\shadow_fight_clone\ui.h
 	"Renderer.h"
@@ -93,7 +96,7 @@
 
 1793125591 e:\c++\shadow_fight_clone\shadow_fight_clone\background.h
 
-1793125891 source:e:\c++\shadow_fight_clone\shadow_fight_clone\game.cpp
+1793127622 source:e:\c++\shadow_fight_clone\shadow_fight_clone\game.cpp
 	"Game.h"
 	"CombatSystem.h"
 	"Config.h"
@@ -105,4 +108,15 @@
 	"Enemy.h"
 	"Config.h"
 	<cstdio>
+
+1793127455 e:\c++\shadow_fight_clone\shadow_fight_clone\effects.h
+	<vector>
+
+1793127543 source:e:\c++\shadow_fight_clone\shadow_fight_clone\effects.cpp
+	"Effects.h"
+	"Renderer.h"
+	"Config.h"
+	<cmath>
+	<cstdlib>
+	<algorithm>
 

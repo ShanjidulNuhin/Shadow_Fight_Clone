@@ -50,6 +50,8 @@
 		<Unit filename="CombatSystem.cpp" />
 		<Unit filename="CombatSystem.h" />
 		<Unit filename="Config.h" />
+		<Unit filename="Effects.cpp" />
+		<Unit filename="Effects.h" />
 		<Unit filename="Enemy.cpp" />
 		<Unit filename="Enemy.h" />
 		<Unit filename="Fighter.cpp" />

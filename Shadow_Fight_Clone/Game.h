@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Background.h"
+#include "Effects.h"
 
 // The screen the game is showing right now.
 enum class GameState {
@@ -55,6 +56,7 @@ private:
     Renderer     renderer;
     UI           ui;
     Background   background;
+    Effects      effects;
     Player       player;
     Enemy        enemy;
 
