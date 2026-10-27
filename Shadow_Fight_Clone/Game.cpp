@@ -22,6 +22,7 @@ Game::Game()
       noInput(),
       renderer(Config::WORLD_WIDTH, Config::WORLD_HEIGHT),
       ui(renderer),
+      background(),
       player(PLAYER_START_X, Config::GROUND_HEIGHT),
       enemy(ENEMY_START_X, Config::GROUND_HEIGHT),
       state(GameState::MENU),
@@ -76,8 +77,11 @@ void Game::endRound() {
 }
 
 void Game::update(float deltaTime) {
-    // Only the fight and the K.O. moment move. In the menu, while paused and on the
-    // game-over screen, everything is frozen.
+    // Always advance ambient background animations (mist drift, star twinkle, flame flicker)
+    background.update(deltaTime);
+
+    // Only the fight and the K.O. moment advance combat. In the menu, while paused and on the
+    // game-over screen, gameplay simulation is frozen.
     switch (state) {
         case GameState::FIGHT:      updateFight(deltaTime);     break;
         case GameState::ROUND_OVER: updateRoundOver(deltaTime); break;
@@ -135,13 +139,14 @@ void Game::updateRoundOver(float deltaTime) {
 }
 
 void Game::drawScene() {
-    // ground
-    renderer.drawRect(0, 0, Config::WORLD_WIDTH, Config::GROUND_HEIGHT,
-                      0.30f, 0.20f, 0.12f);
+    // 1. Cinematic arena environment: moonlit sky, mountains, silhouettes, mist & stone floor
+    background.draw(renderer);
 
+    // 2. Fighters
     player.draw(renderer);
     enemy.draw(renderer);
 
+    // 3. Optional debug bounding boxes
     if (showDebugBoxes && state != GameState::MENU) {
         ui.drawDebugBoxes(player);
         ui.drawDebugBoxes(enemy);

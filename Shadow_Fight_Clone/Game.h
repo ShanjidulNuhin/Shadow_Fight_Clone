@@ -6,6 +6,7 @@
 #include "UI.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Background.h"
 
 // The screen the game is showing right now.
 enum class GameState {
@@ -53,6 +54,7 @@ private:
     InputManager noInput;                 // never has a key pressed (used while the K.O. plays)
     Renderer     renderer;
     UI           ui;
+    Background   background;
     Player       player;
     Enemy        enemy;
 

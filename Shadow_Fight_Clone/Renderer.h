@@ -19,9 +19,42 @@ public:
     void drawRect(float x, float y, float width, float height,
                   float r, float g, float b) const;
 
+    // Semi-transparent rectangle
+    void drawRectAlpha(float x, float y, float width, float height,
+                       float r, float g, float b, float alpha) const;
+
     // Just the border of a rectangle (used for debug boxes).
     void drawRectOutline(float x, float y, float width, float height,
                          float r, float g, float b) const;
+
+    // Vertical gradient rectangle (bottom to top)
+    void drawGradientRect(float x, float y, float width, float height,
+                          float rBottom, float gBottom, float bBottom, float aBottom,
+                          float rTop, float gTop, float bTop, float aTop) const;
+
+    // Filled circle (used for moon, halos, lantern glow, particles, joints)
+    void drawCircle(float cx, float cy, float radius,
+                    float r, float g, float b, float alpha = 1.0f,
+                    int segments = 28) const;
+
+    // Outlined circle
+    void drawCircleOutline(float cx, float cy, float radius,
+                           float r, float g, float b, float alpha = 1.0f,
+                           float lineWidth = 1.5f, int segments = 28) const;
+
+    // Triangle (used for mountain peaks, roof eaves, and particles)
+    void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3,
+                      float r, float g, float b, float alpha = 1.0f) const;
+
+    // Arbitrary convex quad (used for mountain ridges, angled limbs, and trapezoids)
+    void drawQuad(float x1, float y1, float x2, float y2,
+                  float x3, float y3, float x4, float y4,
+                  float r, float g, float b, float alpha = 1.0f) const;
+
+    // 2D Line
+    void drawLine(float x1, float y1, float x2, float y2,
+                  float r, float g, float b, float alpha = 1.0f,
+                  float width = 1.0f) const;
 
     // (x, y) is the bottom-left of the first letter.
     void drawText(float x, float y, const char* text,
