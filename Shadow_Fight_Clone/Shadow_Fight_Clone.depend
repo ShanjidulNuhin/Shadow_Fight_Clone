@@ -13,21 +13,22 @@
 
 1792132381 e:\c++\shadow_fight_clone\shadow_fight_clone\inputmanager.h
 
-1793125741 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
+1793126386 source:e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.cpp
 	"Renderer.h"
 	<windows.h>
 	<GL/glut.h>
 	<cmath>
 
-1793125655 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
+1793126358 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
 
-1792547080 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1793126638 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
 	"Config.h"
+	<cmath>
 
-1792545397 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
+1793126441 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
 	"Collision.h"
 	"AttackData.h"
 
@@ -43,7 +44,7 @@
 1792134022 e:\c++\shadow_fight_clone\shadow_fight_clone\animation.h
 	"Fighter.h"
 
-1792324461 source:e:\c++\shadow_fight_clone\shadow_fight_clone\player.cpp
+1793126478 source:e:\c++\shadow_fight_clone\shadow_fight_clone\player.cpp
 	"Player.h"
 	"InputManager.h"
 
@@ -62,7 +63,7 @@
 
 1792545031 e:\c++\shadow_fight_clone\shadow_fight_clone\attackdata.h
 
-1792546443 source:e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.cpp
+1793126501 source:e:\c++\shadow_fight_clone\shadow_fight_clone\enemy.cpp
 	"Enemy.h"
 	<cmath>
 	<cstdlib>

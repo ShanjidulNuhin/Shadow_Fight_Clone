@@ -48,7 +48,8 @@ Enemy::Enemy(float startX, float startY)
       preferredGap(45.0f), lastAttack(AttackChoice::NONE),
       dodgePending(false), dodgeTimer(0.0f), airDrift(0.0f),
       targetWasAttacking(false), guardPending(false), reactionTimer(0.0f), guardTimer(0.0f) {
-    setColor(0.95f, 0.55f, 0.20f);
+    setColor(0.13f, 0.08f, 0.08f);
+    setAccentColor(0.95f, 0.45f, 0.15f);
     setFacingRight(false);
 }
 

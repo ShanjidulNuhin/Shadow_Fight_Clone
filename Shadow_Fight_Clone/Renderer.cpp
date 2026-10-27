@@ -204,6 +204,30 @@ void Renderer::drawLine(float x1, float y1, float x2, float y2,
     }
 }
 
+void Renderer::drawLimb(float x1, float y1, float x2, float y2,
+                        float r1, float r2,
+                        float r, float g, float b, float alpha) const {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float len = std::sqrt(dx * dx + dy * dy);
+    if (len < 0.001f) {
+        drawCircle(x1, y1, r1, r, g, b, alpha, 16);
+        return;
+    }
+
+    float nx = -dy / len;
+    float ny =  dx / len;
+
+    drawQuad(x1 + nx * r1, y1 + ny * r1,
+             x2 + nx * r2, y2 + ny * r2,
+             x2 - nx * r2, y2 - ny * r2,
+             x1 - nx * r1, y1 - ny * r1,
+             r, g, b, alpha);
+
+    drawCircle(x1, y1, r1, r, g, b, alpha, 16);
+    drawCircle(x2, y2, r2, r, g, b, alpha, 16);
+}
+
 void Renderer::drawTextCentered(float centerX, float y, const char* text,
                                 float r, float g, float b, bool large) const {
     void* font = large ? GLUT_BITMAP_TIMES_ROMAN_24 : GLUT_BITMAP_HELVETICA_18;

@@ -56,6 +56,11 @@ public:
                   float r, float g, float b, float alpha = 1.0f,
                   float width = 1.0f) const;
 
+    // Tapered rounded limb connecting (x1, y1) to (x2, y2) with radii r1 and r2
+    void drawLimb(float x1, float y1, float x2, float y2,
+                  float r1, float r2,
+                  float r, float g, float b, float alpha = 1.0f) const;
+
     // (x, y) is the bottom-left of the first letter.
     void drawText(float x, float y, const char* text,
                   float r, float g, float b) const;

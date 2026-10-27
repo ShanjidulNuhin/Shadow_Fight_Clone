@@ -43,6 +43,7 @@ public:
     void updateState(float deltaTime);
 
     void setColor(float r, float g, float b);
+    void setAccentColor(float r, float g, float b);
     void setFacingRight(bool faceRight);
     float pushHorizontally(float dx);
 
@@ -95,6 +96,7 @@ private:
     float blockFlashTimer;
     float invulnerableTimer;
     float colorR, colorG, colorB;
+    float accentR, accentG, accentB;
     int   health;
     int   maxHealth;
     float energy;

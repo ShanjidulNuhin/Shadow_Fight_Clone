@@ -3,6 +3,8 @@
 
 Player::Player(float startX, float startY)
     : Fighter(startX, startY, 50.0f, 100.0f) {
+    setColor(0.08f, 0.09f, 0.12f);       // Deep obsidian shadow silhouette
+    setAccentColor(0.25f, 0.85f, 0.95f); // Luminous cyan headband / eye
 }
 
 void Player::update(const InputManager& input, float deltaTime) {
