@@ -3,6 +3,7 @@
 #include "Animation.h"
 #include "Config.h"
 #include <cmath>
+#include <algorithm>
 
 namespace {
     const float CROUCH_HEIGHT_RATIO = 0.6f;
@@ -353,7 +354,7 @@ const char* Fighter::getStateName() const {
 }
 
 void Fighter::draw(const Renderer& renderer) const {
-    Pose pose = Animation::getPose(state, stateTime);
+    Pose pose = Animation::getPose(state, stateTime, getCurrentAttack(), hitStunDuration);
     AttackPhase phase = getAttackPhase();
 
     float bodyR = colorR, bodyG = colorG, bodyB = colorB;
@@ -392,38 +393,73 @@ void Fighter::draw(const Renderer& renderer) const {
     bool  drawEye    = (state != FighterState::DEAD);
 
     // =========================================================================
-    // JOINT SOLVER BASED ON MARTIAL-ARTS STANCE / STATE
+    // DYNAMIC JOINT SOLVER WITH CONTINUOUS PROCEDURAL ANIMATION
     // =========================================================================
     if (state == FighterState::DEAD) {
-        // Collapsed silhouette resting on the arena stone floor
-        headCenter = { cx + dir * 32.0f, drawY + 8.0f };
-        neck       = { cx + dir * 24.0f, drawY + 6.0f };
-        chest      = { cx + dir * 14.0f, drawY + 6.0f };
-        waist      = { cx,               drawY + 5.0f };
-        hips       = { cx - dir * 10.0f, drawY + 5.0f };
+        // Smooth dynamic ragdoll collapse: interpolates from standing to flat
+        float col = pose.collapse;
+        float invCol = 1.0f - col;
 
-        // Sprawled legs
+        headCenter = { cx + dir * (5.0f * invCol + 32.0f * col), drawY + 90.0f * invCol + 8.0f * col };
+        neck       = { cx + dir * (4.0f * invCol + 24.0f * col), drawY + 80.0f * invCol + 6.0f * col };
+        chest      = { cx + dir * (3.0f * invCol + 14.0f * col), drawY + 72.0f * invCol + 6.0f * col };
+        waist      = { cx + dir * (1.0f * invCol),               drawY + 54.0f * invCol + 5.0f * col };
+        hips       = { cx - dir * (10.0f * col),                 drawY + 46.0f * invCol + 5.0f * col };
+
+        // Front leg collapses
         hipF   = { hips.x + dir * 2.0f, hips.y };
-        kneeF  = { cx - dir * 22.0f, drawY + 4.0f };
-        ankleF = { cx - dir * 34.0f, drawY + 3.0f };
-        toeF   = { cx - dir * 39.0f, drawY + 2.0f };
+        kneeF  = { cx + dir * (13.0f * invCol - 22.0f * col), drawY + 24.0f * invCol + 4.0f * col };
+        ankleF = { cx + dir * (15.0f * invCol - 34.0f * col), drawY + 3.0f };
+        toeF   = { ankleF.x + dir * (6.0f * invCol - 5.0f * col), ankleF.y - 1.0f };
 
+        // Back leg collapses
         hipB   = { hips.x - dir * 2.0f, hips.y };
-        kneeB  = { cx - dir * 18.0f, drawY + 6.0f };
-        ankleB = { cx - dir * 30.0f, drawY + 5.0f };
-        toeB   = { cx - dir * 35.0f, drawY + 4.0f };
+        kneeB  = { cx - dir * (8.0f * invCol + 18.0f * col),  drawY + 24.0f * invCol + 6.0f * col };
+        ankleB = { cx - dir * (14.0f * invCol + 30.0f * col), drawY + 3.0f * invCol + 5.0f * col };
+        toeB   = { ankleB.x - dir * 5.0f, ankleB.y - 1.0f };
 
-        // Limbs on floor
+        // Arms drop limp to the floor
         shoulderF = { chest.x + dir * 2.0f, chest.y };
-        elbowF    = { cx + dir * 8.0f,  drawY + 3.0f };
-        handF     = { cx,               drawY + 2.0f };
+        elbowF    = { cx + dir * (14.0f * invCol + 8.0f * col), drawY + 58.0f * invCol + 3.0f * col };
+        handF     = { cx + dir * (18.0f * invCol),              drawY + 68.0f * invCol + 2.0f * col };
 
         shoulderB = { chest.x - dir * 2.0f, chest.y };
-        elbowB    = { cx + dir * 18.0f, drawY + 7.0f };
-        handB     = { cx + dir * 26.0f, drawY + 7.0f };
+        elbowB    = { cx + dir * (-4.0f * invCol + 18.0f * col), drawY + 56.0f * invCol + 7.0f * col };
+        handB     = { cx + dir * (6.0f * invCol + 26.0f * col),  drawY + 64.0f * invCol + 7.0f * col };
+
+        if (col >= 0.85f) drawEye = false;
+
+    } else if (state == FighterState::WALK) {
+        // Continuous martial-arts stride cycle with swinging limbs & counter-sway
+        hips       = { cx + dir * pose.torsoLeanX * 0.4f, drawY + 46.0f + pose.offsetY };
+        waist      = { cx + dir * pose.torsoLeanX * 0.7f, drawY + 54.0f + pose.offsetY };
+        chest      = { cx + dir * pose.torsoLeanX,        drawY + 72.0f + pose.offsetY };
+        neck       = { chest.x + dir * 2.0f,              chest.y + 8.0f };
+        headCenter = { neck.x + dir * 1.5f,               neck.y + 10.0f };
+
+        // Front leg stride & lift
+        hipF   = { hips.x + dir * 4.0f, hips.y };
+        ankleF = { cx + dir * (15.0f + pose.strideLegF), drawY + 3.0f + pose.liftLegF };
+        toeF   = { ankleF.x + dir * 6.0f, ankleF.y - 1.0f };
+        kneeF  = { (hipF.x + ankleF.x) * 0.5f + dir * 4.0f, (hipF.y + ankleF.y) * 0.5f + pose.liftLegF * 0.6f };
+
+        // Back leg stride & lift (opposite phase)
+        hipB   = { hips.x - dir * 4.0f, hips.y };
+        ankleB = { cx + dir * (-14.0f + pose.strideLegB), drawY + 3.0f + pose.liftLegB };
+        toeB   = { ankleB.x + dir * 5.0f, ankleB.y - 1.0f };
+        kneeB  = { (hipB.x + ankleB.x) * 0.5f + dir * 3.0f, (hipB.y + ankleB.y) * 0.5f + pose.liftLegB * 0.6f };
+
+        // Arms swinging in rhythm with strides
+        shoulderF = { chest.x + dir * 4.0f, chest.y };
+        elbowF    = { cx + dir * (14.0f + pose.armSwingF * 0.6f), drawY + 58.0f + pose.offsetY };
+        handF     = { cx + dir * (18.0f + pose.armSwingF),        drawY + 68.0f + pose.offsetY };
+
+        shoulderB = { chest.x - dir * 3.0f, chest.y };
+        elbowB    = { cx + dir * (-4.0f + pose.armSwingB * 0.6f), drawY + 56.0f + pose.offsetY };
+        handB     = { cx + dir * (6.0f + pose.armSwingB),         drawY + 64.0f + pose.offsetY };
 
     } else if (state == FighterState::CROUCH) {
-        // Low crouching tiger martial-arts guard
+        // Deep crouching tiger martial-arts guard
         hips       = { cx - dir * 4.0f,  drawY + 22.0f };
         waist      = { cx,               drawY + 30.0f };
         chest      = { cx + dir * 8.0f,  drawY + 40.0f };
@@ -475,65 +511,70 @@ void Fighter::draw(const Renderer& renderer) const {
         handB     = { cx - dir * 16.0f, drawY + 50.0f };
 
     } else if (state == FighterState::BLOCK) {
-        // Reinforced crossed-forearm iron guard
-        hips       = { cx - dir * 3.0f, drawY + 44.0f };
-        waist      = { cx - dir * 2.0f, drawY + 52.0f };
-        chest      = { cx,              drawY + 70.0f };
-        neck       = { cx + dir * 1.0f, drawY + 77.0f };
-        headCenter = { cx + dir * 2.0f, drawY + 87.0f };
+        // Fluid transition into iron guard using blockBrace
+        float b = pose.blockBrace;
+        float invB = 1.0f - b;
+
+        hips       = { cx - dir * (3.0f * b),              drawY + 46.0f - 2.0f * b };
+        waist      = { cx + dir * (1.0f * invB - 2.0f * b), drawY + 54.0f - 2.0f * b };
+        chest      = { cx + dir * (3.0f * invB),           drawY + 72.0f - 2.0f * b };
+        neck       = { cx + dir * (4.0f * invB + 1.0f * b), drawY + 80.0f - 3.0f * b };
+        headCenter = { cx + dir * (5.0f * invB + 2.0f * b), drawY + 90.0f - 3.0f * b };
 
         hipF   = { hips.x + dir * 4.0f, hips.y };
-        kneeF  = { cx + dir * 12.0f, drawY + 22.0f };
-        ankleF = { cx + dir * 14.0f, drawY + 3.0f };
+        kneeF  = { cx + dir * (13.0f * invB + 12.0f * b), drawY + 24.0f - 2.0f * b };
+        ankleF = { cx + dir * (15.0f * invB + 14.0f * b), drawY + 3.0f };
         toeF   = { cx + dir * 20.0f, drawY + 2.0f };
 
         hipB   = { hips.x - dir * 4.0f, hips.y };
-        kneeB  = { cx - dir * 10.0f, drawY + 22.0f };
-        ankleB = { cx - dir * 16.0f, drawY + 3.0f };
+        kneeB  = { cx - dir * (8.0f * invB + 10.0f * b),  drawY + 24.0f - 2.0f * b };
+        ankleB = { cx - dir * (14.0f * invB + 16.0f * b), drawY + 3.0f };
         toeB   = { cx - dir * 10.0f, drawY + 2.0f };
 
+        // Crossed arms raised into guard
         shoulderF = { chest.x + dir * 3.0f, chest.y };
-        elbowF    = { cx + dir * 13.0f, drawY + 64.0f };
-        handF     = { cx + dir * 15.0f, drawY + 78.0f };
+        elbowF    = { cx + dir * (14.0f * invB + 13.0f * b), drawY + 58.0f * invB + 64.0f * b };
+        handF     = { cx + dir * (18.0f * invB + 15.0f * b), drawY + 68.0f * invB + 78.0f * b };
 
         shoulderB = { chest.x - dir * 2.0f, chest.y };
-        elbowB    = { cx + dir * 9.0f,  drawY + 60.0f };
-        handB     = { cx + dir * 11.0f, drawY + 76.0f };
+        elbowB    = { cx + dir * (-4.0f * invB + 9.0f * b), drawY + 56.0f * invB + 60.0f * b };
+        handB     = { cx + dir * (6.0f * invB + 11.0f * b), drawY + 64.0f * invB + 76.0f * b };
 
     } else if (state == FighterState::HIT) {
-        // Shockwave impact recoil
-        hips       = { cx - dir * 6.0f,  drawY + 44.0f };
-        waist      = { cx - dir * 9.0f,  drawY + 53.0f };
-        chest      = { cx - dir * 14.0f, drawY + 70.0f };
-        neck       = { cx - dir * 17.0f, drawY + 78.0f };
-        headCenter = { cx - dir * 20.0f, drawY + 87.0f };
+        // Shockwave impact recoil with damped harmonic recovery
+        hips       = { cx + dir * (pose.hitRecoilX * 0.4f), drawY + 44.0f };
+        waist      = { cx + dir * (pose.hitRecoilX * 0.7f), drawY + 53.0f };
+        chest      = { cx + dir * (pose.hitRecoilX + pose.torsoLeanX * 0.5f), drawY + 70.0f };
+        neck       = { chest.x - dir * 3.0f, chest.y + 8.0f };
+        headCenter = { neck.x - dir * 3.0f, neck.y + 9.0f };
 
         hipF   = { hips.x + dir * 4.0f, hips.y };
-        kneeF  = { cx + dir * 6.0f,  drawY + 20.0f };
+        kneeF  = { cx + dir * (6.0f + pose.hitRecoilX * 0.2f),  drawY + 20.0f };
         ankleF = { cx + dir * 10.0f, drawY + 3.0f };
         toeF   = { cx + dir * 16.0f, drawY + 2.0f };
 
         hipB   = { hips.x - dir * 4.0f, hips.y };
-        kneeB  = { cx - dir * 14.0f, drawY + 18.0f };
+        kneeB  = { cx - dir * (14.0f - pose.hitRecoilX * 0.2f), drawY + 18.0f };
         ankleB = { cx - dir * 18.0f, drawY + 3.0f };
         toeB   = { cx - dir * 12.0f, drawY + 2.0f };
 
         shoulderF = { chest.x + dir * 2.0f, chest.y };
-        elbowF    = { cx - dir * 2.0f,  drawY + 66.0f };
-        handF     = { cx + dir * 8.0f,  drawY + 64.0f };
+        elbowF    = { cx + dir * (2.0f + pose.hitRecoilX * 0.3f),  drawY + 66.0f };
+        handF     = { cx + dir * (8.0f + pose.hitRecoilX * 0.4f),  drawY + 64.0f };
 
         shoulderB = { chest.x - dir * 3.0f, chest.y };
-        elbowB    = { cx - dir * 20.0f, drawY + 62.0f };
-        handB     = { cx - dir * 26.0f, drawY + 54.0f };
+        elbowB    = { cx - dir * (18.0f - pose.hitRecoilX * 0.4f), drawY + 62.0f };
+        handB     = { cx - dir * (24.0f - pose.hitRecoilX * 0.5f), drawY + 54.0f };
 
     } else if (state == FighterState::PUNCH) {
-        // Driving martial-arts straight punch
-        hips       = { cx + dir * 2.0f,  drawY + 46.0f };
-        waist      = { cx + dir * 5.0f,  drawY + 54.0f };
-        chest      = { cx + dir * 9.0f,  drawY + 72.0f };
-        neck       = { cx + dir * 11.0f, drawY + 80.0f };
-        headCenter = { cx + dir * 13.0f, drawY + 90.0f };
+        // Dynamic continuous punch animation (windup -> snap -> recovery)
+        hips       = { cx + dir * (2.0f + pose.torsoLeanX * 0.3f), drawY + 46.0f };
+        waist      = { cx + dir * (5.0f + pose.torsoLeanX * 0.6f), drawY + 54.0f };
+        chest      = { cx + dir * (8.0f + pose.torsoLeanX),        drawY + 72.0f };
+        neck       = { chest.x + dir * 2.0f,                       chest.y + 8.0f };
+        headCenter = { neck.x + dir * 2.0f,                        neck.y + 10.0f };
 
+        // Front lunge legs
         hipF   = { hips.x + dir * 4.0f, hips.y };
         kneeF  = { cx + dir * 16.0f, drawY + 24.0f };
         ankleF = { cx + dir * 18.0f, drawY + 3.0f };
@@ -547,57 +588,71 @@ void Fighter::draw(const Renderer& renderer) const {
         shoulderF = { chest.x + dir * 4.0f, chest.y };
         shoulderB = { chest.x - dir * 4.0f, chest.y };
 
-        if (phase == AttackPhase::STARTUP) {
-            elbowF = { cx + dir * 8.0f,  drawY + 66.0f };
-            handF  = { cx + dir * 12.0f, drawY + 70.0f };
-        } else if (phase == AttackPhase::ACTIVE) {
-            float punchReach = Attacks::PUNCH.reach;
-            float punchY = drawY + Attacks::PUNCH.hitboxOffsetY + Attacks::PUNCH.hitboxHeight * 0.5f;
-            float targetHandX = (facingRight ? (drawX + drawW) : drawX) + dir * punchReach * 0.95f;
+        float maxReachHandX = (facingRight ? (drawX + drawW) : drawX) + dir * Attacks::PUNCH.reach * 0.95f;
+        float punchY        = drawY + Attacks::PUNCH.hitboxOffsetY + Attacks::PUNCH.hitboxHeight * 0.5f;
+        float readyHandX    = cx + dir * 18.0f;
+        float coiledHandX   = cx + dir * 6.0f;
 
-            elbowF = { (shoulderF.x + targetHandX) * 0.5f, punchY - 2.0f };
-            handF  = { targetHandX, punchY };
+        if (phase == AttackPhase::STARTUP) {
+            float t = pose.actionProgress;
+            handF  = { readyHandX * (1.0f - t) + coiledHandX * t, (drawY + 68.0f) * (1.0f - t) + punchY * t };
+            elbowF = { cx + dir * (14.0f * (1.0f - t) + 8.0f * t), drawY + (58.0f * (1.0f - t) + 64.0f * t) };
+        } else if (phase == AttackPhase::ACTIVE) {
+            float t = pose.actionProgress;
+            float snap = t * (2.0f - t); // snappy explosive thrust
+            handF  = { coiledHandX * (1.0f - snap) + maxReachHandX * snap, punchY };
+            elbowF = { (shoulderF.x + handF.x) * 0.5f, punchY - 2.0f * (1.0f - snap) };
         } else { // RECOVERY
-            elbowF = { cx + dir * 14.0f, drawY + 68.0f };
-            handF  = { cx + dir * 20.0f, drawY + 70.0f };
+            float t = pose.actionProgress;
+            handF  = { maxReachHandX * (1.0f - t) + readyHandX * t, punchY * (1.0f - t) + (drawY + 68.0f) * t };
+            elbowF = { (shoulderF.x + handF.x) * 0.5f, (punchY - 2.0f) * (1.0f - t) + (drawY + 58.0f) * t };
         }
 
-        // Back arm chambered tightly at ribcage
+        // Back arm tightly chambered
         elbowB = { cx - dir * 5.0f, drawY + 60.0f };
         handB  = { cx + dir * 2.0f, drawY + 62.0f };
 
     } else if (state == FighterState::KICK) {
-        // Snapping martial-arts kick
-        hips       = { cx,               drawY + 46.0f };
-        waist      = { cx - dir * 4.0f,  drawY + 54.0f };
-        chest      = { cx - dir * 10.0f, drawY + 70.0f };
-        neck       = { cx - dir * 12.0f, drawY + 78.0f };
-        headCenter = { cx - dir * 14.0f, drawY + 87.0f };
+        // Dynamic continuous kick animation (chamber -> snap -> whip-back)
+        hips       = { cx + dir * (pose.torsoLeanX * 0.2f), drawY + 46.0f };
+        waist      = { cx + dir * (pose.torsoLeanX * 0.5f), drawY + 54.0f };
+        chest      = { cx + dir * (pose.torsoLeanX),        drawY + 70.0f };
+        neck       = { chest.x - dir * 2.0f,                chest.y + 8.0f };
+        headCenter = { neck.x - dir * 2.0f,                 neck.y + 9.0f };
 
-        // Supporting leg (back leg planted)
+        // Supporting leg firmly rooted
         hipB   = { hips.x - dir * 4.0f, hips.y };
         kneeB  = { cx - dir * 6.0f,  drawY + 22.0f };
         ankleB = { cx - dir * 8.0f,  drawY + 3.0f };
         toeB   = { cx - dir * 3.0f,  drawY + 2.0f };
 
-        // Kicking leg (front leg)
+        // Kicking leg
         hipF = { hips.x + dir * 4.0f, hips.y };
-        if (phase == AttackPhase::STARTUP) {
-            kneeF  = { cx + dir * 12.0f, drawY + 48.0f };
-            ankleF = { cx + dir * 6.0f,  drawY + 36.0f };
-            toeF   = { cx + dir * 10.0f, drawY + 38.0f };
-        } else if (phase == AttackPhase::ACTIVE) {
-            float kickReach = Attacks::KICK.reach;
-            float kickY = drawY + Attacks::KICK.hitboxOffsetY + Attacks::KICK.hitboxHeight * 0.5f;
-            float targetFootX = (facingRight ? (drawX + drawW) : drawX) + dir * kickReach * 0.95f;
+        float maxReachFootX = (facingRight ? (drawX + drawW) : drawX) + dir * Attacks::KICK.reach * 0.95f;
+        float kickY         = drawY + Attacks::KICK.hitboxOffsetY + Attacks::KICK.hitboxHeight * 0.5f;
+        float readyFootX    = cx + dir * 15.0f;
+        float chamberFootX  = cx + dir * 8.0f;
+        float chamberFootY  = drawY + 36.0f;
+        float chamberKneeX  = cx + dir * 14.0f;
+        float chamberKneeY  = drawY + 46.0f;
 
-            kneeF  = { (hipF.x + targetFootX) * 0.50f, kickY + 6.0f };
-            ankleF = { targetFootX - dir * 4.0f, kickY };
-            toeF   = { targetFootX, kickY };
+        if (phase == AttackPhase::STARTUP) {
+            float t = pose.actionProgress;
+            float ease = t * t;
+            ankleF = { readyFootX * (1.0f - ease) + chamberFootX * ease, (drawY + 3.0f) * (1.0f - ease) + chamberFootY * ease };
+            kneeF  = { (cx + dir * 13.0f) * (1.0f - ease) + chamberKneeX * ease, (drawY + 24.0f) * (1.0f - ease) + chamberKneeY * ease };
+            toeF   = { ankleF.x + dir * 5.0f, ankleF.y + 2.0f * ease };
+        } else if (phase == AttackPhase::ACTIVE) {
+            float t = pose.actionProgress;
+            float snap = t * (2.0f - t); // explosive snap
+            ankleF = { chamberFootX * (1.0f - snap) + (maxReachFootX - dir * 4.0f) * snap, chamberFootY * (1.0f - snap) + kickY * snap };
+            kneeF  = { (hipF.x + ankleF.x) * 0.50f, chamberKneeY * (1.0f - snap) + (kickY + 6.0f) * snap };
+            toeF   = { ankleF.x + dir * 4.0f, ankleF.y };
         } else { // RECOVERY
-            kneeF  = { cx + dir * 14.0f, drawY + 36.0f };
-            ankleF = { cx + dir * 10.0f, drawY + 20.0f };
-            toeF   = { cx + dir * 15.0f, drawY + 18.0f };
+            float t = pose.actionProgress;
+            ankleF = { (maxReachFootX - dir * 4.0f) * (1.0f - t) + readyFootX * t, kickY * (1.0f - t) + (drawY + 3.0f) * t };
+            kneeF  = { (hipF.x + ankleF.x) * 0.50f + dir * 3.0f, (drawY + 30.0f) * (1.0f - t) + (drawY + 24.0f) * t };
+            toeF   = { ankleF.x + dir * 5.0f, ankleF.y - 1.0f };
         }
 
         shoulderF = { chest.x + dir * 3.0f, chest.y };
@@ -609,12 +664,12 @@ void Fighter::draw(const Renderer& renderer) const {
         handB     = { cx - dir * 20.0f, drawY + 52.0f };
 
     } else if (state == FighterState::SPECIAL) {
-        // Devastating powerhouse thrust
-        hips       = { cx + dir * 3.0f,  drawY + 46.0f };
-        waist      = { cx + dir * 6.0f,  drawY + 54.0f };
-        chest      = { cx + dir * 10.0f, drawY + 72.0f };
-        neck       = { cx + dir * 12.0f, drawY + 80.0f };
-        headCenter = { cx + dir * 14.0f, drawY + 90.0f };
+        // Continuous powerhouse special strike
+        hips       = { cx + dir * (3.0f + pose.torsoLeanX * 0.25f), drawY + 46.0f };
+        waist      = { cx + dir * (6.0f + pose.torsoLeanX * 0.5f),  drawY + 54.0f };
+        chest      = { cx + dir * (10.0f + pose.torsoLeanX),        drawY + 72.0f };
+        neck       = { chest.x + dir * 2.0f,                        chest.y + 8.0f };
+        headCenter = { neck.x + dir * 2.0f,                         neck.y + 10.0f };
 
         hipF   = { hips.x + dir * 4.0f, hips.y };
         kneeF  = { cx + dir * 18.0f, drawY + 22.0f };
@@ -629,31 +684,34 @@ void Fighter::draw(const Renderer& renderer) const {
         shoulderF = { chest.x + dir * 5.0f, chest.y };
         shoulderB = { chest.x - dir * 4.0f, chest.y };
 
-        if (phase == AttackPhase::STARTUP) {
-            elbowF = { cx + dir * 4.0f,  drawY + 62.0f };
-            handF  = { cx + dir * 8.0f,  drawY + 64.0f };
-        } else if (phase == AttackPhase::ACTIVE) {
-            float specReach = Attacks::SPECIAL.reach;
-            float specY = drawY + Attacks::SPECIAL.hitboxOffsetY + Attacks::SPECIAL.hitboxHeight * 0.5f;
-            float targetHandX = (facingRight ? (drawX + drawW) : drawX) + dir * specReach * 0.95f;
+        float maxReachHandX = (facingRight ? (drawX + drawW) : drawX) + dir * Attacks::SPECIAL.reach * 0.95f;
+        float specY         = drawY + Attacks::SPECIAL.hitboxOffsetY + Attacks::SPECIAL.hitboxHeight * 0.5f;
 
-            elbowF = { (shoulderF.x + targetHandX) * 0.5f, specY - 2.0f };
-            handF  = { targetHandX, specY };
+        if (phase == AttackPhase::STARTUP) {
+            float t = pose.actionProgress;
+            elbowF = { cx + dir * (14.0f * (1.0f - t) + 4.0f * t), drawY + 58.0f * (1.0f - t) + 62.0f * t };
+            handF  = { cx + dir * (18.0f * (1.0f - t) + 8.0f * t), drawY + 68.0f * (1.0f - t) + 64.0f * t };
+        } else if (phase == AttackPhase::ACTIVE) {
+            float t = pose.actionProgress;
+            float snap = t * (2.0f - t);
+            handF  = { (cx + dir * 8.0f) * (1.0f - snap) + maxReachHandX * snap, specY };
+            elbowF = { (shoulderF.x + handF.x) * 0.5f, specY - 2.0f };
         } else { // RECOVERY
-            elbowF = { cx + dir * 16.0f, drawY + 68.0f };
-            handF  = { cx + dir * 22.0f, drawY + 70.0f };
+            float t = pose.actionProgress;
+            handF  = { maxReachHandX * (1.0f - t) + (cx + dir * 18.0f) * t, specY * (1.0f - t) + (drawY + 68.0f) * t };
+            elbowF = { (shoulderF.x + handF.x) * 0.5f, specY * (1.0f - t) + (drawY + 58.0f) * t };
         }
 
         elbowB = { cx - dir * 8.0f,  drawY + 58.0f };
         handB  = { cx - dir * 12.0f, drawY + 54.0f };
 
     } else {
-        // Default IDLE / WALK: Athletic martial-arts combat stance
-        hips       = { cx,              drawY + 46.0f };
-        waist      = { cx + dir * 1.0f, drawY + 54.0f };
-        chest      = { cx + dir * 3.0f, drawY + 72.0f };
-        neck       = { cx + dir * 4.0f, drawY + 80.0f };
-        headCenter = { cx + dir * 5.0f, drawY + 90.0f };
+        // IDLE: Poised combat stance with breathing rhythm
+        hips       = { cx,              drawY + 46.0f + pose.breathY * 0.3f };
+        waist      = { cx + dir * 1.0f, drawY + 54.0f + pose.breathY * 0.6f };
+        chest      = { cx + dir * 3.0f, drawY + 72.0f + pose.breathY };
+        neck       = { cx + dir * 4.0f, drawY + 80.0f + pose.breathY * 0.9f };
+        headCenter = { cx + dir * 5.0f, drawY + 90.0f + pose.breathY * 0.9f };
 
         hipF   = { hips.x + dir * 4.0f, hips.y };
         kneeF  = { cx + dir * 13.0f, drawY + 24.0f };
@@ -666,12 +724,12 @@ void Fighter::draw(const Renderer& renderer) const {
         toeB   = { cx - dir * 8.0f,  drawY + 2.0f };
 
         shoulderF = { chest.x + dir * 4.0f, chest.y };
-        elbowF    = { cx + dir * 14.0f, drawY + 58.0f };
-        handF     = { cx + dir * 18.0f, drawY + 68.0f };
+        elbowF    = { cx + dir * 14.0f, drawY + 58.0f + pose.breathY * 0.8f };
+        handF     = { cx + dir * 18.0f, drawY + 68.0f + pose.breathY * 1.2f };
 
         shoulderB = { chest.x - dir * 3.0f, chest.y };
-        elbowB    = { cx - dir * 4.0f,  drawY + 56.0f };
-        handB     = { cx + dir * 6.0f,  drawY + 64.0f };
+        elbowB    = { cx - dir * 4.0f,  drawY + 56.0f + pose.breathY * 0.6f };
+        handB     = { cx + dir * 6.0f,  drawY + 64.0f + pose.breathY * 0.9f };
     }
 
     // =========================================================================
@@ -748,7 +806,7 @@ void Fighter::draw(const Renderer& renderer) const {
         // Headband (Hachimaki) wrapped around forehead
         renderer.drawRect(headCenter.x - 8.5f, headCenter.y + 0.5f, 17.0f, 3.5f, accentR, accentG, accentB);
 
-        // Wind-blown headband ribbons trailing behind head
+        // Wind-blown headband ribbons trailing behind head with dynamic sway
         float tailWave1 = std::sin(stateTime * 10.0f) * 2.5f;
         float tailWave2 = std::cos(stateTime * 8.0f) * 3.0f;
 

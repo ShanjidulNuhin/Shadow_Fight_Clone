@@ -21,12 +21,13 @@
 
 1793126358 e:\c++\shadow_fight_clone\shadow_fight_clone\renderer.h
 
-1793126638 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1793127081 source:e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
 	"Config.h"
 	<cmath>
+	<algorithm>
 
 1793126441 e:\c++\shadow_fight_clone\shadow_fight_clone\fighter.h
 	"Collision.h"
@@ -37,11 +38,13 @@
 1792133079 e:\c++\shadow_fight_clone\shadow_fight_clone\player.h
 	"Fighter.h"
 
-1792477407 source:e:\c++\shadow_fight_clone\shadow_fight_clone\animation.cpp
+1793126977 source:e:\c++\shadow_fight_clone\shadow_fight_clone\animation.cpp
 	"Animation.h"
+	"AttackData.h"
 	<cmath>
+	<algorithm>
 
-1792134022 e:\c++\shadow_fight_clone\shadow_fight_clone\animation.h
+1793126942 e:\c++\shadow_fight_clone\shadow_fight_clone\animation.h
 	"Fighter.h"
 
 1793126478 source:e:\c++\shadow_fight_clone\shadow_fight_clone\player.cpp
