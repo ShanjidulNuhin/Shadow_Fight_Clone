@@ -16,6 +16,8 @@ public:
     void beginFrame();                     // clear the screen
     void endFrame();                       // show what was drawn
 
+    void setClearColor(float r, float g, float b);
+
     // Camera / screen offset for cinematic screen shake
     void setCameraOffset(float offsetX, float offsetY);
     void resetCamera();

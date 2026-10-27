@@ -45,6 +45,7 @@ void Game::startMatch() {
     playerWins  = 0;
     enemyWins   = 0;
     roundNumber = 1;
+    background.randomizeThemeAndLocation();
     startRound();
 }
 
@@ -158,6 +159,10 @@ void Game::drawScene() {
 }
 
 void Game::draw() {
+    float bgR, bgG, bgB;
+    background.getClearColor(bgR, bgG, bgB);
+    renderer.setClearColor(bgR, bgG, bgB);
+
     renderer.beginFrame();
 
     // 1. Apply multi-axis screen shake to the world camera
@@ -184,7 +189,10 @@ void Game::draw() {
         case GameState::FIGHT:
             ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins);
             if (roundIntroTimer > 0.0f) {
-                ui.drawRoundIntro(roundNumber, roundIntroTimer <= FIGHT_BANNER_TIME);
+                char stageInfo[64];
+                std::snprintf(stageInfo, sizeof(stageInfo), "%s  -  %s",
+                              background.getLocationName(), background.getThemeName());
+                ui.drawRoundIntro(roundNumber, roundIntroTimer <= FIGHT_BANNER_TIME, stageInfo);
             }
             break;
 

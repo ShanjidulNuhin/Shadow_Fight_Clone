@@ -136,7 +136,7 @@ void UI::drawPauseScreen() const {
     renderer.drawTextCentered(centerX, 260.0f, "M   main menu", 0.8f, 0.8f, 0.8f, false);
 }
 
-void UI::drawRoundIntro(int roundNumber, bool showFight) const {
+void UI::drawRoundIntro(int roundNumber, bool showFight, const char* stageInfo) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
     if (showFight) {
@@ -144,7 +144,10 @@ void UI::drawRoundIntro(int roundNumber, bool showFight) const {
     } else {
         char text[32];
         std::snprintf(text, sizeof(text), "ROUND %d", roundNumber);
-        renderer.drawTextCentered(centerX, 360.0f, text, 1.0f, 1.0f, 1.0f, true);
+        renderer.drawTextCentered(centerX, 370.0f, text, 1.0f, 1.0f, 1.0f, true);
+        if (stageInfo != nullptr && stageInfo[0] != '\0') {
+            renderer.drawTextCentered(centerX, 330.0f, stageInfo, 1.0f, 0.85f, 0.35f, false);
+        }
     }
 }
 

@@ -20,7 +20,7 @@ public:
 
     void drawMenu() const;                                        // title screen
     void drawPauseScreen() const;
-    void drawRoundIntro(int roundNumber, bool showFight) const;   // "ROUND 2", then "FIGHT!"
+    void drawRoundIntro(int roundNumber, bool showFight, const char* stageInfo = nullptr) const;
     void drawRoundOver(const char* detail) const;                 // "K.O." plus a message
     void drawGameOver(bool playerWon, int playerWins, int enemyWins) const;
 

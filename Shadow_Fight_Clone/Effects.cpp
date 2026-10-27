@@ -332,53 +332,34 @@ void Effects::drawVignette(const Renderer& renderer) const {
     const float w = (float)Config::WORLD_WIDTH;
     const float h = (float)Config::WORLD_HEIGHT;
 
-    // Darkened peripheral borders fading smoothly inward toward center
-    const float marginX = 170.0f;
-    const float marginY = 130.0f;
+    // Softened peripheral borders fading smoothly inward toward center (open & bright)
+    const float marginX = 130.0f;
+    const float marginY = 100.0f;
 
     // Left edge
     renderer.drawGradientRectH(0.0f, 0.0f, marginX, h,
-                               0.0f, 0.0f, 0.0f, 0.65f,
+                               0.0f, 0.0f, 0.0f, 0.35f,
                                0.0f, 0.0f, 0.0f, 0.0f);
 
     // Right edge
     renderer.drawGradientRectH(w - marginX, 0.0f, marginX, h,
                                0.0f, 0.0f, 0.0f, 0.0f,
-                               0.0f, 0.0f, 0.0f, 0.65f);
+                               0.0f, 0.0f, 0.0f, 0.35f);
 
     // Top edge
     renderer.drawGradientRect(0.0f, h - marginY, w, marginY,
                               0.0f, 0.0f, 0.0f, 0.0f,
-                              0.0f, 0.0f, 0.0f, 0.60f);
+                              0.0f, 0.0f, 0.0f, 0.32f);
 
     // Bottom edge
     renderer.drawGradientRect(0.0f, 0.0f, w, marginY,
-                              0.0f, 0.0f, 0.0f, 0.60f,
+                              0.0f, 0.0f, 0.0f, 0.30f,
                               0.0f, 0.0f, 0.0f, 0.0f);
 
-    // 4 Corner triangular deep shadows for cinematic camera lens feel
-    const float cornerSize = 140.0f;
-    // Bottom-Left
-    renderer.drawTriangle(0.0f, 0.0f,
-                          cornerSize, 0.0f,
-                          0.0f, cornerSize,
-                          0.0f, 0.0f, 0.0f, 0.45f);
-
-    // Bottom-Right
-    renderer.drawTriangle(w, 0.0f,
-                          w - cornerSize, 0.0f,
-                          w, cornerSize,
-                          0.0f, 0.0f, 0.0f, 0.45f);
-
-    // Top-Left
-    renderer.drawTriangle(0.0f, h,
-                          cornerSize, h,
-                          0.0f, h - cornerSize,
-                          0.0f, 0.0f, 0.0f, 0.45f);
-
-    // Top-Right
-    renderer.drawTriangle(w, h,
-                          w - cornerSize, h,
-                          w, h - cornerSize,
-                          0.0f, 0.0f, 0.0f, 0.45f);
+    // 4 Corner soft shadow accents for subtle depth without darkening the center fight
+    const float cornerSize = 100.0f;
+    renderer.drawTriangle(0.0f, 0.0f, cornerSize, 0.0f, 0.0f, cornerSize, 0.0f, 0.0f, 0.0f, 0.22f);
+    renderer.drawTriangle(w, 0.0f, w - cornerSize, 0.0f, w, cornerSize, 0.0f, 0.0f, 0.0f, 0.22f);
+    renderer.drawTriangle(0.0f, h, cornerSize, h, 0.0f, h - cornerSize, 0.0f, 0.0f, 0.0f, 0.22f);
+    renderer.drawTriangle(w, h, w - cornerSize, h, w, h - cornerSize, 0.0f, 0.0f, 0.0f, 0.22f);
 }
