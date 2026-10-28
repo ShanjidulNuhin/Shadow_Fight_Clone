@@ -29,9 +29,9 @@ struct AttackData {
 
 namespace Attacks {
     //                                 startup active recovery  reach   height offsetY  dmg  knock  stun  energy blockable
-    const AttackData PUNCH   = {       0.08f,  0.10f, 0.17f,    65.0f,  35.0f, 95.0f,   10, 420.0f, 0.30f,   0.0f, true  };
-    const AttackData KICK    = {       0.30f,  0.10f, 0.26f,    90.0f,  45.0f, 15.0f,   15, 540.0f, 0.40f,   0.0f, false };
-    const AttackData SPECIAL = {       0.25f,  0.12f, 0.35f,   115.0f,  85.0f, 30.0f,   30, 720.0f, 0.60f,  50.0f, true  };
+    const AttackData PUNCH   = {       0.08f,  0.10f, 0.17f,    85.0f,  44.0f, 120.0f,  10, 440.0f, 0.30f,   0.0f, true  };
+    const AttackData KICK    = {       0.30f,  0.10f, 0.26f,   115.0f,  55.0f,  20.0f,  15, 560.0f, 0.40f,   0.0f, false };
+    const AttackData SPECIAL = {       0.25f,  0.12f, 0.35f,   145.0f, 110.0f,  40.0f,  30, 750.0f, 0.60f,  50.0f, true  };
 }
 
 #endif

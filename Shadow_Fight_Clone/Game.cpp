@@ -8,8 +8,8 @@ namespace {
     const unsigned char KEY_ENTER  = 13;
     const unsigned char KEY_ESCAPE = 27;
 
-    const float PLAYER_START_X = 110.0f;
-    const float ENEMY_START_X  = 580.0f;
+    const float PLAYER_START_X = 90.0f;
+    const float ENEMY_START_X  = 610.0f;
 
     const float ROUND_INTRO_TIME  = 1.6f;
     const float FIGHT_BANNER_TIME = 0.6f;
@@ -31,6 +31,7 @@ Game::Game()
       menuScreen(MenuScreen::MAIN),
       pauseScreen(PauseScreen::PAUSE_MAIN),
       gameMode(GameMode::NORMAL),
+      selectedDifficulty(GameMode::NORMAL),
       roundResult(RoundResult::NONE),
       roundNumber(1),
       playerWins(0),
@@ -42,6 +43,9 @@ Game::Game()
       selectedButtonIndex(-1),
       windowWidth(Config::WORLD_WIDTH),
       windowHeight(Config::WORLD_HEIGHT),
+      matchInProgress(false),
+      isStartGameFlow(false),
+      showAlertPopup(false),
       showDebugBoxes(false), // Disable green box by default as requested!
       quitRequested(false) {
 }
@@ -55,6 +59,9 @@ void Game::startMatch() {
     playerWins  = 0;
     enemyWins   = 0;
     roundNumber = 1;
+    matchInProgress = true;
+    isStartGameFlow = false;
+    showAlertPopup  = false;
     background.randomizeThemeAndLocation();
     startRound();
 }
@@ -175,7 +182,7 @@ void Game::draw() {
             } else if (menuScreen == MenuScreen::CONTROLS) {
                 ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
             } else if (menuScreen == MenuScreen::DIFFICULTY) {
-                ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, gameMode);
+                ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, selectedDifficulty, isStartGameFlow);
             }
             break;
 
@@ -198,7 +205,10 @@ void Game::draw() {
             } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
                 ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
             } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
-                ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, gameMode);
+                ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, selectedDifficulty, false);
+                if (showAlertPopup) {
+                    ui.drawAlertDialog("You cannot change game mode middle of the game", mouseX, mouseY);
+                }
             }
             break;
 
@@ -228,7 +238,9 @@ void Game::draw() {
 void Game::handleMenuClick(float mx, float my) {
     if (menuScreen == MenuScreen::MAIN) {
         if (UIButtons::BTN_MAIN_START.contains(mx, my)) {
-            startMatch();
+            menuScreen = MenuScreen::DIFFICULTY;
+            isStartGameFlow = true;
+            selectedDifficulty = gameMode;
         } else if (UIButtons::BTN_MAIN_OPTIONS.contains(mx, my)) {
             menuScreen = MenuScreen::OPTIONS;
         } else if (UIButtons::BTN_MAIN_EXIT.contains(mx, my)) {
@@ -239,6 +251,8 @@ void Game::handleMenuClick(float mx, float my) {
             menuScreen = MenuScreen::CONTROLS;
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
             menuScreen = MenuScreen::DIFFICULTY;
+            isStartGameFlow = false;
+            selectedDifficulty = gameMode;
         } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
             menuScreen = MenuScreen::MAIN;
         }
@@ -248,21 +262,38 @@ void Game::handleMenuClick(float mx, float my) {
         }
     } else if (menuScreen == MenuScreen::DIFFICULTY) {
         if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
-            gameMode = GameMode::EASY;
-            enemy.setDifficulty(gameMode);
+            selectedDifficulty = GameMode::EASY;
         } else if (UIButtons::BTN_DIFF_NORMAL.contains(mx, my)) {
-            gameMode = GameMode::NORMAL;
-            enemy.setDifficulty(gameMode);
+            selectedDifficulty = GameMode::NORMAL;
         } else if (UIButtons::BTN_DIFF_HARD.contains(mx, my)) {
-            gameMode = GameMode::HARD;
-            enemy.setDifficulty(gameMode);
+            selectedDifficulty = GameMode::HARD;
         } else if (UIButtons::BTN_DIFF_BACK.contains(mx, my)) {
-            menuScreen = MenuScreen::OPTIONS;
+            if (isStartGameFlow) {
+                menuScreen = MenuScreen::MAIN;
+            } else {
+                menuScreen = MenuScreen::OPTIONS;
+            }
+        } else if (UIButtons::BTN_DIFF_OK.contains(mx, my)) {
+            gameMode = selectedDifficulty;
+            enemy.setDifficulty(gameMode);
+            if (isStartGameFlow) {
+                startMatch();
+            } else {
+                menuScreen = MenuScreen::OPTIONS;
+            }
         }
     }
 }
 
 void Game::handlePauseClick(float mx, float my) {
+    if (showAlertPopup) {
+        if (UIButtons::BTN_ALERT_OK.contains(mx, my)) {
+            showAlertPopup = false;
+            selectedDifficulty = gameMode; // Return to same difficulty page with unchanged gameMode
+        }
+        return;
+    }
+
     if (pauseScreen == PauseScreen::PAUSE_MAIN) {
         if (UIButtons::BTN_PAUSE_RESUME.contains(mx, my)) {
             state = GameState::FIGHT;
@@ -272,6 +303,8 @@ void Game::handlePauseClick(float mx, float my) {
             pauseScreen = PauseScreen::PAUSE_OPTIONS;
         } else if (UIButtons::BTN_PAUSE_EXIT.contains(mx, my)) {
             // Exit returns to Home screen (Main Menu), NOT closing full game!
+            matchInProgress = false;
+            showAlertPopup  = false;
             state = GameState::MENU;
             menuScreen = MenuScreen::MAIN;
         }
@@ -280,6 +313,8 @@ void Game::handlePauseClick(float mx, float my) {
             pauseScreen = PauseScreen::PAUSE_CONTROLS;
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
             pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
+            selectedDifficulty = gameMode;
+            showAlertPopup = false;
         } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
             pauseScreen = PauseScreen::PAUSE_MAIN;
         }
@@ -289,16 +324,21 @@ void Game::handlePauseClick(float mx, float my) {
         }
     } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
         if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
-            gameMode = GameMode::EASY;
-            enemy.setDifficulty(gameMode);
+            selectedDifficulty = GameMode::EASY;
         } else if (UIButtons::BTN_DIFF_NORMAL.contains(mx, my)) {
-            gameMode = GameMode::NORMAL;
-            enemy.setDifficulty(gameMode);
+            selectedDifficulty = GameMode::NORMAL;
         } else if (UIButtons::BTN_DIFF_HARD.contains(mx, my)) {
-            gameMode = GameMode::HARD;
-            enemy.setDifficulty(gameMode);
+            selectedDifficulty = GameMode::HARD;
         } else if (UIButtons::BTN_DIFF_BACK.contains(mx, my)) {
+            selectedDifficulty = gameMode;
             pauseScreen = PauseScreen::PAUSE_OPTIONS;
+        } else if (UIButtons::BTN_DIFF_OK.contains(mx, my)) {
+            // Check if player attempts to change difficulty during an active fight
+            if (matchInProgress && selectedDifficulty != gameMode) {
+                showAlertPopup = true;
+            } else {
+                pauseScreen = PauseScreen::PAUSE_OPTIONS;
+            }
         }
     }
 }
@@ -336,15 +376,28 @@ void Game::onKeyDown(unsigned char key) {
     switch (state) {
         case GameState::MENU:
             if (key == KEY_ENTER) {
-                if (menuScreen == MenuScreen::MAIN) startMatch();
-                else if (menuScreen == MenuScreen::OPTIONS) menuScreen = MenuScreen::MAIN;
-                else if (menuScreen == MenuScreen::CONTROLS) menuScreen = MenuScreen::OPTIONS;
-                else if (menuScreen == MenuScreen::DIFFICULTY) menuScreen = MenuScreen::OPTIONS;
+                if (menuScreen == MenuScreen::MAIN) {
+                    menuScreen = MenuScreen::DIFFICULTY;
+                    isStartGameFlow = true;
+                    selectedDifficulty = gameMode;
+                } else if (menuScreen == MenuScreen::OPTIONS) {
+                    menuScreen = MenuScreen::MAIN;
+                } else if (menuScreen == MenuScreen::CONTROLS) {
+                    menuScreen = MenuScreen::OPTIONS;
+                } else if (menuScreen == MenuScreen::DIFFICULTY) {
+                    gameMode = selectedDifficulty;
+                    enemy.setDifficulty(gameMode);
+                    if (isStartGameFlow) startMatch();
+                    else menuScreen = MenuScreen::OPTIONS;
+                }
             } else if (key == KEY_ESCAPE) {
                 if (menuScreen == MenuScreen::MAIN) quitRequested = true;
                 else if (menuScreen == MenuScreen::OPTIONS) menuScreen = MenuScreen::MAIN;
                 else if (menuScreen == MenuScreen::CONTROLS) menuScreen = MenuScreen::OPTIONS;
-                else if (menuScreen == MenuScreen::DIFFICULTY) menuScreen = MenuScreen::OPTIONS;
+                else if (menuScreen == MenuScreen::DIFFICULTY) {
+                    if (isStartGameFlow) menuScreen = MenuScreen::MAIN;
+                    else menuScreen = MenuScreen::OPTIONS;
+                }
             }
             break;
 
@@ -363,17 +416,29 @@ void Game::onKeyDown(unsigned char key) {
             break;
 
         case GameState::PAUSED:
+            if (showAlertPopup) {
+                if (key == KEY_ENTER || key == KEY_ESCAPE || key == ' ') {
+                    showAlertPopup = false;
+                    selectedDifficulty = gameMode;
+                }
+                break;
+            }
             if (key == 'p' || key == 'P' || key == KEY_ESCAPE) {
                 if (pauseScreen == PauseScreen::PAUSE_MAIN) {
                     state = GameState::FIGHT;
                 } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
                     pauseScreen = PauseScreen::PAUSE_MAIN;
+                } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
+                    selectedDifficulty = gameMode;
+                    pauseScreen = PauseScreen::PAUSE_OPTIONS;
                 } else {
                     pauseScreen = PauseScreen::PAUSE_OPTIONS;
                 }
             }
             if (key == 'r' || key == 'R') startMatch();
             if (key == 'm' || key == 'M') {
+                matchInProgress = false;
+                showAlertPopup  = false;
                 state = GameState::MENU;
                 menuScreen = MenuScreen::MAIN;
             }
@@ -385,6 +450,8 @@ void Game::onKeyDown(unsigned char key) {
         case GameState::GAME_OVER:
             if (key == KEY_ENTER) startMatch();
             if (key == 'm' || key == 'M' || key == KEY_ESCAPE) {
+                matchInProgress = false;
+                showAlertPopup  = false;
                 state = GameState::MENU;
                 menuScreen = MenuScreen::MAIN;
             }

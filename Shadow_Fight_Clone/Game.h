@@ -22,7 +22,7 @@ enum class MenuScreen {
     MAIN,         // [Start Game] [Options] [Exit]
     OPTIONS,      // [Game Controls] [Game Mode] [Back]
     CONTROLS,     // All controls display + [Back]
-    DIFFICULTY    // [Easy] [Normal] [Hard] + [Back]
+    DIFFICULTY    // [Easy] [Normal] [Hard] + [Back] & [OK]
 };
 
 enum class PauseScreen {
@@ -81,6 +81,7 @@ private:
     MenuScreen   menuScreen;
     PauseScreen  pauseScreen;
     GameMode     gameMode;
+    GameMode     selectedDifficulty;
     RoundResult  roundResult;
 
     int          roundNumber;
@@ -95,6 +96,9 @@ private:
     int          windowWidth;
     int          windowHeight;
 
+    bool         matchInProgress;
+    bool         isStartGameFlow;
+    bool         showAlertPopup;
     bool         showDebugBoxes;
     bool         quitRequested;
 };

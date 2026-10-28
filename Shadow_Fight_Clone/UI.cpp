@@ -89,16 +89,13 @@ void UI::drawSettingsIcon(bool hovered) const {
     float iconB = hovered ? 0.30f : 0.88f;
 
     // Stylized Gear Wheel ⚙️
-    // 8 radial gear teeth
     for (int i = 0; i < 8; i++) {
         float angle = i * (3.14159265f / 4.0f);
         float tx = cx + std::cos(angle) * 11.0f;
         float ty = cy + std::sin(angle) * 11.0f;
         renderer.drawCircle(tx, ty, 2.5f, iconR, iconG, iconB, 1.0f, 8);
     }
-    // Main circular rim
     renderer.drawCircle(cx, cy, 8.5f, iconR, iconG, iconB, 1.0f, 16);
-    // Inner hub hole
     renderer.drawCircle(cx, cy, 3.8f, 0.10f, 0.10f, 0.14f, 1.0f, 12);
 }
 
@@ -106,11 +103,9 @@ void UI::drawHealthBar(float x, float y, float width, float height,
                        const Fighter& fighter, const char* name) const {
     float fraction = (float)fighter.getHealth() / (float)fighter.getMaxHealth();
 
-    // Drop shadow
     renderer.drawRectAlpha(x + 2.0f, y - 2.0f, width, height, 0.0f, 0.0f, 0.0f, 0.5f);
-
-    renderer.drawRect(x, y, width, height, 0.28f, 0.06f, 0.06f);           // empty part: dark red
-    renderer.drawRect(x, y, width * fraction, height, 0.20f, 0.82f, 0.25f); // remaining health: vibrant green
+    renderer.drawRect(x, y, width, height, 0.28f, 0.06f, 0.06f);
+    renderer.drawRect(x, y, width * fraction, height, 0.20f, 0.82f, 0.25f);
     renderer.drawRectOutline(x, y, width, height, 0.9f, 0.9f, 0.95f);
 
     char label[64];
@@ -126,9 +121,9 @@ void UI::drawEnergyBar(float x, float y, float width, float height,
 
     renderer.drawRect(x, y, width, height, 0.05f, 0.10f, 0.25f);
     if (specialReady) {
-        renderer.drawRect(x, y, width * fraction, height, 1.0f, 0.82f, 0.20f); // gold: special ready
+        renderer.drawRect(x, y, width * fraction, height, 1.0f, 0.82f, 0.20f);
     } else {
-        renderer.drawRect(x, y, width * fraction, height, 0.25f, 0.65f, 1.0f); // blue: charging
+        renderer.drawRect(x, y, width * fraction, height, 0.25f, 0.65f, 1.0f);
     }
     renderer.drawRectOutline(x, y, width, height, 0.85f, 0.85f, 0.90f);
 }
@@ -153,24 +148,19 @@ void UI::drawHUD(const Fighter& player, const Enemy& enemy,
     const float worldW = (float)Config::WORLD_WIDTH;
     const float worldH = (float)Config::WORLD_HEIGHT;
 
-    // Health bars
     drawHealthBar(15.0f, worldH - 55.0f, 300.0f, 20.0f, player, "SHADOW (YOU)");
     drawHealthBar(worldW - 315.0f, worldH - 55.0f, 300.0f, 20.0f, enemy, "WARRIOR (ENEMY)");
 
-    // Energy bars
     drawEnergyBar(15.0f, worldH - 72.0f, 300.0f, 10.0f, player);
     drawEnergyBar(worldW - 315.0f, worldH - 72.0f, 300.0f, 10.0f, enemy);
 
-    // Round markers
     drawRoundPips(15.0f, worldH - 94.0f, playerWins);
     drawRoundPips(worldW - 315.0f, worldH - 94.0f, enemyWins);
 
-    // Center Round Header
     char label[64];
     std::snprintf(label, sizeof(label), "ROUND %d", roundNumber);
     renderer.drawTextCentered(worldW / 2.0f, worldH - 42.0f, label, 1.0f, 0.90f, 0.35f, false);
 
-    // Top-Right In-Game Settings Gear Icon Button
     bool iconHovered = UIButtons::BTN_SETTINGS_ICON.contains(mouseX, mouseY);
     drawSettingsIcon(iconHovered);
 }
@@ -180,17 +170,12 @@ void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex) const {
 
     renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.65f);
 
-    // Cinematic Game Title
     renderer.drawTextCentered(centerX, 480.0f, "SHADOW FIGHT", 1.0f, 1.0f, 1.0f, true);
     renderer.drawTextCentered(centerX, 440.0f, "- THE SHADOW CLONE -", 1.0f, 0.85f, 0.35f, false);
 
     renderer.drawLine(centerX - 180.0f, 415.0f, centerX + 180.0f, 415.0f,
                       0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
-    // 3 Buttons as requested:
-    // 1. "Start Game"
-    // 2. "Options"
-    // 3. "Exit"
     bool h0 = UIButtons::BTN_MAIN_START.contains(mouseX, mouseY)   || (selectedIndex == 0);
     bool h1 = UIButtons::BTN_MAIN_OPTIONS.contains(mouseX, mouseY) || (selectedIndex == 1);
     bool h2 = UIButtons::BTN_MAIN_EXIT.contains(mouseX, mouseY)    || (selectedIndex == 2);
@@ -235,7 +220,6 @@ void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex) const
     renderer.drawLine(centerX - 160.0f, 480.0f, centerX + 160.0f, 480.0f,
                       0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
-    // Controls card panel
     float cardX = 100.0f;
     float cardY = 135.0f;
     float cardW = 600.0f;
@@ -245,7 +229,6 @@ void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex) const
     renderer.drawRectAlpha(cardX, cardY, cardW, cardH, 0.08f, 0.08f, 0.12f, 0.90f);
     renderer.drawRectOutline(cardX, cardY, cardW, cardH, 0.45f, 0.45f, 0.52f);
 
-    // Control rows
     float startY = 425.0f;
     float stepY  = 35.0f;
 
@@ -258,9 +241,9 @@ void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex) const
     drawRow(0, "A  /  D", "Move Left and Right", 1.0f, 0.85f, 0.35f);
     drawRow(1, "W  or  SPACE", "Jump (Leap into air / cross over)", 1.0f, 0.85f, 0.35f);
     drawRow(2, "S", "Crouch (Duck under high attacks)", 1.0f, 0.85f, 0.35f);
-    drawRow(3, "J", "Punch / Dagger Thrust (Fast striking speed)", 0.35f, 0.85f, 1.0f);
+    drawRow(3, "J", "Punch / Martial Strike (Fast speed)", 0.35f, 0.85f, 1.0f);
     drawRow(4, "K", "Kick (Unblockable strike! Jump to evade)", 1.0f, 0.55f, 0.25f);
-    drawRow(5, "L", "Special Dragon Attack (Costs 50 Energy)", 1.0f, 0.85f, 0.20f);
+    drawRow(5, "L", "Special Dragon Strike (Costs 50 Energy)", 1.0f, 0.85f, 0.20f);
     drawRow(6, "I", "Block Guard (Hold to absorb incoming damage)", 0.50f, 0.80f, 1.0f);
     drawRow(7, "P  or  ESC", "Pause Game / In-Fight Settings Menu", 0.80f, 0.80f, 0.80f);
 
@@ -268,29 +251,34 @@ void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex) const
     drawButton(UIButtons::BTN_CTRL_BACK, hBack);
 }
 
-void UI::drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const {
+void UI::drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode displayedMode, bool isStartGame) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
     renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.75f);
 
-    renderer.drawTextCentered(centerX, 510.0f, "GAME MODE DIFFICULTY", 1.0f, 1.0f, 1.0f, true);
-    renderer.drawTextCentered(centerX, 465.0f, "Select enemy combat intensity and reflexes",
-                              0.85f, 0.85f, 0.90f, false);
-    renderer.drawLine(centerX - 180.0f, 435.0f, centerX + 180.0f, 435.0f,
+    if (isStartGame) {
+        renderer.drawTextCentered(centerX, 515.0f, "START GAME", 1.0f, 1.0f, 1.0f, true);
+        renderer.drawTextCentered(centerX, 470.0f, "Select difficulty to start your martial fight",
+                                  1.0f, 0.85f, 0.35f, false);
+    } else {
+        renderer.drawTextCentered(centerX, 515.0f, "GAME MODE DIFFICULTY", 1.0f, 1.0f, 1.0f, true);
+        renderer.drawTextCentered(centerX, 470.0f, "Select enemy combat intensity and reflexes",
+                                  0.85f, 0.85f, 0.90f, false);
+    }
+    renderer.drawLine(centerX - 180.0f, 440.0f, centerX + 180.0f, 440.0f,
                       0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
     bool h0 = UIButtons::BTN_DIFF_EASY.contains(mouseX, mouseY)   || (selectedIndex == 0);
     bool h1 = UIButtons::BTN_DIFF_NORMAL.contains(mouseX, mouseY) || (selectedIndex == 1);
     bool h2 = UIButtons::BTN_DIFF_HARD.contains(mouseX, mouseY)   || (selectedIndex == 2);
-    bool hBack = UIButtons::BTN_DIFF_BACK.contains(mouseX, mouseY) || (selectedIndex == 3);
 
-    drawButton(UIButtons::BTN_DIFF_EASY, h0, currentMode == GameMode::EASY);
-    drawButton(UIButtons::BTN_DIFF_NORMAL, h1, currentMode == GameMode::NORMAL);
-    drawButton(UIButtons::BTN_DIFF_HARD, h2, currentMode == GameMode::HARD);
+    drawButton(UIButtons::BTN_DIFF_EASY, h0, displayedMode == GameMode::EASY);
+    drawButton(UIButtons::BTN_DIFF_NORMAL, h1, displayedMode == GameMode::NORMAL);
+    drawButton(UIButtons::BTN_DIFF_HARD, h2, displayedMode == GameMode::HARD);
 
     // Description info box
     float boxX = 80.0f;
-    float boxY = 160.0f;
+    float boxY = 155.0f;
     float boxW = 640.0f;
     float boxH = 140.0f;
 
@@ -298,18 +286,12 @@ void UI::drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameM
     renderer.drawRectAlpha(boxX, boxY, boxW, boxH, 0.08f, 0.08f, 0.12f, 0.92f);
     renderer.drawRectOutline(boxX, boxY, boxW, boxH, 0.45f, 0.45f, 0.52f);
 
-    // Determine which mode's description to display (hovered takes preview priority, else active)
-    GameMode inspected = currentMode;
-    if (h0) inspected = GameMode::EASY;
-    else if (h1) inspected = GameMode::NORMAL;
-    else if (h2) inspected = GameMode::HARD;
-
-    if (inspected == GameMode::EASY) {
+    if (displayedMode == GameMode::EASY) {
         renderer.drawText(boxX + 25.0f, boxY + 105.0f, "MODE: EASY (RELAXED COMBAT)", 0.35f, 0.95f, 0.45f);
         renderer.drawText(boxX + 25.0f, boxY + 75.0f,  "* Enemy deals 35% less damage (0.65x multiplier).", 0.90f, 0.90f, 0.95f);
         renderer.drawText(boxX + 25.0f, boxY + 50.0f,  "* Slower reaction time when attacked; enemy rarely blocks.", 0.90f, 0.90f, 0.95f);
         renderer.drawText(boxX + 25.0f, boxY + 25.0f,  "* Generous recovery windows between attacks. Ideal for beginners.", 0.80f, 0.80f, 0.85f);
-    } else if (inspected == GameMode::NORMAL) {
+    } else if (displayedMode == GameMode::NORMAL) {
         renderer.drawText(boxX + 25.0f, boxY + 105.0f, "MODE: NORMAL (STANDARD BALANCE)", 1.0f, 0.85f, 0.35f);
         renderer.drawText(boxX + 25.0f, boxY + 75.0f,  "* Enemy deals full standard damage (1.0x multiplier).", 0.90f, 0.90f, 0.95f);
         renderer.drawText(boxX + 25.0f, boxY + 50.0f,  "* Balanced reaction speed with tactical blocks and dodges.", 0.90f, 0.90f, 0.95f);
@@ -321,7 +303,40 @@ void UI::drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameM
         renderer.drawText(boxX + 25.0f, boxY + 25.0f,  "* Relentless spacing pressure and frequent guard defense.", 0.80f, 0.80f, 0.85f);
     }
 
+    // Both BACK and OK buttons placed beside each other as requested
+    bool hBack = UIButtons::BTN_DIFF_BACK.contains(mouseX, mouseY) || (selectedIndex == 3);
+    bool hOk   = UIButtons::BTN_DIFF_OK.contains(mouseX, mouseY)   || (selectedIndex == 4);
+
     drawButton(UIButtons::BTN_DIFF_BACK, hBack);
+    drawButton(UIButtons::BTN_DIFF_OK, hOk, false, isStartGame ? "START FIGHT" : "OK");
+}
+
+void UI::drawAlertDialog(const char* message, float mouseX, float mouseY) const {
+    const float centerX = Config::WORLD_WIDTH / 2.0f;
+
+    // Dark backdrop overlay for modal alert
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.70f);
+
+    float boxX = 130.0f;
+    float boxY = 190.0f;
+    float boxW = 540.0f;
+    float boxH = 220.0f;
+
+    renderer.drawRectAlpha(boxX + 6.0f, boxY - 6.0f, boxW, boxH, 0.0f, 0.0f, 0.0f, 0.70f);
+    renderer.drawRectAlpha(boxX, boxY, boxW, boxH, 0.14f, 0.08f, 0.08f, 0.98f);
+    renderer.drawRectOutline(boxX, boxY, boxW, boxH, 1.0f, 0.35f, 0.25f);
+    renderer.drawRectOutline(boxX + 2.0f, boxY + 2.0f, boxW - 4.0f, boxH - 4.0f, 0.80f, 0.20f, 0.15f);
+
+    renderer.drawTextCentered(centerX, boxY + 168.0f, "! NOTICE !", 1.0f, 0.40f, 0.25f, true);
+    renderer.drawLine(centerX - 100.0f, boxY + 155.0f, centerX + 100.0f, boxY + 155.0f,
+                      1.0f, 0.35f, 0.25f, 0.8f, 1.5f);
+
+    renderer.drawTextCentered(centerX, boxY + 118.0f, message, 1.0f, 0.95f, 0.95f, false);
+    renderer.drawTextCentered(centerX, boxY + 88.0f, "Difficulty remains locked until the ongoing match concludes.",
+                              0.70f, 0.70f, 0.75f, false);
+
+    bool hOk = UIButtons::BTN_ALERT_OK.contains(mouseX, mouseY);
+    drawButton(UIButtons::BTN_ALERT_OK, hOk, false, "OK");
 }
 
 void UI::drawPauseMenu(float mouseX, float mouseY, int selectedIndex) const {
@@ -380,7 +395,7 @@ void UI::drawGameOver(bool playerWon, int playerWins, int enemyWins) const {
         renderer.drawTextCentered(centerX, 380.0f, "You proved your shadow supremacy", 0.90f, 0.90f, 0.95f, false);
     } else {
         renderer.drawTextCentered(centerX, 420.0f, "DEFEATED", 1.0f, 0.30f, 0.30f, true);
-        renderer.drawTextCentered(centerX, 380.0f, "The imperial spear warrior stands victorious", 0.85f, 0.85f, 0.90f, false);
+        renderer.drawTextCentered(centerX, 380.0f, "The imperial warrior stands victorious", 0.85f, 0.85f, 0.90f, false);
     }
 
     char score[64];

@@ -5,9 +5,9 @@
 namespace {
     const float WALK_SPEED_RATIO    = 0.6f;
     const float RETREAT_SPEED_RATIO = 0.4f;
-    const float MIN_SPACING   = 40.0f;
-    const float MAX_SPACING   = 85.0f;
-    const float SPACING_BAND  = 6.0f;
+    const float MIN_SPACING   = 55.0f;
+    const float MAX_SPACING   = 110.0f;
+    const float SPACING_BAND  = 8.0f;
 
     // Timing
     const float FIRST_ATTACK_DELAY = 1.5f;
@@ -15,16 +15,16 @@ namespace {
 
     // Defending defaults
     const float GUARD_URGE_PER_SECOND = 0.15f;
-    const float GUARD_URGE_RANGE      = 95.0f;
+    const float GUARD_URGE_RANGE      = 125.0f;
     const float MIN_GUARD_TIME   = 0.4f;
     const float MAX_GUARD_TIME   = 1.0f;
-    const float NOTICE_MARGIN    = 20.0f;
+    const float NOTICE_MARGIN    = 25.0f;
 
     // Jumping defaults
     const float APPROACH_JUMP_PER_SECOND = 0.30f;
-    const float APPROACH_JUMP_MIN_GAP    = 90.0f;
+    const float APPROACH_JUMP_MIN_GAP    = 110.0f;
     const float AIR_DRIFT = 0.8f;
-    const float REACH_MARGIN = 8.0f;
+    const float REACH_MARGIN = 10.0f;
 
     float randomFraction() {
         return (std::rand() % 1000) / 1000.0f;
@@ -36,10 +36,10 @@ namespace {
 }
 
 Enemy::Enemy(float startX, float startY)
-    : Fighter(startX, startY, 68.0f, 145.0f),
+    : Fighter(startX, startY, 86.0f, 185.0f),
       difficulty(GameMode::NORMAL),
       aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY),
-      preferredGap(65.0f), lastAttack(AttackChoice::NONE),
+      preferredGap(85.0f), lastAttack(AttackChoice::NONE),
       dodgePending(false), dodgeTimer(0.0f), airDrift(0.0f),
       targetWasAttacking(false), guardPending(false), reactionTimer(0.0f), guardTimer(0.0f) {
     setRole(FighterRole::ARMORED_SPEARMAN);

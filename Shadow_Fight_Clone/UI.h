@@ -33,11 +33,15 @@ namespace UIButtons {
     // Controls screen back button
     const RectButton BTN_CTRL_BACK     = { 300.0f, 75.0f,  200.0f, 44.0f, "BACK" };
 
-    // Difficulty screen buttons
+    // Difficulty screen buttons (OK placed beside BACK)
     const RectButton BTN_DIFF_EASY     = { 80.0f,  330.0f, 190.0f, 50.0f, "EASY" };
     const RectButton BTN_DIFF_NORMAL   = { 305.0f, 330.0f, 190.0f, 50.0f, "NORMAL" };
     const RectButton BTN_DIFF_HARD     = { 530.0f, 330.0f, 190.0f, 50.0f, "HARD" };
-    const RectButton BTN_DIFF_BACK     = { 300.0f, 85.0f,  200.0f, 44.0f, "BACK" };
+    const RectButton BTN_DIFF_BACK     = { 190.0f, 80.0f,  190.0f, 46.0f, "BACK" };
+    const RectButton BTN_DIFF_OK       = { 420.0f, 80.0f,  190.0f, 46.0f, "OK" };
+
+    // Alert dialog OK button
+    const RectButton BTN_ALERT_OK      = { 335.0f, 215.0f, 130.0f, 42.0f, "OK" };
 
     // Top-right in-game settings gear button
     const RectButton BTN_SETTINGS_ICON = { 745.0f, 545.0f, 45.0f,  42.0f, "SETTINGS" };
@@ -68,7 +72,8 @@ public:
     void drawMainMenu(float mouseX, float mouseY, int selectedIndex = -1) const;
     void drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const;
     void drawControlsScreen(float mouseX, float mouseY, int selectedIndex = -1) const;
-    void drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const;
+    void drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode displayedMode, bool isStartGame = false) const;
+    void drawAlertDialog(const char* message, float mouseX, float mouseY) const;
 
     // Pause Screen
     void drawPauseMenu(float mouseX, float mouseY, int selectedIndex = -1) const;
