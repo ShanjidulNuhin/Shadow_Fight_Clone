@@ -32,6 +32,12 @@ enum class PauseScreen {
     PAUSE_DIFFICULTY
 };
 
+enum class PopupType {
+    NONE,
+    ROUND1_RESTART_CONFIRM,  // Round 1: "The match will restart in this difficulty" -> [OK]
+    ROUND2_RESTART_PROMPT    // Round 2/3: "You cannot change after first round... do you want to restart?" -> [YES] / [NO]
+};
+
 enum class RoundResult {
     NONE,
     PLAYER_WON,
@@ -98,7 +104,7 @@ private:
 
     bool         matchInProgress;
     bool         isStartGameFlow;
-    bool         showAlertPopup;
+    PopupType    popupType;
     bool         showDebugBoxes;
     bool         quitRequested;
 };

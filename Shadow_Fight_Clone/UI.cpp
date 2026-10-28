@@ -311,32 +311,72 @@ void UI::drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameM
     drawButton(UIButtons::BTN_DIFF_OK, hOk, false, isStartGame ? "START FIGHT" : "OK");
 }
 
-void UI::drawAlertDialog(const char* message, float mouseX, float mouseY) const {
+void UI::drawAlertDialog(const char* title, const char* line1, const char* line2,
+                         float mouseX, float mouseY, const char* okLabel) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
     // Dark backdrop overlay for modal alert
-    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.70f);
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.72f);
 
-    float boxX = 130.0f;
-    float boxY = 190.0f;
-    float boxW = 540.0f;
-    float boxH = 220.0f;
+    float boxX = 120.0f;
+    float boxY = 180.0f;
+    float boxW = 560.0f;
+    float boxH = 230.0f;
 
     renderer.drawRectAlpha(boxX + 6.0f, boxY - 6.0f, boxW, boxH, 0.0f, 0.0f, 0.0f, 0.70f);
-    renderer.drawRectAlpha(boxX, boxY, boxW, boxH, 0.14f, 0.08f, 0.08f, 0.98f);
-    renderer.drawRectOutline(boxX, boxY, boxW, boxH, 1.0f, 0.35f, 0.25f);
-    renderer.drawRectOutline(boxX + 2.0f, boxY + 2.0f, boxW - 4.0f, boxH - 4.0f, 0.80f, 0.20f, 0.15f);
+    renderer.drawRectAlpha(boxX, boxY, boxW, boxH, 0.12f, 0.10f, 0.14f, 0.98f);
+    renderer.drawRectOutline(boxX, boxY, boxW, boxH, 1.0f, 0.80f, 0.30f);
+    renderer.drawRectOutline(boxX + 2.0f, boxY + 2.0f, boxW - 4.0f, boxH - 4.0f, 0.65f, 0.45f, 0.15f);
 
-    renderer.drawTextCentered(centerX, boxY + 168.0f, "! NOTICE !", 1.0f, 0.40f, 0.25f, true);
-    renderer.drawLine(centerX - 100.0f, boxY + 155.0f, centerX + 100.0f, boxY + 155.0f,
-                      1.0f, 0.35f, 0.25f, 0.8f, 1.5f);
+    renderer.drawTextCentered(centerX, boxY + 175.0f, title ? title : "! NOTICE !", 1.0f, 0.85f, 0.35f, true);
+    renderer.drawLine(centerX - 120.0f, boxY + 160.0f, centerX + 120.0f, boxY + 160.0f,
+                      0.85f, 0.70f, 0.25f, 0.8f, 1.5f);
 
-    renderer.drawTextCentered(centerX, boxY + 118.0f, message, 1.0f, 0.95f, 0.95f, false);
-    renderer.drawTextCentered(centerX, boxY + 88.0f, "Difficulty remains locked until the ongoing match concludes.",
-                              0.70f, 0.70f, 0.75f, false);
+    if (line1) {
+        renderer.drawTextCentered(centerX, boxY + 122.0f, line1, 1.0f, 0.95f, 0.95f, false);
+    }
+    if (line2) {
+        renderer.drawTextCentered(centerX, boxY + 92.0f, line2, 0.80f, 0.80f, 0.85f, false);
+    }
 
     bool hOk = UIButtons::BTN_ALERT_OK.contains(mouseX, mouseY);
-    drawButton(UIButtons::BTN_ALERT_OK, hOk, false, "OK");
+    drawButton(UIButtons::BTN_ALERT_OK, hOk, false, okLabel ? okLabel : "OK");
+}
+
+void UI::drawConfirmDialog(const char* title, const char* line1, const char* line2,
+                           float mouseX, float mouseY,
+                           const char* yesLabel, const char* noLabel) const {
+    const float centerX = Config::WORLD_WIDTH / 2.0f;
+
+    // Dark backdrop overlay for modal alert
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.75f);
+
+    float boxX = 110.0f;
+    float boxY = 175.0f;
+    float boxW = 580.0f;
+    float boxH = 240.0f;
+
+    renderer.drawRectAlpha(boxX + 6.0f, boxY - 6.0f, boxW, boxH, 0.0f, 0.0f, 0.0f, 0.70f);
+    renderer.drawRectAlpha(boxX, boxY, boxW, boxH, 0.14f, 0.09f, 0.10f, 0.98f);
+    renderer.drawRectOutline(boxX, boxY, boxW, boxH, 1.0f, 0.40f, 0.30f);
+    renderer.drawRectOutline(boxX + 2.0f, boxY + 2.0f, boxW - 4.0f, boxH - 4.0f, 0.75f, 0.25f, 0.20f);
+
+    renderer.drawTextCentered(centerX, boxY + 185.0f, title ? title : "! NOTICE !", 1.0f, 0.45f, 0.30f, true);
+    renderer.drawLine(centerX - 130.0f, boxY + 170.0f, centerX + 130.0f, boxY + 170.0f,
+                      1.0f, 0.40f, 0.25f, 0.8f, 1.5f);
+
+    if (line1) {
+        renderer.drawTextCentered(centerX, boxY + 132.0f, line1, 1.0f, 0.95f, 0.95f, false);
+    }
+    if (line2) {
+        renderer.drawTextCentered(centerX, boxY + 100.0f, line2, 1.0f, 0.85f, 0.35f, false);
+    }
+
+    bool hYes = UIButtons::BTN_CONFIRM_YES.contains(mouseX, mouseY);
+    bool hNo  = UIButtons::BTN_CONFIRM_NO.contains(mouseX, mouseY);
+
+    drawButton(UIButtons::BTN_CONFIRM_YES, hYes, false, yesLabel ? yesLabel : "YES");
+    drawButton(UIButtons::BTN_CONFIRM_NO, hNo, false, noLabel ? noLabel : "NO");
 }
 
 void UI::drawPauseMenu(float mouseX, float mouseY, int selectedIndex) const {

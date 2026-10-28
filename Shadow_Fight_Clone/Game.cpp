@@ -45,7 +45,7 @@ Game::Game()
       windowHeight(Config::WORLD_HEIGHT),
       matchInProgress(false),
       isStartGameFlow(false),
-      showAlertPopup(false),
+      popupType(PopupType::NONE),
       showDebugBoxes(false), // Disable green box by default as requested!
       quitRequested(false) {
 }
@@ -61,7 +61,7 @@ void Game::startMatch() {
     roundNumber = 1;
     matchInProgress = true;
     isStartGameFlow = false;
-    showAlertPopup  = false;
+    popupType       = PopupType::NONE;
     background.randomizeThemeAndLocation();
     startRound();
 }
@@ -206,8 +206,16 @@ void Game::draw() {
                 ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
             } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
                 ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, selectedDifficulty, false);
-                if (showAlertPopup) {
-                    ui.drawAlertDialog("You cannot change game mode middle of the game", mouseX, mouseY);
+                if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
+                    ui.drawAlertDialog("NOTICE",
+                                       "The match will restart in this difficulty",
+                                       "Click OK to confirm and restart from Round 1.",
+                                       mouseX, mouseY, "OK");
+                } else if (popupType == PopupType::ROUND2_RESTART_PROMPT) {
+                    ui.drawConfirmDialog("DIFFICULTY LOCKED",
+                                         "You cannot change after first round... if you want the game will restart.",
+                                         "Do you want to restart the game?",
+                                         mouseX, mouseY, "YES", "NO");
                 }
             }
             break;
@@ -286,10 +294,28 @@ void Game::handleMenuClick(float mx, float my) {
 }
 
 void Game::handlePauseClick(float mx, float my) {
-    if (showAlertPopup) {
+    if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
         if (UIButtons::BTN_ALERT_OK.contains(mx, my)) {
-            showAlertPopup = false;
-            selectedDifficulty = gameMode; // Return to same difficulty page with unchanged gameMode
+            popupType = PopupType::NONE;
+            gameMode = selectedDifficulty;
+            enemy.setDifficulty(gameMode);
+            startMatch();
+        }
+        return;
+    }
+
+    if (popupType == PopupType::ROUND2_RESTART_PROMPT) {
+        if (UIButtons::BTN_CONFIRM_YES.contains(mx, my)) {
+            popupType = PopupType::NONE;
+            matchInProgress = false;
+            state = GameState::MENU;
+            menuScreen = MenuScreen::DIFFICULTY;
+            isStartGameFlow = true;
+            selectedDifficulty = gameMode;
+        } else if (UIButtons::BTN_CONFIRM_NO.contains(mx, my)) {
+            popupType = PopupType::NONE;
+            selectedDifficulty = gameMode;
+            pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
         }
         return;
     }
@@ -304,7 +330,7 @@ void Game::handlePauseClick(float mx, float my) {
         } else if (UIButtons::BTN_PAUSE_EXIT.contains(mx, my)) {
             // Exit returns to Home screen (Main Menu), NOT closing full game!
             matchInProgress = false;
-            showAlertPopup  = false;
+            popupType       = PopupType::NONE;
             state = GameState::MENU;
             menuScreen = MenuScreen::MAIN;
         }
@@ -314,7 +340,7 @@ void Game::handlePauseClick(float mx, float my) {
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
             pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
             selectedDifficulty = gameMode;
-            showAlertPopup = false;
+            popupType = PopupType::NONE;
         } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
             pauseScreen = PauseScreen::PAUSE_MAIN;
         }
@@ -333,9 +359,13 @@ void Game::handlePauseClick(float mx, float my) {
             selectedDifficulty = gameMode;
             pauseScreen = PauseScreen::PAUSE_OPTIONS;
         } else if (UIButtons::BTN_DIFF_OK.contains(mx, my)) {
-            // Check if player attempts to change difficulty during an active fight
-            if (matchInProgress && selectedDifficulty != gameMode) {
-                showAlertPopup = true;
+            if (selectedDifficulty != gameMode) {
+                bool isRoundOne = (roundNumber == 1 && playerWins == 0 && enemyWins == 0);
+                if (isRoundOne) {
+                    popupType = PopupType::ROUND1_RESTART_CONFIRM;
+                } else {
+                    popupType = PopupType::ROUND2_RESTART_PROMPT;
+                }
             } else {
                 pauseScreen = PauseScreen::PAUSE_OPTIONS;
             }
@@ -416,13 +446,33 @@ void Game::onKeyDown(unsigned char key) {
             break;
 
         case GameState::PAUSED:
-            if (showAlertPopup) {
-                if (key == KEY_ENTER || key == KEY_ESCAPE || key == ' ') {
-                    showAlertPopup = false;
+            if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
+                if (key == KEY_ENTER || key == ' ') {
+                    popupType = PopupType::NONE;
+                    gameMode = selectedDifficulty;
+                    enemy.setDifficulty(gameMode);
+                    startMatch();
+                } else if (key == KEY_ESCAPE) {
+                    popupType = PopupType::NONE;
                     selectedDifficulty = gameMode;
                 }
                 break;
+            } else if (popupType == PopupType::ROUND2_RESTART_PROMPT) {
+                if (key == 'y' || key == 'Y' || key == KEY_ENTER) {
+                    popupType = PopupType::NONE;
+                    matchInProgress = false;
+                    state = GameState::MENU;
+                    menuScreen = MenuScreen::DIFFICULTY;
+                    isStartGameFlow = true;
+                    selectedDifficulty = gameMode;
+                } else if (key == 'n' || key == 'N' || key == KEY_ESCAPE) {
+                    popupType = PopupType::NONE;
+                    selectedDifficulty = gameMode;
+                    pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
+                }
+                break;
             }
+
             if (key == 'p' || key == 'P' || key == KEY_ESCAPE) {
                 if (pauseScreen == PauseScreen::PAUSE_MAIN) {
                     state = GameState::FIGHT;
@@ -438,7 +488,7 @@ void Game::onKeyDown(unsigned char key) {
             if (key == 'r' || key == 'R') startMatch();
             if (key == 'm' || key == 'M') {
                 matchInProgress = false;
-                showAlertPopup  = false;
+                popupType       = PopupType::NONE;
                 state = GameState::MENU;
                 menuScreen = MenuScreen::MAIN;
             }
@@ -451,7 +501,7 @@ void Game::onKeyDown(unsigned char key) {
             if (key == KEY_ENTER) startMatch();
             if (key == 'm' || key == 'M' || key == KEY_ESCAPE) {
                 matchInProgress = false;
-                showAlertPopup  = false;
+                popupType       = PopupType::NONE;
                 state = GameState::MENU;
                 menuScreen = MenuScreen::MAIN;
             }

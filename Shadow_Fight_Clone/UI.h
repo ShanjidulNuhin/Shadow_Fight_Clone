@@ -42,6 +42,8 @@ namespace UIButtons {
 
     // Alert dialog OK button
     const RectButton BTN_ALERT_OK      = { 335.0f, 215.0f, 130.0f, 42.0f, "OK" };
+    const RectButton BTN_CONFIRM_YES   = { 245.0f, 215.0f, 140.0f, 42.0f, "YES" };
+    const RectButton BTN_CONFIRM_NO    = { 415.0f, 215.0f, 140.0f, 42.0f, "NO" };
 
     // Top-right in-game settings gear button
     const RectButton BTN_SETTINGS_ICON = { 745.0f, 545.0f, 45.0f,  42.0f, "SETTINGS" };
@@ -73,7 +75,11 @@ public:
     void drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const;
     void drawControlsScreen(float mouseX, float mouseY, int selectedIndex = -1) const;
     void drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode displayedMode, bool isStartGame = false) const;
-    void drawAlertDialog(const char* message, float mouseX, float mouseY) const;
+    void drawAlertDialog(const char* title, const char* line1, const char* line2,
+                         float mouseX, float mouseY, const char* okLabel = "OK") const;
+    void drawConfirmDialog(const char* title, const char* line1, const char* line2,
+                           float mouseX, float mouseY,
+                           const char* yesLabel = "YES", const char* noLabel = "NO") const;
 
     // Pause Screen
     void drawPauseMenu(float mouseX, float mouseY, int selectedIndex = -1) const;
