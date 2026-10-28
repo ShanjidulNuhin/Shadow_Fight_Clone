@@ -2,6 +2,7 @@
 #include "CombatSystem.h"
 #include "Config.h"
 #include <cstdio>
+#include <cstdlib>
 
 namespace {
     const unsigned char KEY_ENTER  = 13;
@@ -10,11 +11,11 @@ namespace {
     const float PLAYER_START_X = 100.0f;
     const float ENEMY_START_X  = 550.0f;
 
-    const float ROUND_INTRO_TIME  = 1.6f;   // how long the fighters wait at the start of a round
-    const float FIGHT_BANNER_TIME = 0.6f;   // the LAST part of the intro shows "FIGHT!"
-    const float ROUND_OVER_TIME   = 3.5f;   // how long the K.O. screen stays up
-    const float SLOW_MOTION_TIME  = 1.2f;   // the K.O. plays in slow motion for this long...
-    const float SLOW_MOTION_SPEED = 0.35f;  // ...at this fraction of normal speed
+    const float ROUND_INTRO_TIME  = 1.6f;
+    const float FIGHT_BANNER_TIME = 0.6f;
+    const float ROUND_OVER_TIME   = 3.5f;
+    const float SLOW_MOTION_TIME  = 1.2f;
+    const float SLOW_MOTION_SPEED = 0.35f;
 }
 
 Game::Game()
@@ -27,18 +28,27 @@ Game::Game()
       player(PLAYER_START_X, Config::GROUND_HEIGHT),
       enemy(ENEMY_START_X, Config::GROUND_HEIGHT),
       state(GameState::MENU),
+      menuScreen(MenuScreen::MAIN),
+      pauseScreen(PauseScreen::PAUSE_MAIN),
+      gameMode(GameMode::NORMAL),
       roundResult(RoundResult::NONE),
       roundNumber(1),
       playerWins(0),
       enemyWins(0),
       roundIntroTimer(0.0f),
       roundOverTimer(0.0f),
-      showDebugBoxes(true),
+      mouseX(-1.0f),
+      mouseY(-1.0f),
+      selectedButtonIndex(-1),
+      windowWidth(Config::WORLD_WIDTH),
+      windowHeight(Config::WORLD_HEIGHT),
+      showDebugBoxes(false), // Disable green box by default as requested!
       quitRequested(false) {
 }
 
 void Game::init() {
     renderer.init();
+    enemy.setDifficulty(gameMode);
 }
 
 void Game::startMatch() {
@@ -50,9 +60,9 @@ void Game::startMatch() {
 }
 
 void Game::startRound() {
-    // brand-new fighters, standing at their starting spots with full health and energy
     player = Player(PLAYER_START_X, Config::GROUND_HEIGHT);
     enemy  = Enemy(ENEMY_START_X, Config::GROUND_HEIGHT);
+    enemy.setDifficulty(gameMode);
 
     effects.reset();
 
@@ -67,7 +77,7 @@ void Game::endRound() {
     bool enemyDown  = enemy.isDead();
 
     if (playerDown && enemyDown) {
-        roundResult = RoundResult::DRAW;          // nobody scores
+        roundResult = RoundResult::DRAW;
     } else if (enemyDown) {
         roundResult = RoundResult::PLAYER_WON;
         playerWins++;
@@ -81,12 +91,9 @@ void Game::endRound() {
 }
 
 void Game::update(float deltaTime) {
-    // Always advance ambient background and active visual effects
     background.update(deltaTime);
     effects.update(deltaTime);
 
-    // Only the fight and the K.O. moment advance combat. In the menu, while paused and on the
-    // game-over screen, gameplay simulation is frozen.
     switch (state) {
         case GameState::FIGHT:      updateFight(deltaTime);     break;
         case GameState::ROUND_OVER: updateRoundOver(deltaTime); break;
@@ -95,7 +102,6 @@ void Game::update(float deltaTime) {
 }
 
 void Game::updateFight(float deltaTime) {
-    // The "ROUND n / FIGHT!" banner: everyone waits until it's gone.
     if (roundIntroTimer > 0.0f) {
         roundIntroTimer -= deltaTime;
         return;
@@ -105,18 +111,13 @@ void Game::updateFight(float deltaTime) {
     float enemyXBefore  = enemy.getHurtbox().x;
 
     player.update(input, deltaTime);
-
-    // The enemy's brain decides what to do (approach, attack, wait...).
     enemy.update(player, deltaTime);
 
-    // Solid bodies: fighters can't walk through each other (jump over instead!).
     CombatSystem::separateFighters(player, playerXBefore, enemy, enemyXBefore);
 
-    // Did either fighter's attack land on the other? Triggers hit sparks & screen shake
     CombatSystem::resolveAttack(player, enemy, &effects);
     CombatSystem::resolveAttack(enemy, player, &effects);
 
-    // Did that hit knock someone out?
     if (player.isDead() || enemy.isDead()) {
         endRound();
     }
@@ -125,8 +126,6 @@ void Game::updateFight(float deltaTime) {
 void Game::updateRoundOver(float deltaTime) {
     roundOverTimer += deltaTime;
 
-    // The K.O. plays in slow motion for a moment. Nobody is controlled any more:
-    // the player gets "no keys pressed", and the enemy's brain just stands there.
     float simTime = (roundOverTimer < SLOW_MOTION_TIME) ? deltaTime * SLOW_MOTION_SPEED : deltaTime;
     player.update(noInput, simTime);
     enemy.update(player, simTime);
@@ -137,21 +136,17 @@ void Game::updateRoundOver(float deltaTime) {
         if (matchDecided) {
             state = GameState::GAME_OVER;
         } else {
-            if (roundResult != RoundResult::DRAW) roundNumber++;   // a drawn round is replayed
+            if (roundResult != RoundResult::DRAW) roundNumber++;
             startRound();
         }
     }
 }
 
 void Game::drawScene() {
-    // 1. Cinematic arena environment: moonlit sky, mountains, silhouettes, mist & stone floor
     background.draw(renderer);
-
-    // 2. Silhouette Fighters
     player.draw(renderer);
     enemy.draw(renderer);
 
-    // 3. Optional debug bounding boxes
     if (showDebugBoxes && state != GameState::MENU) {
         ui.drawDebugBoxes(player);
         ui.drawDebugBoxes(enemy);
@@ -165,29 +160,27 @@ void Game::draw() {
 
     renderer.beginFrame();
 
-    // 1. Apply multi-axis screen shake to the world camera
     renderer.setCameraOffset(effects.getShakeX(), effects.getShakeY());
-
-    // 2. Draw background and fighters in world coordinates
     drawScene();
-
-    // 3. Draw particles, sparks, dust, and shockwaves in world coordinates
     effects.drawParticles(renderer);
-
-    // 4. Reset camera offset for HUD and vignette
     renderer.resetCamera();
-
-    // 5. Draw cinematic corner vignette
     effects.drawVignette(renderer);
 
-    // 6. Draw UI / HUD on top (always crisp, stable and unshakeable)
     switch (state) {
         case GameState::MENU:
-            ui.drawMenu();
+            if (menuScreen == MenuScreen::MAIN) {
+                ui.drawMainMenu(mouseX, mouseY, selectedButtonIndex);
+            } else if (menuScreen == MenuScreen::OPTIONS) {
+                ui.drawOptionsMenu(mouseX, mouseY, selectedButtonIndex, gameMode);
+            } else if (menuScreen == MenuScreen::CONTROLS) {
+                ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
+            } else if (menuScreen == MenuScreen::DIFFICULTY) {
+                ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, gameMode);
+            }
             break;
 
         case GameState::FIGHT:
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins);
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
             if (roundIntroTimer > 0.0f) {
                 char stageInfo[64];
                 std::snprintf(stageInfo, sizeof(stageInfo), "%s  -  %s",
@@ -197,13 +190,20 @@ void Game::draw() {
             break;
 
         case GameState::PAUSED:
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins);
-            ui.drawPauseScreen();
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
+            if (pauseScreen == PauseScreen::PAUSE_MAIN) {
+                ui.drawPauseMenu(mouseX, mouseY, selectedButtonIndex);
+            } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
+                ui.drawOptionsMenu(mouseX, mouseY, selectedButtonIndex, gameMode);
+            } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
+                ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
+            } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
+                ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, gameMode);
+            }
             break;
 
         case GameState::ROUND_OVER: {
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins);
-
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
             char message[64];
             if (roundResult == RoundResult::PLAYER_WON) {
                 std::snprintf(message, sizeof(message), "You won round %d", roundNumber);
@@ -217,7 +217,7 @@ void Game::draw() {
         }
 
         case GameState::GAME_OVER:
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins);
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
             ui.drawGameOver(playerWins >= Config::ROUNDS_TO_WIN, playerWins, enemyWins);
             break;
     }
@@ -225,21 +225,136 @@ void Game::draw() {
     renderer.endFrame();
 }
 
+void Game::handleMenuClick(float mx, float my) {
+    if (menuScreen == MenuScreen::MAIN) {
+        if (UIButtons::BTN_MAIN_START.contains(mx, my)) {
+            startMatch();
+        } else if (UIButtons::BTN_MAIN_OPTIONS.contains(mx, my)) {
+            menuScreen = MenuScreen::OPTIONS;
+        } else if (UIButtons::BTN_MAIN_EXIT.contains(mx, my)) {
+            quitRequested = true;
+        }
+    } else if (menuScreen == MenuScreen::OPTIONS) {
+        if (UIButtons::BTN_OPT_CONTROLS.contains(mx, my)) {
+            menuScreen = MenuScreen::CONTROLS;
+        } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
+            menuScreen = MenuScreen::DIFFICULTY;
+        } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
+            menuScreen = MenuScreen::MAIN;
+        }
+    } else if (menuScreen == MenuScreen::CONTROLS) {
+        if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
+            menuScreen = MenuScreen::OPTIONS;
+        }
+    } else if (menuScreen == MenuScreen::DIFFICULTY) {
+        if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
+            gameMode = GameMode::EASY;
+            enemy.setDifficulty(gameMode);
+        } else if (UIButtons::BTN_DIFF_NORMAL.contains(mx, my)) {
+            gameMode = GameMode::NORMAL;
+            enemy.setDifficulty(gameMode);
+        } else if (UIButtons::BTN_DIFF_HARD.contains(mx, my)) {
+            gameMode = GameMode::HARD;
+            enemy.setDifficulty(gameMode);
+        } else if (UIButtons::BTN_DIFF_BACK.contains(mx, my)) {
+            menuScreen = MenuScreen::OPTIONS;
+        }
+    }
+}
+
+void Game::handlePauseClick(float mx, float my) {
+    if (pauseScreen == PauseScreen::PAUSE_MAIN) {
+        if (UIButtons::BTN_PAUSE_RESUME.contains(mx, my)) {
+            state = GameState::FIGHT;
+        } else if (UIButtons::BTN_PAUSE_RESTART.contains(mx, my)) {
+            startMatch();
+        } else if (UIButtons::BTN_PAUSE_OPTIONS.contains(mx, my)) {
+            pauseScreen = PauseScreen::PAUSE_OPTIONS;
+        } else if (UIButtons::BTN_PAUSE_EXIT.contains(mx, my)) {
+            // Exit returns to Home screen (Main Menu), NOT closing full game!
+            state = GameState::MENU;
+            menuScreen = MenuScreen::MAIN;
+        }
+    } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
+        if (UIButtons::BTN_OPT_CONTROLS.contains(mx, my)) {
+            pauseScreen = PauseScreen::PAUSE_CONTROLS;
+        } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
+            pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
+        } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
+            pauseScreen = PauseScreen::PAUSE_MAIN;
+        }
+    } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
+        if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
+            pauseScreen = PauseScreen::PAUSE_OPTIONS;
+        }
+    } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
+        if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
+            gameMode = GameMode::EASY;
+            enemy.setDifficulty(gameMode);
+        } else if (UIButtons::BTN_DIFF_NORMAL.contains(mx, my)) {
+            gameMode = GameMode::NORMAL;
+            enemy.setDifficulty(gameMode);
+        } else if (UIButtons::BTN_DIFF_HARD.contains(mx, my)) {
+            gameMode = GameMode::HARD;
+            enemy.setDifficulty(gameMode);
+        } else if (UIButtons::BTN_DIFF_BACK.contains(mx, my)) {
+            pauseScreen = PauseScreen::PAUSE_OPTIONS;
+        }
+    }
+}
+
+void Game::onMouseMove(float worldX, float worldY) {
+    mouseX = worldX;
+    mouseY = worldY;
+    selectedButtonIndex = -1;
+}
+
+void Game::onMouseClick(int button, int btnState, float worldX, float worldY) {
+    mouseX = worldX;
+    mouseY = worldY;
+
+    if (button == 0 && btnState == 0) { // GLUT_LEFT_BUTTON and GLUT_DOWN
+        if (state == GameState::MENU) {
+            handleMenuClick(worldX, worldY);
+        } else if (state == GameState::FIGHT) {
+            // Check top-right in-game settings icon
+            if (UIButtons::BTN_SETTINGS_ICON.contains(worldX, worldY)) {
+                state = GameState::PAUSED;
+                pauseScreen = PauseScreen::PAUSE_MAIN;
+            }
+        } else if (state == GameState::PAUSED) {
+            handlePauseClick(worldX, worldY);
+        } else if (state == GameState::GAME_OVER) {
+            startMatch();
+        }
+    }
+}
+
 void Game::onKeyDown(unsigned char key) {
-    // Held keys (A, D, J, K...) are always tracked, whatever screen we're on.
     input.keyDown(key);
 
-    // One-time key presses: what they do depends on the current state.
     switch (state) {
         case GameState::MENU:
-            if (key == KEY_ENTER)  startMatch();
-            if (key == KEY_ESCAPE) quitRequested = true;
+            if (key == KEY_ENTER) {
+                if (menuScreen == MenuScreen::MAIN) startMatch();
+                else if (menuScreen == MenuScreen::OPTIONS) menuScreen = MenuScreen::MAIN;
+                else if (menuScreen == MenuScreen::CONTROLS) menuScreen = MenuScreen::OPTIONS;
+                else if (menuScreen == MenuScreen::DIFFICULTY) menuScreen = MenuScreen::OPTIONS;
+            } else if (key == KEY_ESCAPE) {
+                if (menuScreen == MenuScreen::MAIN) quitRequested = true;
+                else if (menuScreen == MenuScreen::OPTIONS) menuScreen = MenuScreen::MAIN;
+                else if (menuScreen == MenuScreen::CONTROLS) menuScreen = MenuScreen::OPTIONS;
+                else if (menuScreen == MenuScreen::DIFFICULTY) menuScreen = MenuScreen::OPTIONS;
+            }
             break;
 
         case GameState::FIGHT:
-            if (key == 'p' || key == 'P' || key == KEY_ESCAPE) state = GameState::PAUSED;
+            if (key == 'p' || key == 'P' || key == KEY_ESCAPE) {
+                state = GameState::PAUSED;
+                pauseScreen = PauseScreen::PAUSE_MAIN;
+            }
             if (key == 'h' || key == 'H') showDebugBoxes = !showDebugBoxes;
-            if (key == 't' || key == 'T') {            // testing aid: refill everyone's health
+            if (key == 't' || key == 'T') {
                 player.restoreHealth();
                 enemy.restoreHealth();
                 player.restoreEnergy();
@@ -248,17 +363,31 @@ void Game::onKeyDown(unsigned char key) {
             break;
 
         case GameState::PAUSED:
-            if (key == 'p' || key == 'P' || key == KEY_ESCAPE) state = GameState::FIGHT;
+            if (key == 'p' || key == 'P' || key == KEY_ESCAPE) {
+                if (pauseScreen == PauseScreen::PAUSE_MAIN) {
+                    state = GameState::FIGHT;
+                } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
+                    pauseScreen = PauseScreen::PAUSE_MAIN;
+                } else {
+                    pauseScreen = PauseScreen::PAUSE_OPTIONS;
+                }
+            }
             if (key == 'r' || key == 'R') startMatch();
-            if (key == 'm' || key == 'M') state = GameState::MENU;
+            if (key == 'm' || key == 'M') {
+                state = GameState::MENU;
+                menuScreen = MenuScreen::MAIN;
+            }
             break;
 
         case GameState::ROUND_OVER:
-            break;   // nothing to press during the K.O. moment
+            break;
 
         case GameState::GAME_OVER:
             if (key == KEY_ENTER) startMatch();
-            if (key == 'm' || key == 'M' || key == KEY_ESCAPE) state = GameState::MENU;
+            if (key == 'm' || key == 'M' || key == KEY_ESCAPE) {
+                state = GameState::MENU;
+                menuScreen = MenuScreen::MAIN;
+            }
             break;
     }
 }
@@ -267,7 +396,13 @@ void Game::onKeyUp(unsigned char key) {
     input.keyUp(key);
 }
 
+void Game::onSpecialKey(int key) {
+    // Optional special key support (e.g. arrow keys)
+}
+
 void Game::onResize(int windowW, int windowH) {
+    windowWidth = windowW;
+    windowHeight = windowH;
     renderer.resize(windowW, windowH);
 }
 

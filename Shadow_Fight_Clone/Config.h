@@ -1,6 +1,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+enum class GameMode {
+    EASY,
+    NORMAL,
+    HARD
+};
+
 // Game-wide constants shared by several files.
 namespace Config {
     const int   WORLD_WIDTH   = 800;     // world units == window pixels for now

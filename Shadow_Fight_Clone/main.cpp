@@ -8,6 +8,8 @@
 int lastTime = 0;
 int fpsTimer = 0;
 int fpsFrames = 0;
+int currentWindowW = Config::WORLD_WIDTH;
+int currentWindowH = Config::WORLD_HEIGHT;
 
 // GLUT callbacks can't carry objects, so the one Game lives here.
 Game game;
@@ -47,7 +49,28 @@ void keyboardUp(unsigned char key, int, int) {
     game.onKeyUp(key);
 }
 
+void mouseClick(int button, int state, int x, int y) {
+    float worldX = (float)x * (float)Config::WORLD_WIDTH / (float)currentWindowW;
+    float worldY = (float)(currentWindowH - y) * (float)Config::WORLD_HEIGHT / (float)currentWindowH;
+    game.onMouseClick(button, state, worldX, worldY);
+    if (game.shouldQuit()) std::exit(0);
+}
+
+void mouseMotion(int x, int y) {
+    float worldX = (float)x * (float)Config::WORLD_WIDTH / (float)currentWindowW;
+    float worldY = (float)(currentWindowH - y) * (float)Config::WORLD_HEIGHT / (float)currentWindowH;
+    game.onMouseMove(worldX, worldY);
+}
+
+void mousePassiveMotion(int x, int y) {
+    float worldX = (float)x * (float)Config::WORLD_WIDTH / (float)currentWindowW;
+    float worldY = (float)(currentWindowH - y) * (float)Config::WORLD_HEIGHT / (float)currentWindowH;
+    game.onMouseMove(worldX, worldY);
+}
+
 void reshape(int w, int h) {
+    currentWindowW = (w > 0) ? w : 1;
+    currentWindowH = (h > 0) ? h : 1;
     game.onResize(w, h);
 }
 
@@ -66,6 +89,9 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboardDown);
     glutKeyboardUpFunc(keyboardUp);
+    glutMouseFunc(mouseClick);
+    glutMotionFunc(mouseMotion);
+    glutPassiveMotionFunc(mousePassiveMotion);
     glutIdleFunc(idle);
 
     lastTime = glutGet(GLUT_ELAPSED_TIME);

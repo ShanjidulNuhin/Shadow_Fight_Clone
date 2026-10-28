@@ -32,7 +32,10 @@ bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
 
     bool wasBlocking = (defender.getState() == FighterState::BLOCK) && attack->blockable;
 
-    defender.receiveHit(*attack, pushDirection);
+    float mult = attacker.getDamageMultiplier();
+    int damageToApply = std::max(1, (int)std::round(attack->damage * mult));
+
+    defender.receiveHit(*attack, pushDirection, damageToApply);
 
     // Determine visual spark style
     if (effects != nullptr) {

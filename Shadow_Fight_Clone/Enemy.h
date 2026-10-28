@@ -2,6 +2,7 @@
 #define ENEMY_H
 
 #include "Fighter.h"
+#include "Config.h"
 
 enum class AIState {
     IDLE,
@@ -20,6 +21,9 @@ public:
 
     void update(const Fighter& target, float deltaTime);
 
+    void     setDifficulty(GameMode mode);
+    GameMode getDifficulty() const;
+
     AIState     getAIState() const;
     const char* getAIStateName() const;
 
@@ -30,6 +34,8 @@ private:
     float        randomCooldown() const;
     void         pickNewSpacing();
     void         watchForAttacks(const Fighter& target, float gap, float deltaTime);
+
+    GameMode     difficulty;
 
     AIState      aiState;
     float        attackCooldown;

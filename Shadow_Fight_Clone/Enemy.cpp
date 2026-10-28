@@ -12,22 +12,15 @@ namespace {
     // Timing
     const float FIRST_ATTACK_DELAY = 1.5f;
     const float ARRIVAL_PAUSE      = 0.3f;
-    const int   HESITATION_PERCENT = 25;
 
-    // Defending
-    const int   DEFEND_PERCENT   = 45;
-    const float MIN_REACTION     = 0.05f;
-    const float MAX_REACTION     = 0.15f;
+    // Defending defaults
     const float GUARD_URGE_PER_SECOND = 0.15f;
     const float GUARD_URGE_RANGE      = 70.0f;
     const float MIN_GUARD_TIME   = 0.4f;
     const float MAX_GUARD_TIME   = 1.0f;
     const float NOTICE_MARGIN    = 15.0f;
 
-    // Jumping
-    const int   DODGE_PERCENT     = 45;
-    const float MIN_DODGE_REACTION = 0.10f;
-    const float MAX_DODGE_REACTION = 0.22f;
+    // Jumping defaults
     const float APPROACH_JUMP_PER_SECOND = 0.30f;
     const float APPROACH_JUMP_MIN_GAP    = 70.0f;
     const float AIR_DRIFT = 0.8f;
@@ -44,13 +37,35 @@ namespace {
 
 Enemy::Enemy(float startX, float startY)
     : Fighter(startX, startY, 50.0f, 100.0f),
+      difficulty(GameMode::NORMAL),
       aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY),
       preferredGap(45.0f), lastAttack(AttackChoice::NONE),
       dodgePending(false), dodgeTimer(0.0f), airDrift(0.0f),
       targetWasAttacking(false), guardPending(false), reactionTimer(0.0f), guardTimer(0.0f) {
+    setRole(FighterRole::ARMORED_SPEARMAN);
     setColor(0.13f, 0.08f, 0.08f);
     setAccentColor(0.95f, 0.45f, 0.15f);
     setFacingRight(false);
+    setDifficulty(GameMode::NORMAL);
+}
+
+void Enemy::setDifficulty(GameMode mode) {
+    difficulty = mode;
+    switch (mode) {
+        case GameMode::EASY:
+            setDamageMultiplier(0.65f);
+            break;
+        case GameMode::NORMAL:
+            setDamageMultiplier(1.00f);
+            break;
+        case GameMode::HARD:
+            setDamageMultiplier(1.50f);
+            break;
+    }
+}
+
+GameMode Enemy::getDifficulty() const {
+    return difficulty;
 }
 
 void Enemy::pickNewSpacing() {
@@ -58,31 +73,64 @@ void Enemy::pickNewSpacing() {
 }
 
 float Enemy::randomCooldown() const {
+    if (difficulty == GameMode::EASY) {
+        // Slow to attack, big recovery windows for player
+        return 1.8f + randomFraction() * 1.5f;
+    } else if (difficulty == GameMode::HARD) {
+        // Aggressive, fast attack combos
+        return 0.25f + randomFraction() * 0.50f;
+    }
+    // Normal: balanced
     int roll = std::rand() % 100;
     if (roll < 25) return 0.3f + randomFraction() * 0.3f;
-    if (roll < 75) return 1.0f + randomFraction() * 1.0f;
-    return 2.2f + randomFraction() * 1.0f;
+    if (roll < 75) return 0.9f + randomFraction() * 0.9f;
+    return 1.8f + randomFraction() * 0.8f;
 }
+
 void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
     const AttackData* theirAttack = target.getCurrentAttack();
     bool targetIsAttacking = (theirAttack != nullptr);
+
+    int defendChance = 45;
+    float minReact = 0.08f, maxReact = 0.16f;
+    int dodgeChance = 40;
+    float minDodge = 0.10f, maxDodge = 0.20f;
+
+    if (difficulty == GameMode::EASY) {
+        // Slow reaction and rarely blocks
+        defendChance = 20;
+        minReact = 0.30f;
+        maxReact = 0.48f;
+        dodgeChance = 15;
+        minDodge = 0.30f;
+        maxDodge = 0.45f;
+    } else if (difficulty == GameMode::HARD) {
+        // Lightning fast reflexes and frequent defense
+        defendChance = 75;
+        minReact = 0.02f;
+        maxReact = 0.06f;
+        dodgeChance = 70;
+        minDodge = 0.03f;
+        maxDodge = 0.08f;
+    }
 
     if (targetIsAttacking && !targetWasAttacking &&
         gap < theirAttack->reach + NOTICE_MARGIN && canAct()) {
 
         if (!theirAttack->blockable) {
-            if (!dodgePending && std::rand() % 100 < DODGE_PERCENT) {
+            if (!dodgePending && std::rand() % 100 < dodgeChance) {
                 dodgePending = true;
-                dodgeTimer = MIN_DODGE_REACTION + randomFraction() * (MAX_DODGE_REACTION - MIN_DODGE_REACTION);
+                dodgeTimer = minDodge + randomFraction() * (maxDodge - minDodge);
             }
         } else if (!guardPending && guardTimer <= 0.0f) {
-            if (std::rand() % 100 < DEFEND_PERCENT) {
+            if (std::rand() % 100 < defendChance) {
                 guardPending  = true;
-                reactionTimer = MIN_REACTION + randomFraction() * (MAX_REACTION - MIN_REACTION);
+                reactionTimer = minReact + randomFraction() * (maxReact - minReact);
             }
         }
     }
     targetWasAttacking = targetIsAttacking;
+
     if (dodgePending) {
         dodgeTimer -= deltaTime;
         if (dodgeTimer <= 0.0f) {
@@ -93,12 +141,14 @@ void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
             jump();
         }
     }
+
     if (!guardPending && guardTimer <= 0.0f && canAct() && gap < GUARD_URGE_RANGE) {
         float roll = std::rand() / (float)RAND_MAX;
         if (roll < GUARD_URGE_PER_SECOND * deltaTime) {
             guardTimer = MIN_GUARD_TIME + randomFraction() * (MAX_GUARD_TIME - MIN_GUARD_TIME);
         }
     }
+
     if (guardPending) {
         reactionTimer -= deltaTime;
         if (reactionTimer <= 0.0f) {
@@ -106,8 +156,10 @@ void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
             guardTimer = MIN_GUARD_TIME + randomFraction() * (MAX_GUARD_TIME - MIN_GUARD_TIME);
         }
     }
+
     if (guardTimer > 0.0f) guardTimer -= deltaTime;
 }
+
 Enemy::AttackChoice Enemy::chooseAttack(const Fighter& target, float gap) const {
     if (isInTheAir(target)) return AttackChoice::NONE;
     int punchWeight   = 0;
@@ -169,9 +221,13 @@ void Enemy::update(const Fighter& target, float deltaTime) {
         if (attackCooldown <= 0.0f) {
             AttackChoice choice = chooseAttack(target, gap);
 
+            int hesitationChance = 25;
+            if (difficulty == GameMode::EASY) hesitationChance = 40;
+            else if (difficulty == GameMode::HARD) hesitationChance = 5;
+
             if (choice == AttackChoice::NONE) {
                 if (!isInTheAir(target)) preferredGap = MIN_SPACING + randomFraction() * 15.0f;
-            } else if (std::rand() % 100 < HESITATION_PERCENT) {
+            } else if (std::rand() % 100 < hesitationChance) {
                 attackCooldown = 0.2f + randomFraction() * 0.4f;
             } else {
                 if (choice == AttackChoice::PUNCH)   startPunch();
@@ -188,9 +244,13 @@ void Enemy::update(const Fighter& target, float deltaTime) {
             }
         }
         if (!attackedThisFrame) {
+            float speedRatio = WALK_SPEED_RATIO;
+            if (difficulty == GameMode::EASY) speedRatio *= 0.75f;
+            else if (difficulty == GameMode::HARD) speedRatio *= 1.30f;
+
             if (gap > preferredGap) {
                 aiState = AIState::APPROACH;
-                walkDirection = directionToTarget * WALK_SPEED_RATIO;
+                walkDirection = directionToTarget * speedRatio;
                 if (attackCooldown < ARRIVAL_PAUSE) attackCooldown = ARRIVAL_PAUSE;
 
                 if (gap > APPROACH_JUMP_MIN_GAP &&

@@ -41,7 +41,8 @@ namespace {
 }
 
 Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
-    : x(startX), y(startY), width(bodyWidth), height(bodyHeight),
+    : role(FighterRole::NINJA), damageMultiplier(1.0f),
+      x(startX), y(startY), width(bodyWidth), height(bodyHeight),
       standingHeight(bodyHeight), crouchHeight(bodyHeight * CROUCH_HEIGHT_RATIO),
       moveSpeed(250.0f), velocityY(0.0f), knockbackVelocityX(0.0f),
       moveDirection(0.0f), facingRight(true),
@@ -195,6 +196,22 @@ float Fighter::pushHorizontally(float dx) {
     return x - oldX;
 }
 
+void Fighter::setRole(FighterRole r) {
+    role = r;
+}
+
+FighterRole Fighter::getRole() const {
+    return role;
+}
+
+void Fighter::setDamageMultiplier(float mult) {
+    damageMultiplier = mult;
+}
+
+float Fighter::getDamageMultiplier() const {
+    return damageMultiplier;
+}
+
 void Fighter::setColor(float r, float g, float b) {
     colorR = r;
     colorG = g;
@@ -238,14 +255,16 @@ void Fighter::onAttackConnected() {
     attackHasHit = true;
 }
 
-void Fighter::receiveHit(const AttackData& attack, float pushDirection) {
+void Fighter::receiveHit(const AttackData& attack, float pushDirection, int customDamage) {
     if (isDead()) return;
 
     bool attackerIsOnRight = (pushDirection < 0.0f);
     bool facingAttacker = (attackerIsOnRight == facingRight);
 
+    int rawDamage = (customDamage >= 0) ? customDamage : attack.damage;
+
     if (blocking && facingAttacker && attack.blockable) {
-        int chipDamage = attack.damage * BLOCK_DAMAGE_PERCENT / 100;
+        int chipDamage = rawDamage * BLOCK_DAMAGE_PERCENT / 100;
         if (chipDamage < 1) chipDamage = 1;
         takeDamage(chipDamage);
 
@@ -254,7 +273,7 @@ void Fighter::receiveHit(const AttackData& attack, float pushDirection) {
         return;
     }
 
-    takeDamage(attack.damage);
+    takeDamage(rawDamage);
 
     if (isDead()) {
         state = FighterState::DEAD;
@@ -733,7 +752,7 @@ void Fighter::draw(const Renderer& renderer) const {
     }
 
     // =========================================================================
-    // LAYER 1: BACK LIMBS (Depth-sorted behind torso with darker shadow tint)
+    // LAYER 1: BACK LIMBS & BACK ATTIRE
     // =========================================================================
     // Back Leg
     renderer.drawLimb(hipB.x, hipB.y, kneeB.x, kneeB.y, 5.5f, 4.5f, backR, backG, backB);
@@ -745,10 +764,57 @@ void Fighter::draw(const Renderer& renderer) const {
     renderer.drawLimb(elbowB.x, elbowB.y, handB.x, handB.y, 3.5f, 3.0f, backR, backG, backB);
     renderer.drawCircle(handB.x, handB.y, 3.5f, backR, backG, backB);
 
+    // Character-specific back elements
+    if (role == FighterRole::NINJA) {
+        // Ninja: Twin daggers / ninja blades strapped across the back (as in reference image)
+        if (state != FighterState::DEAD) {
+            // Scabbard 1 & Hilt 1
+            renderer.drawLine(shoulderB.x - dir * 2.0f, shoulderB.y + 2.0f,
+                              shoulderB.x - dir * 14.0f, shoulderB.y + 20.0f,
+                              0.15f, 0.15f, 0.18f, 1.0f, 3.2f);
+            renderer.drawLine(shoulderB.x - dir * 12.0f, shoulderB.y + 18.0f,
+                              shoulderB.x - dir * 16.0f, shoulderB.y + 24.0f,
+                              accentR, accentG, accentB, 1.0f, 2.8f);
+            // Scabbard 2 & Hilt 2 (slightly offset)
+            renderer.drawLine(shoulderB.x - dir * 5.0f, shoulderB.y + 4.0f,
+                              shoulderB.x - dir * 18.0f, shoulderB.y + 25.0f,
+                              0.12f, 0.12f, 0.15f, 1.0f, 3.0f);
+            renderer.drawLine(shoulderB.x - dir * 16.0f, shoulderB.y + 22.0f,
+                              shoulderB.x - dir * 20.0f, shoulderB.y + 28.0f,
+                              accentR * 0.8f, accentG * 0.8f, accentB * 0.8f, 1.0f, 2.5f);
+        }
+        // Off-hand reverse-grip defensive dagger
+        float ddirX = -dir * 10.0f;
+        float ddirY = -5.0f;
+        renderer.drawLine(handB.x, handB.y, handB.x + ddirX, handB.y + ddirY,
+                          0.82f, 0.88f, 0.95f, 1.0f, 2.0f);
+    } else {
+        // Spearman: Armored shoulder pauldron on back arm
+        renderer.drawCircle(shoulderB.x, shoulderB.y, 5.5f, backR * 1.3f, backG * 1.3f, backB * 1.3f);
+        renderer.drawQuad(shoulderB.x - dir * 4.0f, shoulderB.y + 4.0f,
+                          shoulderB.x + dir * 4.0f, shoulderB.y + 4.0f,
+                          shoulderB.x + dir * 5.0f, shoulderB.y - 3.0f,
+                          shoulderB.x - dir * 5.0f, shoulderB.y - 3.0f,
+                          backR * 1.15f, backG * 1.15f, backB * 1.15f);
+
+        // Spearman: Billowing warrior coat-tails / tunic skirts trailing backwards (as in reference image!)
+        float skirtWave = (state == FighterState::DEAD) ? 0.0f : std::sin(stateTime * 7.0f) * 3.5f;
+        renderer.drawQuad(waist.x - dir * 3.0f, waist.y,
+                          waist.x - dir * 7.0f, waist.y,
+                          cx - dir * (26.0f + skirtWave), drawY + 8.0f,
+                          cx - dir * (17.0f + skirtWave), drawY + 8.0f,
+                          backR, backG, backB);
+        renderer.drawQuad(waist.x - dir * 5.0f, waist.y - 2.0f,
+                          waist.x - dir * 9.0f, waist.y - 2.0f,
+                          cx - dir * (32.0f + skirtWave * 1.2f), drawY + 4.0f,
+                          cx - dir * (24.0f + skirtWave * 1.2f), drawY + 4.0f,
+                          backR * 0.85f, backG * 0.85f, backB * 0.85f);
+    }
+
     // =========================================================================
-    // LAYER 2: TORSO & BELT SASH (Middle layer)
+    // LAYER 2: TORSO & BELT / ARMOR
     // =========================================================================
-    // Upper chest & shoulders (tapered athletic silhouette)
+    // Upper chest & shoulders
     renderer.drawQuad(chest.x - 9.0f, chest.y,
                       chest.x + 9.0f, chest.y,
                       waist.x + 6.5f, waist.y,
@@ -765,21 +831,34 @@ void Fighter::draw(const Renderer& renderer) const {
     // Muscular neck
     renderer.drawLimb(neck.x, neck.y - 2.0f, headCenter.x, headCenter.y - 4.0f, 3.2f, 3.8f, bodyR, bodyG, bodyB);
 
-    // Martial-arts belt / sash (Obi) wrapped around waist
-    renderer.drawRect(waist.x - 7.5f, waist.y - 2.5f, 15.0f, 5.0f, accentR, accentG, accentB);
+    if (role == FighterRole::NINJA) {
+        // Ninja: Belt sash (Obi) wrapped around waist
+        renderer.drawRect(waist.x - 7.5f, waist.y - 2.5f, 15.0f, 5.0f, accentR, accentG, accentB);
 
-    // Hanging sash ribbon tails fluttering in the wind
-    if (state != FighterState::DEAD) {
-        float sashWave = std::sin(stateTime * 6.0f) * 2.0f;
-        renderer.drawQuad(waist.x - dir * 2.0f, waist.y - 2.0f,
-                          waist.x - dir * 6.0f, waist.y - 2.0f,
-                          waist.x - dir * 9.0f + sashWave, waist.y - 14.0f,
-                          waist.x - dir * 5.0f + sashWave, waist.y - 14.0f,
-                          accentR, accentG, accentB);
+        // Hanging sash ribbon tails fluttering in the wind
+        if (state != FighterState::DEAD) {
+            float sashWave = std::sin(stateTime * 6.0f) * 2.0f;
+            renderer.drawQuad(waist.x - dir * 2.0f, waist.y - 2.0f,
+                              waist.x - dir * 6.0f, waist.y - 2.0f,
+                              waist.x - dir * 9.0f + sashWave, waist.y - 14.0f,
+                              waist.x - dir * 5.0f + sashWave, waist.y - 14.0f,
+                              accentR, accentG, accentB);
+        }
+    } else {
+        // Spearman: Segmented armor plates & heavy combat belt
+        renderer.drawRect(waist.x - 8.0f, waist.y - 3.5f, 16.0f, 7.0f, accentR * 0.7f, accentG * 0.7f, accentB * 0.7f);
+        renderer.drawRectOutline(waist.x - 8.0f, waist.y - 3.5f, 16.0f, 7.0f, 0.45f, 0.45f, 0.50f);
+        // Front armored tunic flap
+        float skirtWave = (state == FighterState::DEAD) ? 0.0f : std::sin(stateTime * 7.0f) * 2.5f;
+        renderer.drawQuad(waist.x, waist.y,
+                          waist.x - dir * 5.0f, waist.y,
+                          cx - dir * (14.0f + skirtWave * 0.8f), drawY + 12.0f,
+                          cx - dir * (8.0f + skirtWave * 0.8f), drawY + 12.0f,
+                          bodyR, bodyG, bodyB);
     }
 
     // =========================================================================
-    // LAYER 3: FRONT LIMBS (Foreground layer with primary silhouette tone)
+    // LAYER 3: FRONT LIMBS & WEAPONS
     // =========================================================================
     // Front Leg
     renderer.drawLimb(hipF.x, hipF.y, kneeF.x, kneeF.y, 5.5f, 4.5f, bodyR, bodyG, bodyB);
@@ -791,48 +870,184 @@ void Fighter::draw(const Renderer& renderer) const {
     renderer.drawLimb(elbowF.x, elbowF.y, handF.x, handF.y, 3.5f, 3.0f, bodyR, bodyG, bodyB);
     renderer.drawCircle(handF.x, handF.y, 3.5f, bodyR, bodyG, bodyB);
 
+    // Character-specific front weapons & armor
+    if (role == FighterRole::NINJA) {
+        // Ninja: Combat Dagger / Sai in front hand
+        float bladeAngle = 0.0f;
+        float bladeLen   = 22.0f;
+        if (state == FighterState::PUNCH || state == FighterState::SPECIAL) {
+            bladeLen = 28.0f;
+            bladeAngle = 0.0f;
+        } else if (state == FighterState::BLOCK) {
+            bladeAngle = 0.5f;
+        } else {
+            bladeAngle = 0.15f;
+        }
+
+        float tipX = handF.x + dir * (std::cos(bladeAngle) * bladeLen);
+        float tipY = handF.y + std::sin(bladeAngle) * bladeLen;
+
+        // Dagger guard
+        renderer.drawLine(handF.x - dir * 2.0f, handF.y - 4.0f,
+                          handF.x + dir * 2.0f, handF.y + 4.0f,
+                          accentR, accentG, accentB, 1.0f, 2.5f);
+        // Razor blade with bright steel edge
+        renderer.drawLine(handF.x, handF.y, tipX, tipY,
+                          0.88f, 0.92f, 0.98f, 1.0f, 2.5f);
+        renderer.drawLine(handF.x, handF.y, tipX, tipY,
+                          0.25f, 0.30f, 0.35f, 1.0f, 1.2f);
+    } else {
+        // Spearman: Front shoulder pauldron
+        renderer.drawCircle(shoulderF.x, shoulderF.y, 6.0f, bodyR * 1.3f, bodyG * 1.3f, bodyB * 1.3f);
+        renderer.drawQuad(shoulderF.x - dir * 4.0f, shoulderF.y + 5.0f,
+                          shoulderF.x + dir * 5.0f, shoulderF.y + 5.0f,
+                          shoulderF.x + dir * 6.0f, shoulderF.y - 3.0f,
+                          shoulderF.x - dir * 5.0f, shoulderF.y - 3.0f,
+                          bodyR * 1.15f, bodyG * 1.15f, bodyB * 1.15f);
+
+        // Spearman: Long Polearm / Spear (Yari / Naginata)
+        float spearTailX, spearTailY;
+        float spearHeadX, spearHeadY;
+
+        if (state == FighterState::PUNCH || state == FighterState::SPECIAL) {
+            // Forward spear thrust strike!
+            spearTailX = handB.x - dir * 28.0f;
+            spearTailY = handB.y - 4.0f;
+            spearHeadX = handF.x + dir * 44.0f;
+            spearHeadY = handF.y + 1.0f;
+        } else if (state == FighterState::BLOCK) {
+            // Vertical spear guard
+            spearTailX = handF.x - dir * 6.0f;
+            spearTailY = drawY + 2.0f;
+            spearHeadX = handF.x + dir * 4.0f;
+            spearHeadY = drawY + 98.0f;
+        } else {
+            // Iconic stance from reference image: spear angles down and far behind him!
+            spearTailX = handF.x - dir * 62.0f;
+            spearTailY = drawY + 6.0f;
+            spearHeadX = handF.x + dir * 24.0f;
+            spearHeadY = handF.y + 14.0f;
+        }
+
+        // Wooden/steel spear shaft
+        renderer.drawLine(spearTailX, spearTailY, spearHeadX, spearHeadY,
+                          0.25f, 0.20f, 0.16f, 1.0f, 3.2f);
+        renderer.drawLine(spearTailX, spearTailY, spearHeadX, spearHeadY,
+                          0.12f, 0.10f, 0.08f, 1.0f, 1.5f);
+
+        // Spearhead leaf blade & battle tassel
+        float tipDirX = (spearHeadX - spearTailX);
+        float tipDirY = (spearHeadY - spearTailY);
+        float len = std::sqrt(tipDirX * tipDirX + tipDirY * tipDirY);
+        if (len > 0.001f) {
+            tipDirX /= len;
+            tipDirY /= len;
+        }
+        float bladeTipX = spearHeadX + tipDirX * 18.0f;
+        float bladeTipY = spearHeadY + tipDirY * 18.0f;
+        float bladeNormX = -tipDirY * 3.5f;
+        float bladeNormY =  tipDirX * 3.5f;
+
+        // Razor steel spearhead
+        renderer.drawQuad(spearHeadX, spearHeadY,
+                          spearHeadX + tipDirX * 7.0f + bladeNormX, spearHeadY + tipDirY * 7.0f + bladeNormY,
+                          bladeTipX, bladeTipY,
+                          spearHeadX + tipDirX * 7.0f - bladeNormX, spearHeadY + tipDirY * 7.0f - bladeNormY,
+                          0.88f, 0.92f, 0.98f);
+        // Crimson battle tassel fluttering behind blade socket
+        float tasselWave = std::sin(stateTime * 9.0f) * 2.5f;
+        renderer.drawQuad(spearHeadX - tipDirX * 2.0f, spearHeadY - tipDirY * 2.0f,
+                          spearHeadX, spearHeadY,
+                          spearHeadX - dir * 8.0f + tasselWave, spearHeadY - 8.0f,
+                          spearHeadX - dir * 12.0f + tasselWave, spearHeadY - 6.0f,
+                          0.95f, 0.20f, 0.15f);
+    }
+
     // =========================================================================
-    // LAYER 4: HEAD, HEADBAND & GLOWING EYE SLIT
+    // LAYER 4: HEAD, HELMET / HOOD & GLOWING EYES
     // =========================================================================
-    // Ninja cowl / hood head shape
-    renderer.drawCircle(headCenter.x, headCenter.y, headRadius, bodyR, bodyG, bodyB);
-    // Tapered chin
-    renderer.drawTriangle(headCenter.x - 6.5f, headCenter.y - 2.0f,
-                          headCenter.x + 6.5f, headCenter.y - 2.0f,
-                          headCenter.x + dir * 2.0f, headCenter.y - 10.0f,
-                          bodyR, bodyG, bodyB);
+    if (role == FighterRole::NINJA) {
+        // Ninja: Cowl / hood head shape
+        renderer.drawCircle(headCenter.x, headCenter.y, headRadius, bodyR, bodyG, bodyB);
+        // Tapered chin & cloth mask
+        renderer.drawTriangle(headCenter.x - 6.5f, headCenter.y - 2.0f,
+                              headCenter.x + 6.5f, headCenter.y - 2.0f,
+                              headCenter.x + dir * 2.0f, headCenter.y - 10.0f,
+                              bodyR, bodyG, bodyB);
+        // Cowl peak on top
+        renderer.drawTriangle(headCenter.x - 5.0f, headCenter.y + 6.0f,
+                              headCenter.x + 4.0f, headCenter.y + 6.0f,
+                              headCenter.x - dir * 1.5f, headCenter.y + 11.5f,
+                              bodyR, bodyG, bodyB);
 
-    if (state != FighterState::DEAD) {
-        // Headband (Hachimaki) wrapped around forehead
-        renderer.drawRect(headCenter.x - 8.5f, headCenter.y + 0.5f, 17.0f, 3.5f, accentR, accentG, accentB);
+        if (state != FighterState::DEAD) {
+            // Headband wrapped around forehead
+            renderer.drawRect(headCenter.x - 8.5f, headCenter.y + 0.5f, 17.0f, 3.5f, accentR, accentG, accentB);
 
-        // Wind-blown headband ribbons trailing behind head with dynamic sway
-        float tailWave1 = std::sin(stateTime * 10.0f) * 2.5f;
-        float tailWave2 = std::cos(stateTime * 8.0f) * 3.0f;
+            // Wind-blown headband ribbons trailing behind head with dynamic sway
+            float tailWave1 = std::sin(stateTime * 10.0f) * 2.5f;
+            float tailWave2 = std::cos(stateTime * 8.0f) * 3.0f;
 
-        // Tail 1
-        renderer.drawQuad(headCenter.x - dir * 7.5f, headCenter.y + 3.0f,
-                          headCenter.x - dir * 7.5f, headCenter.y + 1.0f,
-                          headCenter.x - dir * 18.0f, headCenter.y - 2.0f + tailWave1,
-                          headCenter.x - dir * 18.0f, headCenter.y + 0.5f + tailWave1,
-                          accentR, accentG, accentB);
+            renderer.drawQuad(headCenter.x - dir * 7.5f, headCenter.y + 3.0f,
+                              headCenter.x - dir * 7.5f, headCenter.y + 1.0f,
+                              headCenter.x - dir * 18.0f, headCenter.y - 2.0f + tailWave1,
+                              headCenter.x - dir * 18.0f, headCenter.y + 0.5f + tailWave1,
+                              accentR, accentG, accentB);
+            renderer.drawQuad(headCenter.x - dir * 7.5f, headCenter.y + 1.5f,
+                              headCenter.x - dir * 7.5f, headCenter.y - 0.5f,
+                              headCenter.x - dir * 22.0f, headCenter.y - 7.0f + tailWave2,
+                              headCenter.x - dir * 22.0f, headCenter.y - 5.0f + tailWave2,
+                              accentR * 0.85f, accentG * 0.85f, accentB * 0.85f);
 
-        // Tail 2 (slightly longer and darker)
-        renderer.drawQuad(headCenter.x - dir * 7.5f, headCenter.y + 1.5f,
-                          headCenter.x - dir * 7.5f, headCenter.y - 0.5f,
-                          headCenter.x - dir * 22.0f, headCenter.y - 7.0f + tailWave2,
-                          headCenter.x - dir * 22.0f, headCenter.y - 5.0f + tailWave2,
-                          accentR * 0.85f, accentG * 0.85f, accentB * 0.85f);
+            // Razor-sharp glowing cyan eye slit
+            if (drawEye) {
+                float eyeX = headCenter.x + dir * 4.0f;
+                float eyeY = headCenter.y + 0.2f;
+                renderer.drawLine(eyeX - dir * 2.0f, eyeY - 0.8f,
+                                  eyeX + dir * 3.0f, eyeY + 0.8f,
+                                  accentR, accentG, accentB, 1.0f, 2.0f);
+                renderer.drawCircle(eyeX + dir * 1.0f, eyeY + 0.3f, 1.2f, 1.0f, 1.0f, 1.0f, 0.95f, 8);
+            }
+        }
+    } else {
+        // Spearman: Distinctive pointed war helmet (matching user's reference image!)
+        // Main helmet skull cap
+        renderer.drawCircle(headCenter.x, headCenter.y, headRadius, bodyR, bodyG, bodyB);
 
-        // Razor-sharp glowing eye slit
+        // Pointed conical helmet crest apex rising from top
+        renderer.drawTriangle(headCenter.x - dir * 7.0f, headCenter.y + 5.0f,
+                              headCenter.x + dir * 6.0f, headCenter.y + 5.0f,
+                              headCenter.x - dir * 1.5f, headCenter.y + 16.5f,
+                              bodyR * 1.15f, bodyG * 1.15f, bodyB * 1.15f);
+
+        // Angled brow visor protruding forward over eyes
+        renderer.drawQuad(headCenter.x - dir * 2.0f, headCenter.y + 4.0f,
+                          headCenter.x + dir * 10.0f, headCenter.y + 1.5f,
+                          headCenter.x + dir * 8.5f,  headCenter.y - 1.2f,
+                          headCenter.x - dir * 1.0f, headCenter.y + 1.0f,
+                          bodyR * 1.3f, bodyG * 1.3f, bodyB * 1.3f);
+
+        // Flared neck guard (aventail) sloping down behind neck
+        renderer.drawQuad(headCenter.x - dir * 2.0f, headCenter.y + 2.0f,
+                          headCenter.x - dir * 10.5f, headCenter.y - 6.0f,
+                          headCenter.x - dir * 8.5f,  headCenter.y - 8.5f,
+                          headCenter.x, headCenter.y - 3.0f,
+                          bodyR * 1.1f, bodyG * 1.1f, bodyB * 1.1f);
+
+        // Tapered chin guard
+        renderer.drawTriangle(headCenter.x - 6.0f, headCenter.y - 2.0f,
+                              headCenter.x + 6.0f, headCenter.y - 2.0f,
+                              headCenter.x + dir * 1.5f, headCenter.y - 9.0f,
+                              bodyR, bodyG, bodyB);
+
+        // Piercing amber eye slit underneath visor
         if (drawEye) {
-            float eyeX = headCenter.x + dir * 4.0f;
-            float eyeY = headCenter.y + 0.2f;
-            renderer.drawLine(eyeX - dir * 2.0f, eyeY - 0.8f,
-                              eyeX + dir * 3.0f, eyeY + 0.8f,
-                              accentR, accentG, accentB, 1.0f, 2.0f);
-            // White-hot ocular center
-            renderer.drawCircle(eyeX + dir * 1.0f, eyeY + 0.3f, 1.2f, 1.0f, 1.0f, 1.0f, 0.95f, 8);
+            float eyeX = headCenter.x + dir * 3.5f;
+            float eyeY = headCenter.y - 0.2f;
+            renderer.drawLine(eyeX - dir * 2.0f, eyeY - 0.5f,
+                              eyeX + dir * 3.0f, eyeY + 0.5f,
+                              accentR, accentG, accentB, 1.0f, 2.2f);
+            renderer.drawCircle(eyeX + dir * 1.0f, eyeY + 0.1f, 1.3f, 1.0f, 0.95f, 0.5f, 0.95f, 8);
         }
     }
 
@@ -857,9 +1072,11 @@ void Fighter::draw(const Renderer& renderer) const {
     }
 
     if (state == FighterState::SPECIAL && phase == AttackPhase::ACTIVE) {
-        // Fiery dragon energy aura gathering on striking hand
-        renderer.drawCircle(handF.x, handF.y, 16.0f, 1.0f, 0.65f, 0.15f, 0.40f, 18);
-        renderer.drawCircle(handF.x, handF.y,  9.0f, 1.0f, 0.90f, 0.35f, 0.80f, 14);
-        renderer.drawCircle(handF.x, handF.y,  4.0f, 1.0f, 1.0f,  1.0f,  0.95f, 10);
+        // Fiery dragon energy aura gathering on striking weapon
+        float strikeX = (role == FighterRole::NINJA) ? handF.x + dir * 18.0f : handF.x + dir * 35.0f;
+        float strikeY = handF.y;
+        renderer.drawCircle(strikeX, strikeY, 18.0f, 1.0f, 0.65f, 0.15f, 0.40f, 18);
+        renderer.drawCircle(strikeX, strikeY, 10.0f, 1.0f, 0.90f, 0.35f, 0.80f, 14);
+        renderer.drawCircle(strikeX, strikeY,  4.5f, 1.0f, 1.0f,  1.0f,  0.95f, 10);
     }
 }

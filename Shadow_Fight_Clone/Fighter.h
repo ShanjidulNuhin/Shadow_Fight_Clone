@@ -6,6 +6,11 @@
 
 class Renderer;
 
+enum class FighterRole {
+    NINJA,             // Player (dual daggers, hooded cowl, back daggers, wraps)
+    ARMORED_SPEARMAN   // Enemy (peaked helmet, pauldrons, flowing coat-tails, long spear)
+};
+
 enum class FighterState {
     IDLE,
     WALK,
@@ -42,6 +47,12 @@ public:
     void applyPhysics(float deltaTime);
     void updateState(float deltaTime);
 
+    void setRole(FighterRole r);
+    FighterRole getRole() const;
+
+    void setDamageMultiplier(float mult);
+    float getDamageMultiplier() const;
+
     void setColor(float r, float g, float b);
     void setAccentColor(float r, float g, float b);
     void setFacingRight(bool faceRight);
@@ -52,7 +63,7 @@ public:
     bool getHitbox(Rect& outBox) const;
     const AttackData* getCurrentAttack() const;
     void onAttackConnected();
-    void receiveHit(const AttackData& attack, float pushDirection);
+    void receiveHit(const AttackData& attack, float pushDirection, int customDamage = -1);
 
     void takeDamage(int amount);
     void restoreHealth();
@@ -75,6 +86,9 @@ public:
 private:
     void keepInsideWorld();
     void startAttack(FighterState attackState);
+
+    FighterRole  role;
+    float        damageMultiplier;
 
     float x;
     float y;
