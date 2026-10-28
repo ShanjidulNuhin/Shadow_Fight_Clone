@@ -2,7 +2,7 @@
 #include "InputManager.h"
 
 Player::Player(float startX, float startY)
-    : Fighter(startX, startY, 50.0f, 100.0f) {
+    : Fighter(startX, startY, 68.0f, 145.0f) {
     setRole(FighterRole::NINJA);
     setColor(0.08f, 0.09f, 0.12f);       // Deep obsidian shadow silhouette
     setAccentColor(0.25f, 0.85f, 0.95f); // Luminous cyan headband / eye
@@ -25,5 +25,5 @@ void Player::update(const InputManager& input, float deltaTime) {
 
     moveHorizontal(direction, deltaTime);
     applyPhysics(deltaTime);
-    updateState(deltaTime);   // always last: it looks at the result of everything above
+    updateState(deltaTime);
 }

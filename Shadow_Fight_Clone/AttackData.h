@@ -21,18 +21,17 @@ struct AttackData {
     // price of using it
     float energyCost;
 
-    // can a guard stop it? (false = it can't be blocked: the only answer is to dodge,
-    // for example by jumping out of the way)
+    // can a guard stop it?
     bool  blockable;
 
     float totalTime() const { return startup + active + recovery; }
 };
 
 namespace Attacks {
-    //                                 startup active recovery  reach height offsetY  dmg  knock  stun  energy blockable
-    const AttackData PUNCH   = {       0.08f,  0.10f, 0.17f,    50.0f, 24.0f, 70.0f,  10, 400.0f, 0.30f,   0.0f, true  };
-    const AttackData KICK    = {       0.30f,  0.10f, 0.26f,    70.0f, 30.0f,  5.0f,  15, 520.0f, 0.40f,   0.0f, false };
-    const AttackData SPECIAL = {       0.25f,  0.12f, 0.35f,    90.0f, 70.0f, 20.0f,  30, 700.0f, 0.60f,  50.0f, true  };
+    //                                 startup active recovery  reach   height offsetY  dmg  knock  stun  energy blockable
+    const AttackData PUNCH   = {       0.08f,  0.10f, 0.17f,    65.0f,  35.0f, 95.0f,   10, 420.0f, 0.30f,   0.0f, true  };
+    const AttackData KICK    = {       0.30f,  0.10f, 0.26f,    90.0f,  45.0f, 15.0f,   15, 540.0f, 0.40f,   0.0f, false };
+    const AttackData SPECIAL = {       0.25f,  0.12f, 0.35f,   115.0f,  85.0f, 30.0f,   30, 720.0f, 0.60f,  50.0f, true  };
 }
 
 #endif

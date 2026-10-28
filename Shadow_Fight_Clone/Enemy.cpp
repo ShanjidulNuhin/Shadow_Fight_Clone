@@ -5,9 +5,9 @@
 namespace {
     const float WALK_SPEED_RATIO    = 0.6f;
     const float RETREAT_SPEED_RATIO = 0.4f;
-    const float MIN_SPACING   = 30.0f;
-    const float MAX_SPACING   = 62.0f;
-    const float SPACING_BAND  = 4.0f;
+    const float MIN_SPACING   = 40.0f;
+    const float MAX_SPACING   = 85.0f;
+    const float SPACING_BAND  = 6.0f;
 
     // Timing
     const float FIRST_ATTACK_DELAY = 1.5f;
@@ -15,16 +15,16 @@ namespace {
 
     // Defending defaults
     const float GUARD_URGE_PER_SECOND = 0.15f;
-    const float GUARD_URGE_RANGE      = 70.0f;
+    const float GUARD_URGE_RANGE      = 95.0f;
     const float MIN_GUARD_TIME   = 0.4f;
     const float MAX_GUARD_TIME   = 1.0f;
-    const float NOTICE_MARGIN    = 15.0f;
+    const float NOTICE_MARGIN    = 20.0f;
 
     // Jumping defaults
     const float APPROACH_JUMP_PER_SECOND = 0.30f;
-    const float APPROACH_JUMP_MIN_GAP    = 70.0f;
+    const float APPROACH_JUMP_MIN_GAP    = 90.0f;
     const float AIR_DRIFT = 0.8f;
-    const float REACH_MARGIN = 5.0f;
+    const float REACH_MARGIN = 8.0f;
 
     float randomFraction() {
         return (std::rand() % 1000) / 1000.0f;
@@ -36,10 +36,10 @@ namespace {
 }
 
 Enemy::Enemy(float startX, float startY)
-    : Fighter(startX, startY, 50.0f, 100.0f),
+    : Fighter(startX, startY, 68.0f, 145.0f),
       difficulty(GameMode::NORMAL),
       aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY),
-      preferredGap(45.0f), lastAttack(AttackChoice::NONE),
+      preferredGap(65.0f), lastAttack(AttackChoice::NONE),
       dodgePending(false), dodgeTimer(0.0f), airDrift(0.0f),
       targetWasAttacking(false), guardPending(false), reactionTimer(0.0f), guardTimer(0.0f) {
     setRole(FighterRole::ARMORED_SPEARMAN);
@@ -74,13 +74,10 @@ void Enemy::pickNewSpacing() {
 
 float Enemy::randomCooldown() const {
     if (difficulty == GameMode::EASY) {
-        // Slow to attack, big recovery windows for player
         return 1.8f + randomFraction() * 1.5f;
     } else if (difficulty == GameMode::HARD) {
-        // Aggressive, fast attack combos
         return 0.25f + randomFraction() * 0.50f;
     }
-    // Normal: balanced
     int roll = std::rand() % 100;
     if (roll < 25) return 0.3f + randomFraction() * 0.3f;
     if (roll < 75) return 0.9f + randomFraction() * 0.9f;
@@ -97,7 +94,6 @@ void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
     float minDodge = 0.10f, maxDodge = 0.20f;
 
     if (difficulty == GameMode::EASY) {
-        // Slow reaction and rarely blocks
         defendChance = 20;
         minReact = 0.30f;
         maxReact = 0.48f;
@@ -105,7 +101,6 @@ void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
         minDodge = 0.30f;
         maxDodge = 0.45f;
     } else if (difficulty == GameMode::HARD) {
-        // Lightning fast reflexes and frequent defense
         defendChance = 75;
         minReact = 0.02f;
         maxReact = 0.06f;
@@ -226,7 +221,7 @@ void Enemy::update(const Fighter& target, float deltaTime) {
             else if (difficulty == GameMode::HARD) hesitationChance = 5;
 
             if (choice == AttackChoice::NONE) {
-                if (!isInTheAir(target)) preferredGap = MIN_SPACING + randomFraction() * 15.0f;
+                if (!isInTheAir(target)) preferredGap = MIN_SPACING + randomFraction() * 20.0f;
             } else if (std::rand() % 100 < hesitationChance) {
                 attackCooldown = 0.2f + randomFraction() * 0.4f;
             } else {

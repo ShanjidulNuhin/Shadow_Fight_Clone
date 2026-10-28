@@ -8,8 +8,8 @@ namespace {
     const unsigned char KEY_ENTER  = 13;
     const unsigned char KEY_ESCAPE = 27;
 
-    const float PLAYER_START_X = 100.0f;
-    const float ENEMY_START_X  = 550.0f;
+    const float PLAYER_START_X = 110.0f;
+    const float ENEMY_START_X  = 580.0f;
 
     const float ROUND_INTRO_TIME  = 1.6f;
     const float FIGHT_BANNER_TIME = 0.6f;
