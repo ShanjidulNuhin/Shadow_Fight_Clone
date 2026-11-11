@@ -4,7 +4,14 @@
 
 ### A 2D silhouette fighting game built from scratch with **C++** and **OpenGL (freeglut)**
 
-*No image files. No game engine. Every character, arena and effect is drawn with pure OpenGL code.*
+<img width="993" height="742" alt="image" src="https://github.com/user-attachments/assets/56b8c099-f1ec-45b4-aeca-4161243a6334" /> 
+<img width="997" height="743" alt="image" src="https://github.com/user-attachments/assets/45496b5a-a5f9-42df-b52d-d6276cbfeaba" /> 
+<img width="998" height="747" alt="image" src="https://github.com/user-attachments/assets/acf70612-5dd6-44fc-a3bb-0cf6f53e3d67" />
+<img width="1000" height="745" alt="image" src="https://github.com/user-attachments/assets/217d0008-7097-4912-aa5e-566b4733021a" />
+<img width="997" height="750" alt="image" src="https://github.com/user-attachments/assets/faf9d868-f2d3-403e-a87b-32a347ea8797" />
+<img width="997" height="747" alt="image" src="https://github.com/user-attachments/assets/114957cd-1a05-4cdc-af78-dbebbb7ecf12" />
+
+
 
 ![C++](https://img.shields.io/badge/C++-Game_Logic-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 ![OpenGL](https://img.shields.io/badge/OpenGL-freeglut-5586A4?style=for-the-badge&logo=opengl&logoColor=white)
