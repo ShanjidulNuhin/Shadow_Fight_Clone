@@ -29,7 +29,7 @@
 
 | Main Menu | Gameplay |
 |:---:|:---:|
-| ![Main Menu](screenshots/menu.png) | ![Gameplay](screenshots/gameplay.png) |
+| ![Main Menu](Screenshot 2026-11-11 224726) | ![Gameplay](screenshots/gameplay.png) |
 
 | Special Attack | K.O. Screen |
 |:---:|:---:|
