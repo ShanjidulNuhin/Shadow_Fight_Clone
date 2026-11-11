@@ -21,16 +21,13 @@
 
 | Main Menu | Gameplay |
 |:---:|:---:|
-| ![Main Menu](<img width="993" height="742" alt="image" src="https://github.com/user-attachments/assets/50f6a044-45ef-4265-b788-af96e012d1bf" />
-) | ![Gameplay](<img width="997" height="743" alt="image" src="https://github.com/user-attachments/assets/7c84b09f-cad5-493d-9f0b-8458323fec0e" />
+| ![Main Menu](<img width="993" height="742" alt="image" src="https://github.com/user-attachments/assets/50f6a044-45ef-4265-b788-af96e012d1bf" />) | ![Gameplay](<img width="997" height="743" alt="image" src="https://github.com/user-attachments/assets/7c84b09f-cad5-493d-9f0b-8458323fec0e" />
 ) |
 
-| Special Attack | K.O. Screen |
+| Special Attack |
 |:---:|:---:|
-| ![Special Attack]() | ![KO](<img width="996" height="746" alt="image" src="https://github.com/user-attachments/assets/d49c1a2d-1eb2-4315-b2f7-9106ab1fa541" />
-) |
-
-| End Game |
+| ![Special Attack]() |(<img width="996" height="746" alt="image" src="https://github.com/user-attachments/assets/d49c1a2d-1eb2-4315-b2f7-9106ab1fa541" />
+)| End Game |
 |:---:|:---:|
 | ![End Game]() | <img width="995" height="755" alt="image" src="https://github.com/user-attachments/assets/d1ed80b2-38d2-4d42-9041-ae2d12ec2c4f" />
 <img width="997" height="747" alt="image" src="https://github.com/user-attachments/assets/45279dae-e211-4970-865e-f717ef37f59f" /> |
