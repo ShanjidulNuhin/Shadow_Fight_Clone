@@ -4,7 +4,6 @@
 
 ### A 2D silhouette fighting game built from scratch with **C++** and **OpenGL (freeglut)**
 
-
 ![C++](https://img.shields.io/badge/C++-Game_Logic-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 ![OpenGL](https://img.shields.io/badge/OpenGL-freeglut-5586A4?style=for-the-badge&logo=opengl&logoColor=white)
 ![Code::Blocks](https://img.shields.io/badge/IDE-Code::Blocks-3A8F3A?style=for-the-badge)
@@ -17,23 +16,29 @@
 
 ## 📸 Screenshots
 
-> 📌 Replace these placeholders with your own screenshots (see the [How to add screenshots](#-how-to-add-screenshots) section).
-
-| Main Menu | Gameplay |
-|:---:|:---:|
-| ![Main Menu](<img width="993" height="742" alt="image" src="https://github.com/user-attachments/assets/50f6a044-45ef-4265-b788-af96e012d1bf" />) | ![Gameplay](<img width="997" height="743" alt="image" src="https://github.com/user-attachments/assets/7c84b09f-cad5-493d-9f0b-8458323fec0e" />
-) |
-
-| Special Attack |
-|:---:|:---:|
-| ![Special Attack]() |(<img width="996" height="746" alt="image" src="https://github.com/user-attachments/assets/d49c1a2d-1eb2-4315-b2f7-9106ab1fa541" />
-)| End Game |
-|:---:|:---:|
-| ![End Game]() | <img width="995" height="755" alt="image" src="https://github.com/user-attachments/assets/d1ed80b2-38d2-4d42-9041-ae2d12ec2c4f" />
-<img width="997" height="747" alt="image" src="https://github.com/user-attachments/assets/45279dae-e211-4970-865e-f717ef37f59f" /> |
-
-<!-- Optional: add a gameplay GIF -->
-<!-- ![Gameplay GIF](screenshots/gameplay.gif) -->
+<table>
+  <tr>
+    <td align="center" width="50%"><b>Main Menu</b><br><br>
+      <img src="https://github.com/user-attachments/assets/50f6a044-45ef-4265-b788-af96e012d1bf" alt="Main Menu" width="100%">
+    </td>
+    <td align="center" width="50%"><b>Gameplay</b><br><br>
+      <img src="https://github.com/user-attachments/assets/7c84b09f-cad5-493d-9f0b-8458323fec0e" alt="Gameplay" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><b>Special Attack</b><br><br>
+      <img src="https://github.com/user-attachments/assets/d49c1a2d-1eb2-4315-b2f7-9106ab1fa541" alt="Special Attack" width="100%">
+    </td>
+    <td align="center" width="50%"><b>End Game</b><br><br>
+      <img src="https://github.com/user-attachments/assets/d1ed80b2-38d2-4d42-9041-ae2d12ec2c4f" alt="End Game" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><b>Match Result</b><br><br>
+      <img src="https://github.com/user-attachments/assets/45279dae-e211-4970-865e-f717ef37f59f" alt="Match Result" width="50%">
+    </td>
+  </tr>
+</table>
 
 ---
 
