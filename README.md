@@ -4,14 +4,6 @@
 
 ### A 2D silhouette fighting game built from scratch with **C++** and **OpenGL (freeglut)**
 
-<img width="993" height="742" alt="image" src="https://github.com/user-attachments/assets/56b8c099-f1ec-45b4-aeca-4161243a6334" /> 
-<img width="997" height="743" alt="image" src="https://github.com/user-attachments/assets/45496b5a-a5f9-42df-b52d-d6276cbfeaba" /> 
-<img width="998" height="747" alt="image" src="https://github.com/user-attachments/assets/acf70612-5dd6-44fc-a3bb-0cf6f53e3d67" />
-<img width="1000" height="745" alt="image" src="https://github.com/user-attachments/assets/217d0008-7097-4912-aa5e-566b4733021a" />
-<img width="997" height="750" alt="image" src="https://github.com/user-attachments/assets/faf9d868-f2d3-403e-a87b-32a347ea8797" />
-<img width="997" height="747" alt="image" src="https://github.com/user-attachments/assets/114957cd-1a05-4cdc-af78-dbebbb7ecf12" />
-
-
 
 ![C++](https://img.shields.io/badge/C++-Game_Logic-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 ![OpenGL](https://img.shields.io/badge/OpenGL-freeglut-5586A4?style=for-the-badge&logo=opengl&logoColor=white)
@@ -29,11 +21,19 @@
 
 | Main Menu | Gameplay |
 |:---:|:---:|
-| ![Main Menu](Screenshot 2026-11-11 224726) | ![Gameplay](screenshots/gameplay.png) |
+| ![Main Menu](<img width="993" height="742" alt="image" src="https://github.com/user-attachments/assets/50f6a044-45ef-4265-b788-af96e012d1bf" />
+) | ![Gameplay](<img width="997" height="743" alt="image" src="https://github.com/user-attachments/assets/7c84b09f-cad5-493d-9f0b-8458323fec0e" />
+) |
 
 | Special Attack | K.O. Screen |
 |:---:|:---:|
-| ![Special Attack](screenshots/special.png) | ![KO](screenshots/ko.png) |
+| ![Special Attack]() | ![KO](<img width="996" height="746" alt="image" src="https://github.com/user-attachments/assets/d49c1a2d-1eb2-4315-b2f7-9106ab1fa541" />
+) |
+
+| End Game |
+|:---:|:---:|
+| ![End Game]() | <img width="995" height="755" alt="image" src="https://github.com/user-attachments/assets/d1ed80b2-38d2-4d42-9041-ae2d12ec2c4f" />
+<img width="997" height="747" alt="image" src="https://github.com/user-attachments/assets/45279dae-e211-4970-865e-f717ef37f59f" /> |
 
 <!-- Optional: add a gameplay GIF -->
 <!-- ![Gameplay GIF](screenshots/gameplay.gif) -->
