@@ -61,7 +61,7 @@ This project was built to learn and practice:
 <table>
   <tr>
     <td align="center" width="50%"><b>Kai: Shadow Brawler</b><br><br>
-      <img src="screenshots/02-character-kai.png" alt="Screenshot 2026-11-13 031518" width="100%"><img width="1920" height="1080" alt="" src="https://github.com/user-attachments/assets/08ad538b-2832-4f05-9d94-8550d7551288" />
+      <img src="screenshots/02-character-kai.png" alt="Screenshot 2026-11-13 031518" width="100%">
     </td>
     <td align="center" width="50%"><b>Akari: Shadow Archer</b><br><br>
       <img src="screenshots/03-character-akari.png" alt="Screenshot 2026-11-13 033313" width="100%">
@@ -70,8 +70,8 @@ This project was built to learn and practice:
     <td align="center" width="50%"><b>Kuro: Shadow Brawler</b><br><br>
       <img src="Screenshot 2026-11-13 033313" alt="Screenshot 2026-11-13 033313" width="100%">
     </td>
-    <td align="center" width="50%"><b>Akari: Shadow Archer</b><br><br>
-      <img src="screenshots/03-character-akari.png" alt="Screenshot 2026-11-13 031511" width="100%">
+    <td align="center" width="50%"><b>MEI-LING: Shadow Archer</b><br><br>
+      <img src="Screenshot 2026-11-13 033325" alt="Screenshot 2026-11-13 033325" width="100%">
     </td>
 </table>
 
