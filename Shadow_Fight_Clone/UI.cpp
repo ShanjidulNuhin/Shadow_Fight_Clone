@@ -58,7 +58,7 @@ void UI::drawButton(const RectButton& btn, bool hovered, bool active,
     }
 
     // Text formatting
-    float textY = btn.y + btn.height * 0.5f - 6.0f;
+    float textY = btn.y + btn.height * 0.5f - renderer.getTextBaselineOffset(false);
     float centerX = btn.x + btn.width * 0.5f;
 
     if (disabled) {
@@ -180,7 +180,7 @@ void UI::drawHUD(const Fighter& player, const Enemy& enemy,
 
     int displayedBest = (currentScore > highScore) ? currentScore : highScore;
     std::snprintf(label, sizeof(label), "BEST  %d", displayedBest);
-    renderer.drawTextSmall(worldW / 2.0f - 34.0f, worldH - 83.0f, label, 0.65f, 0.90f, 0.68f);
+    renderer.drawTextSmallCentered(worldW / 2.0f, worldH - 83.0f, label, 0.65f, 0.90f, 0.68f);
 
     bool iconHovered = UIButtons::BTN_SETTINGS_ICON.contains(mouseX, mouseY);
     drawSettingsIcon(iconHovered);

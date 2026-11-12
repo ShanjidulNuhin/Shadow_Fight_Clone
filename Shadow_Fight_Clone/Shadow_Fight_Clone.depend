@@ -127,26 +127,26 @@
 	<cstdlib>
 	<algorithm>
 
-1794473937 source:d:\games\shadow_fight_clone\shadow_fight_clone\animation.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\animation.cpp
 	"Animation.h"
 	"AttackData.h"
 	<cmath>
 	<algorithm>
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\animation.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\animation.h
 	"Fighter.h"
 
-1794480416 d:\games\shadow_fight_clone\shadow_fight_clone\fighter.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\fighter.h
 	"Collision.h"
 	"AttackData.h"
 	"CharacterData.h"
 	<vector>
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\collision.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\collision.h
 
-1794471435 d:\games\shadow_fight_clone\shadow_fight_clone\attackdata.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\attackdata.h
 
-1794470045 source:d:\games\shadow_fight_clone\shadow_fight_clone\background.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\background.cpp
 	"Background.h"
 	"Renderer.h"
 	"Config.h"
@@ -154,16 +154,16 @@
 	<cstdlib>
 	<algorithm>
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\background.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\background.h
 
-1794475574 d:\games\shadow_fight_clone\shadow_fight_clone\renderer.h
+1794501430 d:\games\shadow_fight_clone\shadow_fight_clone\renderer.h
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\config.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\config.h
 
-1794470045 source:d:\games\shadow_fight_clone\shadow_fight_clone\collision.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\collision.cpp
 	"Collision.h"
 
-1794476647 source:d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
 	"CombatSystem.h"
 	"Fighter.h"
 	"Collision.h"
@@ -172,14 +172,14 @@
 	<cmath>
 	<algorithm>
 
-1794476645 d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.h
 
-1794473871 d:\games\shadow_fight_clone\shadow_fight_clone\effects.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\effects.h
 	<vector>
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\soundmanager.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\soundmanager.h
 
-1794473873 source:d:\games\shadow_fight_clone\shadow_fight_clone\effects.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\effects.cpp
 	"Effects.h"
 	"Renderer.h"
 	"Config.h"
@@ -187,16 +187,16 @@
 	<cstdlib>
 	<algorithm>
 
-1794474110 source:d:\games\shadow_fight_clone\shadow_fight_clone\enemy.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\enemy.cpp
 	"Enemy.h"
 	<cmath>
 	<cstdlib>
 
-1794474108 d:\games\shadow_fight_clone\shadow_fight_clone\enemy.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\enemy.h
 	"Fighter.h"
 	"Config.h"
 
-1794480428 source:d:\games\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
@@ -205,7 +205,7 @@
 	<cmath>
 	<algorithm>
 
-1794480823 source:d:\games\shadow_fight_clone\shadow_fight_clone\game.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\game.cpp
 	"Game.h"
 	"CombatSystem.h"
 	"Config.h"
@@ -215,7 +215,7 @@
 	<cmath>
 	<algorithm>
 
-1794480633 d:\games\shadow_fight_clone\shadow_fight_clone\game.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\game.h
 	"InputManager.h"
 	"Renderer.h"
 	"UI.h"
@@ -226,19 +226,19 @@
 	"Config.h"
 	"StatsManager.h"
 
-1794480367 d:\games\shadow_fight_clone\shadow_fight_clone\inputmanager.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\inputmanager.h
 
-1794480476 d:\games\shadow_fight_clone\shadow_fight_clone\ui.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\ui.h
 	"Renderer.h"
 	"Config.h"
 	"CharacterData.h"
 	"StatsManager.h"
 	"InputManager.h"
 
-1794474403 d:\games\shadow_fight_clone\shadow_fight_clone\player.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\player.h
 	"Fighter.h"
 
-1794480766 source:d:\games\shadow_fight_clone\shadow_fight_clone\inputmanager.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\inputmanager.cpp
 	"InputManager.h"
 	<GL/glut.h>
 	<cctype>
@@ -249,7 +249,8 @@
 	<windows.h>
 	<mmsystem.h>
 
-1794480844 source:d:\games\shadow_fight_clone\shadow_fight_clone\main.cpp
+1794501452 source:d:\games\shadow_fight_clone\shadow_fight_clone\main.cpp
+	<windows.h>
 	<GL/glut.h>
 	<cstdlib>
 	<cstdio>
@@ -257,17 +258,17 @@
 	"Config.h"
 	"Game.h"
 
-1794480431 source:d:\games\shadow_fight_clone\shadow_fight_clone\player.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\player.cpp
 	"Player.h"
 	"InputManager.h"
 
-1794475577 source:d:\games\shadow_fight_clone\shadow_fight_clone\renderer.cpp
+1794501439 source:d:\games\shadow_fight_clone\shadow_fight_clone\renderer.cpp
 	"Renderer.h"
 	<windows.h>
 	<GL/glut.h>
 	<cmath>
 
-1794480480 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
+1794501446 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
 	"UI.h"
 	"Fighter.h"
 	"Enemy.h"
@@ -275,10 +276,10 @@
 	<cstdio>
 	<cmath>
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\include\gl\glut.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\include\gl\glut.h
 	"freeglut_std.h"
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\include\gl\freeglut_std.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\include\gl\freeglut_std.h
 	<windows.h>
 	<EGL/egl.h>
 	<GLES/gl.h>
@@ -289,7 +290,7 @@
 	<GL/glu.h>
 	<stdlib.h>
 
-1794470045 source:d:\games\shadow_fight_clone\shadow_fight_clone\soundmanager.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\soundmanager.cpp
 	<windows.h>
 	<mmsystem.h>
 	"SoundManager.h"
@@ -299,17 +300,17 @@
 	<cstdlib>
 	<vector>
 
-1794473902 d:\games\shadow_fight_clone\shadow_fight_clone\characterdata.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\characterdata.h
 	"AttackData.h"
 
-1794476187 source:d:\games\shadow_fight_clone\shadow_fight_clone\characterdata.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\characterdata.cpp
 	"CharacterData.h"
 
-1794476619 d:\games\shadow_fight_clone\shadow_fight_clone\statsmanager.h
+1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\statsmanager.h
 	"CharacterData.h"
 	"Config.h"
 
-1794476622 source:d:\games\shadow_fight_clone\shadow_fight_clone\statsmanager.cpp
+1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\statsmanager.cpp
 	"StatsManager.h"
 	<fstream>
 	<sstream>

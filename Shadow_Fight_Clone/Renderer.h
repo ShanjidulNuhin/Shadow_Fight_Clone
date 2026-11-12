@@ -93,12 +93,24 @@ public:
     void drawTextCentered(float centerX, float y, const char* text,
                           float r, float g, float b, bool large) const;
 
+    // Small text centred horizontally on centerX.
+    void drawTextSmallCentered(float centerX, float y, const char* text,
+                               float r, float g, float b) const;
+
+    // World-space vertical baseline offset to vertically center bitmap text at centerY.
+    float getTextBaselineOffset(bool large = false) const;
+
     // A see-through colour laid over the whole screen (to dim the scene behind a menu).
     void drawOverlay(float r, float g, float b, float alpha) const;
 
 private:
+    void drawBitmapCentered(void* font, float centerX, float y, const char* text,
+                            float r, float g, float b) const;
+
     int worldW;
     int worldH;
+    int viewportW;
+    int viewportH;
 };
 
 #endif

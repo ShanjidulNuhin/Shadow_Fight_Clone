@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <GL/glut.h>
 #include <cstdlib>
 #include <cstdio>
@@ -89,7 +90,40 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(Config::WORLD_WIDTH, Config::WORLD_HEIGHT);
+
+    RECT workArea = { 0, 0, 1280, 720 };
+    SystemParametersInfoA(SPI_GETWORKAREA, 0, &workArea, 0);
+    int workW = workArea.right - workArea.left;
+    int workH = workArea.bottom - workArea.top;
+
+    RECT desired = { 0, 0, Config::WORLD_WIDTH, Config::WORLD_HEIGHT };
+    AdjustWindowRect(&desired, WS_OVERLAPPEDWINDOW, FALSE);
+    int frameW = desired.right - desired.left;
+    int frameH = desired.bottom - desired.top;
+    int initX = workArea.left + (workW - frameW) / 2;
+    int initY = workArea.top  + (workH - frameH) / 2;
+    if (initX < workArea.left) initX = workArea.left;
+    if (initY < workArea.top)  initY = workArea.top;
+    glutInitWindowPosition(initX, initY);
+
     glutCreateWindow("Shadow Fight");
+
+    HWND hwnd = GetActiveWindow();
+    if (hwnd == nullptr) {
+        hwnd = FindWindowA(nullptr, "Shadow Fight");
+    }
+    if (hwnd != nullptr) {
+        RECT winRect = {};
+        if (GetWindowRect(hwnd, &winRect)) {
+            int actualW = winRect.right - winRect.left;
+            int actualH = winRect.bottom - winRect.top;
+            int cx = workArea.left + (workW - actualW) / 2;
+            int cy = workArea.top  + (workH - actualH) / 2;
+            if (cx < workArea.left) cx = workArea.left;
+            if (cy < workArea.top)  cy = workArea.top;
+            SetWindowPos(hwnd, nullptr, cx, cy, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+    }
 
     game.init();                 // (needs the window to exist)
     glutIgnoreKeyRepeat(1);

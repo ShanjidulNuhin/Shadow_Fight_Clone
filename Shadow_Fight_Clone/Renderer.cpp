@@ -4,7 +4,8 @@
 #include <cmath>
 
 Renderer::Renderer(int worldWidth, int worldHeight)
-    : worldW(worldWidth), worldH(worldHeight) {
+    : worldW(worldWidth), worldH(worldHeight),
+      viewportW(worldWidth), viewportH(worldHeight) {
 }
 
 void Renderer::init() {
@@ -20,7 +21,9 @@ void Renderer::init() {
 }
 
 void Renderer::resize(int windowW, int windowH) {
-    glViewport(0, 0, windowW, windowH);
+    viewportW = (windowW > 0) ? windowW : 1;
+    viewportH = (windowH > 0) ? windowH : 1;
+    glViewport(0, 0, viewportW, viewportH);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0, worldW, 0, worldH);
@@ -296,16 +299,36 @@ void Renderer::drawPolygon(const float* xs, const float* ys, int count,
     }
 }
 
-void Renderer::drawTextCentered(float centerX, float y, const char* text,
-                                float r, float g, float b, bool large) const {
-    void* font = large ? GLUT_BITMAP_TIMES_ROMAN_24 : GLUT_BITMAP_HELVETICA_18;
-    int textWidth = glutBitmapLength(font, (const unsigned char*)text);
+void Renderer::drawBitmapCentered(void* font, float centerX, float y, const char* text,
+                                  float r, float g, float b) const {
+    if (text == nullptr) return;
+    int textWidthPx = glutBitmapLength(font, (const unsigned char*)text);
+    // GLUT bitmap glyphs have fixed pixel widths, so convert px -> world units using current viewport scale
+    float scaleX = (viewportW > 0) ? (float)worldW / (float)viewportW : 1.0f;
+    float worldTextWidth = (float)textWidthPx * scaleX;
 
     glColor3f(r, g, b);
-    glRasterPos2f(centerX - textWidth / 2.0f, y);
+    glRasterPos2f(centerX - worldTextWidth * 0.5f, y);
     for (const char* c = text; *c != '\0'; c++) {
         glutBitmapCharacter(font, *c);
     }
+}
+
+void Renderer::drawTextCentered(float centerX, float y, const char* text,
+                                float r, float g, float b, bool large) const {
+    void* font = large ? GLUT_BITMAP_TIMES_ROMAN_24 : GLUT_BITMAP_HELVETICA_18;
+    drawBitmapCentered(font, centerX, y, text, r, g, b);
+}
+
+void Renderer::drawTextSmallCentered(float centerX, float y, const char* text,
+                                     float r, float g, float b) const {
+    drawBitmapCentered(GLUT_BITMAP_HELVETICA_12, centerX, y, text, r, g, b);
+}
+
+float Renderer::getTextBaselineOffset(bool large) const {
+    float capHeightPx = large ? 17.0f : 13.0f;
+    float scaleY = (viewportH > 0) ? (float)worldH / (float)viewportH : 1.0f;
+    return (capHeightPx * 0.5f) * scaleY;
 }
 
 void Renderer::drawOverlay(float r, float g, float b, float alpha) const {
