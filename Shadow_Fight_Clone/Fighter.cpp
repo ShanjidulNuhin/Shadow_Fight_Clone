@@ -2,6 +2,7 @@
 #include "Renderer.h"
 #include "Animation.h"
 #include "Config.h"
+#include "SoundManager.h"
 #include <cmath>
 #include <algorithm>
 
@@ -77,6 +78,7 @@ void Fighter::jump() {
     if (onGround && canAct()) {
         velocityY = Config::JUMP_SPEED;
         onGround = false;
+        SoundManager::play(SoundEffect::JUMP);
     }
 }
 
@@ -104,6 +106,7 @@ void Fighter::startAttack(FighterState attackState) {
     if (attackState == FighterState::SPECIAL) {
         if (energy < data->energyCost) return;
         energy -= data->energyCost;
+        SoundManager::play(SoundEffect::SPECIAL_CHARGE);
     }
 
     state = attackState;
@@ -131,11 +134,15 @@ void Fighter::startSpecial() {
 
 void Fighter::applyPhysics(float deltaTime) {
     if (!onGround) {
+        bool wasAirborne = (y > Config::GROUND_HEIGHT + 1.0f);
         velocityY += Config::GRAVITY * deltaTime;
         y += velocityY * deltaTime;
 
         if (y <= Config::GROUND_HEIGHT) {
             y = Config::GROUND_HEIGHT;
+            if (wasAirborne && velocityY < -120.0f) {
+                SoundManager::play(SoundEffect::LAND);
+            }
             velocityY = 0.0f;
             onGround = true;
         }
@@ -156,6 +163,9 @@ void Fighter::applyPhysics(float deltaTime) {
 }
 
 void Fighter::updateState(float deltaTime) {
+    FighterState prevState = state;
+    AttackPhase  prevPhase = getAttackPhase();
+
     stateTime += deltaTime;
 
     if (blockFlashTimer > 0.0f) blockFlashTimer -= deltaTime;
@@ -180,6 +190,10 @@ void Fighter::updateState(float deltaTime) {
         if (attack && stateTime >= attack->totalTime()) {
             state = FighterState::IDLE;
             stateTime = 0.0f;
+        } else if (prevPhase == AttackPhase::STARTUP && getAttackPhase() != AttackPhase::STARTUP) {
+            if (state == FighterState::PUNCH)        SoundManager::play(SoundEffect::PUNCH_WHOOSH);
+            else if (state == FighterState::KICK)    SoundManager::play(SoundEffect::KICK_WHOOSH);
+            else if (state == FighterState::SPECIAL) SoundManager::play(SoundEffect::SPECIAL_WHOOSH);
         }
         return;
     }
@@ -191,6 +205,9 @@ void Fighter::updateState(float deltaTime) {
 
     if (blocking) {
         state = FighterState::BLOCK;
+        if (prevState != FighterState::BLOCK) {
+            SoundManager::play(SoundEffect::BLOCK_GUARD);
+        }
         return;
     }
 

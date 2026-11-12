@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "CombatSystem.h"
 #include "Config.h"
+#include "SoundManager.h"
 #include <cstdio>
 #include <cstdlib>
 
@@ -53,6 +54,7 @@ Game::Game()
 void Game::init() {
     renderer.init();
     enemy.setDifficulty(gameMode);
+    SoundManager::init();
 }
 
 void Game::startMatch() {
@@ -77,6 +79,7 @@ void Game::startRound() {
     roundIntroTimer = ROUND_INTRO_TIME;
     roundOverTimer  = 0.0f;
     state           = GameState::FIGHT;
+    SoundManager::play(SoundEffect::ROUND_START);
 }
 
 void Game::endRound() {
@@ -110,7 +113,11 @@ void Game::update(float deltaTime) {
 
 void Game::updateFight(float deltaTime) {
     if (roundIntroTimer > 0.0f) {
+        bool wasFightBanner = (roundIntroTimer <= FIGHT_BANNER_TIME);
         roundIntroTimer -= deltaTime;
+        if (!wasFightBanner && roundIntroTimer <= FIGHT_BANNER_TIME) {
+            SoundManager::play(SoundEffect::FIGHT_START);
+        }
         return;
     }
 
@@ -142,6 +149,7 @@ void Game::updateRoundOver(float deltaTime) {
 
         if (matchDecided) {
             state = GameState::GAME_OVER;
+            SoundManager::play(playerWins >= Config::ROUNDS_TO_WIN ? SoundEffect::VICTORY : SoundEffect::DEFEAT);
         } else {
             if (roundResult != RoundResult::DRAW) roundNumber++;
             startRound();
@@ -246,36 +254,47 @@ void Game::draw() {
 void Game::handleMenuClick(float mx, float my) {
     if (menuScreen == MenuScreen::MAIN) {
         if (UIButtons::BTN_MAIN_START.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             menuScreen = MenuScreen::DIFFICULTY;
             isStartGameFlow = true;
             selectedDifficulty = gameMode;
         } else if (UIButtons::BTN_MAIN_OPTIONS.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             menuScreen = MenuScreen::OPTIONS;
         } else if (UIButtons::BTN_MAIN_EXIT.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             quitRequested = true;
         }
     } else if (menuScreen == MenuScreen::OPTIONS) {
         if (UIButtons::BTN_OPT_CONTROLS.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             menuScreen = MenuScreen::CONTROLS;
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             menuScreen = MenuScreen::DIFFICULTY;
             isStartGameFlow = false;
             selectedDifficulty = gameMode;
         } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             menuScreen = MenuScreen::MAIN;
         }
     } else if (menuScreen == MenuScreen::CONTROLS) {
         if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             menuScreen = MenuScreen::OPTIONS;
         }
     } else if (menuScreen == MenuScreen::DIFFICULTY) {
         if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             selectedDifficulty = GameMode::EASY;
         } else if (UIButtons::BTN_DIFF_NORMAL.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             selectedDifficulty = GameMode::NORMAL;
         } else if (UIButtons::BTN_DIFF_HARD.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             selectedDifficulty = GameMode::HARD;
         } else if (UIButtons::BTN_DIFF_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             if (isStartGameFlow) {
                 menuScreen = MenuScreen::MAIN;
             } else {
@@ -285,8 +304,10 @@ void Game::handleMenuClick(float mx, float my) {
             gameMode = selectedDifficulty;
             enemy.setDifficulty(gameMode);
             if (isStartGameFlow) {
+                SoundManager::play(SoundEffect::UI_START);
                 startMatch();
             } else {
+                SoundManager::play(SoundEffect::UI_CLICK);
                 menuScreen = MenuScreen::OPTIONS;
             }
         }
@@ -296,6 +317,7 @@ void Game::handleMenuClick(float mx, float my) {
 void Game::handlePauseClick(float mx, float my) {
     if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
         if (UIButtons::BTN_ALERT_OK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_START);
             popupType = PopupType::NONE;
             gameMode = selectedDifficulty;
             enemy.setDifficulty(gameMode);
@@ -306,6 +328,7 @@ void Game::handlePauseClick(float mx, float my) {
 
     if (popupType == PopupType::ROUND2_RESTART_PROMPT) {
         if (UIButtons::BTN_CONFIRM_YES.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             popupType = PopupType::NONE;
             matchInProgress = false;
             state = GameState::MENU;
@@ -313,6 +336,7 @@ void Game::handlePauseClick(float mx, float my) {
             isStartGameFlow = true;
             selectedDifficulty = gameMode;
         } else if (UIButtons::BTN_CONFIRM_NO.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             popupType = PopupType::NONE;
             selectedDifficulty = gameMode;
             pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
@@ -322,13 +346,17 @@ void Game::handlePauseClick(float mx, float my) {
 
     if (pauseScreen == PauseScreen::PAUSE_MAIN) {
         if (UIButtons::BTN_PAUSE_RESUME.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             state = GameState::FIGHT;
         } else if (UIButtons::BTN_PAUSE_RESTART.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_START);
             startMatch();
         } else if (UIButtons::BTN_PAUSE_OPTIONS.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             pauseScreen = PauseScreen::PAUSE_OPTIONS;
         } else if (UIButtons::BTN_PAUSE_EXIT.contains(mx, my)) {
             // Exit returns to Home screen (Main Menu), NOT closing full game!
+            SoundManager::play(SoundEffect::UI_BACK);
             matchInProgress = false;
             popupType       = PopupType::NONE;
             state = GameState::MENU;
@@ -336,29 +364,38 @@ void Game::handlePauseClick(float mx, float my) {
         }
     } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
         if (UIButtons::BTN_OPT_CONTROLS.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             pauseScreen = PauseScreen::PAUSE_CONTROLS;
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
             selectedDifficulty = gameMode;
             popupType = PopupType::NONE;
         } else if (UIButtons::BTN_OPT_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             pauseScreen = PauseScreen::PAUSE_MAIN;
         }
     } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
         if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             pauseScreen = PauseScreen::PAUSE_OPTIONS;
         }
     } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
         if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             selectedDifficulty = GameMode::EASY;
         } else if (UIButtons::BTN_DIFF_NORMAL.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             selectedDifficulty = GameMode::NORMAL;
         } else if (UIButtons::BTN_DIFF_HARD.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             selectedDifficulty = GameMode::HARD;
         } else if (UIButtons::BTN_DIFF_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
             selectedDifficulty = gameMode;
             pauseScreen = PauseScreen::PAUSE_OPTIONS;
         } else if (UIButtons::BTN_DIFF_OK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
             if (selectedDifficulty != gameMode) {
                 bool isRoundOne = (roundNumber == 1 && playerWins == 0 && enemyWins == 0);
                 if (isRoundOne) {
@@ -389,12 +426,14 @@ void Game::onMouseClick(int button, int btnState, float worldX, float worldY) {
         } else if (state == GameState::FIGHT) {
             // Check top-right in-game settings icon
             if (UIButtons::BTN_SETTINGS_ICON.contains(worldX, worldY)) {
+                SoundManager::play(SoundEffect::UI_CLICK);
                 state = GameState::PAUSED;
                 pauseScreen = PauseScreen::PAUSE_MAIN;
             }
         } else if (state == GameState::PAUSED) {
             handlePauseClick(worldX, worldY);
         } else if (state == GameState::GAME_OVER) {
+            SoundManager::play(SoundEffect::UI_START);
             startMatch();
         }
     }
@@ -407,20 +446,29 @@ void Game::onKeyDown(unsigned char key) {
         case GameState::MENU:
             if (key == KEY_ENTER) {
                 if (menuScreen == MenuScreen::MAIN) {
+                    SoundManager::play(SoundEffect::UI_CLICK);
                     menuScreen = MenuScreen::DIFFICULTY;
                     isStartGameFlow = true;
                     selectedDifficulty = gameMode;
                 } else if (menuScreen == MenuScreen::OPTIONS) {
+                    SoundManager::play(SoundEffect::UI_CLICK);
                     menuScreen = MenuScreen::MAIN;
                 } else if (menuScreen == MenuScreen::CONTROLS) {
+                    SoundManager::play(SoundEffect::UI_BACK);
                     menuScreen = MenuScreen::OPTIONS;
                 } else if (menuScreen == MenuScreen::DIFFICULTY) {
                     gameMode = selectedDifficulty;
                     enemy.setDifficulty(gameMode);
-                    if (isStartGameFlow) startMatch();
-                    else menuScreen = MenuScreen::OPTIONS;
+                    if (isStartGameFlow) {
+                        SoundManager::play(SoundEffect::UI_START);
+                        startMatch();
+                    } else {
+                        SoundManager::play(SoundEffect::UI_CLICK);
+                        menuScreen = MenuScreen::OPTIONS;
+                    }
                 }
             } else if (key == KEY_ESCAPE) {
+                SoundManager::play(SoundEffect::UI_BACK);
                 if (menuScreen == MenuScreen::MAIN) quitRequested = true;
                 else if (menuScreen == MenuScreen::OPTIONS) menuScreen = MenuScreen::MAIN;
                 else if (menuScreen == MenuScreen::CONTROLS) menuScreen = MenuScreen::OPTIONS;
@@ -433,11 +481,13 @@ void Game::onKeyDown(unsigned char key) {
 
         case GameState::FIGHT:
             if (key == 'p' || key == 'P' || key == KEY_ESCAPE) {
+                SoundManager::play(SoundEffect::UI_CLICK);
                 state = GameState::PAUSED;
                 pauseScreen = PauseScreen::PAUSE_MAIN;
             }
             if (key == 'h' || key == 'H') showDebugBoxes = !showDebugBoxes;
             if (key == 't' || key == 'T') {
+                SoundManager::play(SoundEffect::UI_CLICK);
                 player.restoreHealth();
                 enemy.restoreHealth();
                 player.restoreEnergy();
@@ -448,17 +498,20 @@ void Game::onKeyDown(unsigned char key) {
         case GameState::PAUSED:
             if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
                 if (key == KEY_ENTER || key == ' ') {
+                    SoundManager::play(SoundEffect::UI_START);
                     popupType = PopupType::NONE;
                     gameMode = selectedDifficulty;
                     enemy.setDifficulty(gameMode);
                     startMatch();
                 } else if (key == KEY_ESCAPE) {
+                    SoundManager::play(SoundEffect::UI_BACK);
                     popupType = PopupType::NONE;
                     selectedDifficulty = gameMode;
                 }
                 break;
             } else if (popupType == PopupType::ROUND2_RESTART_PROMPT) {
                 if (key == 'y' || key == 'Y' || key == KEY_ENTER) {
+                    SoundManager::play(SoundEffect::UI_CLICK);
                     popupType = PopupType::NONE;
                     matchInProgress = false;
                     state = GameState::MENU;
@@ -466,6 +519,7 @@ void Game::onKeyDown(unsigned char key) {
                     isStartGameFlow = true;
                     selectedDifficulty = gameMode;
                 } else if (key == 'n' || key == 'N' || key == KEY_ESCAPE) {
+                    SoundManager::play(SoundEffect::UI_BACK);
                     popupType = PopupType::NONE;
                     selectedDifficulty = gameMode;
                     pauseScreen = PauseScreen::PAUSE_DIFFICULTY;
@@ -474,6 +528,7 @@ void Game::onKeyDown(unsigned char key) {
             }
 
             if (key == 'p' || key == 'P' || key == KEY_ESCAPE) {
+                SoundManager::play(SoundEffect::UI_BACK);
                 if (pauseScreen == PauseScreen::PAUSE_MAIN) {
                     state = GameState::FIGHT;
                 } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
@@ -485,8 +540,12 @@ void Game::onKeyDown(unsigned char key) {
                     pauseScreen = PauseScreen::PAUSE_OPTIONS;
                 }
             }
-            if (key == 'r' || key == 'R') startMatch();
+            if (key == 'r' || key == 'R') {
+                SoundManager::play(SoundEffect::UI_START);
+                startMatch();
+            }
             if (key == 'm' || key == 'M') {
+                SoundManager::play(SoundEffect::UI_BACK);
                 matchInProgress = false;
                 popupType       = PopupType::NONE;
                 state = GameState::MENU;
@@ -498,8 +557,12 @@ void Game::onKeyDown(unsigned char key) {
             break;
 
         case GameState::GAME_OVER:
-            if (key == KEY_ENTER) startMatch();
+            if (key == KEY_ENTER) {
+                SoundManager::play(SoundEffect::UI_START);
+                startMatch();
+            }
             if (key == 'm' || key == 'M' || key == KEY_ESCAPE) {
+                SoundManager::play(SoundEffect::UI_BACK);
                 matchInProgress = false;
                 popupType       = PopupType::NONE;
                 state = GameState::MENU;

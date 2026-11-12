@@ -2,6 +2,7 @@
 #include "Fighter.h"
 #include "Collision.h"
 #include "Effects.h"
+#include "SoundManager.h"
 #include <cmath>
 #include <algorithm>
 
@@ -51,6 +52,18 @@ bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
         }
 
         effects->triggerHit(hitX, hitY, pushDirection, style);
+    }
+
+    if (defender.isDead()) {
+        SoundManager::play(SoundEffect::KO);
+    } else if (defender.getState() == FighterState::BLOCK) {
+        SoundManager::play(SoundEffect::HIT_BLOCK);
+    } else if (attack == &Attacks::KICK) {
+        SoundManager::play(SoundEffect::HIT_KICK);
+    } else if (attack == &Attacks::SPECIAL) {
+        SoundManager::play(SoundEffect::HIT_SPECIAL);
+    } else {
+        SoundManager::play(SoundEffect::HIT_PUNCH);
     }
 
     attacker.onAttackConnected();

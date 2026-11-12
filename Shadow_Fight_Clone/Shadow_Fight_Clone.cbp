@@ -18,6 +18,7 @@
 					<Add library="freeglut" />
 					<Add library="opengl32" />
 					<Add library="glu32" />
+					<Add library="winmm" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -33,6 +34,7 @@
 					<Add library="freeglut" />
 					<Add library="opengl32" />
 					<Add library="glu32" />
+					<Add library="winmm" />
 				</Linker>
 			</Target>
 		</Build>
@@ -64,6 +66,8 @@
 		<Unit filename="Player.h" />
 		<Unit filename="Renderer.cpp" />
 		<Unit filename="Renderer.h" />
+		<Unit filename="SoundManager.cpp" />
+		<Unit filename="SoundManager.h" />
 		<Unit filename="UI.cpp" />
 		<Unit filename="UI.h" />
 		<Unit filename="main.cpp" />
