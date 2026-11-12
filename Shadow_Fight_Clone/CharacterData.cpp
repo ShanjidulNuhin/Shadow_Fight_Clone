@@ -12,13 +12,13 @@ namespace {
             "Meteor Iron Fist",
             "Devastating high-power charged punch.",
             "Skill: Jump-Kick (W+K), Roll (U) dodges Punch/Chain",
-            "HP: 100  |  Speed: Fast  |  Unarmed Blitz",
+            "HP: 100  |  Muscular  |  Unarmed Blitz",
             WeaponType::NONE_UNARMED,
             false, true, false, false,
-            0.08f, 0.09f, 0.12f,
+            0.025f, 0.025f, 0.032f,
             0.25f, 0.85f, 0.95f, // Cyan focus glow
-            86.0f, 185.0f,
-            100, 300.0f, 800.0f, 10.5f,
+            92.0f, 188.0f,
+            100, 295.0f, 790.0f, 10.5f,
             // 3-hit combo: Lead Jab -> Cross Hook -> Tiger Uppercut
             {
                 { 0.05f, 0.08f, 0.14f,  86.0f, 44.0f, 118.0f,  8, 220.0f, 0.26f, 0.0f, true, 0.20f },
@@ -45,13 +45,13 @@ namespace {
             "Electro-Chain Shock",
             "Energizes chain, grabs & shocks opponent.",
             "Skill (O): Long Chain Grab & Pull + 2s Stun",
-            "HP: 110  |  Range: Long  |  Chain Stun",
+            "HP: 110  |  Strong Build |  Chain Stun",
             WeaponType::SPIKED_CHAIN,
             false, false, true, false,
-            0.11f, 0.09f, 0.12f,
+            0.025f, 0.025f, 0.032f,
             0.35f, 0.78f, 1.0f, // Electric blue-cyan
-            86.0f, 186.0f,
-            110, 255.0f, 745.0f, 10.0f,
+            94.0f, 190.0f,
+            110, 260.0f, 755.0f, 10.0f,
             // 3-hit combo: Forward Lash -> Reverse Whip -> Overhead Spike Smash
             {
                 { 0.08f, 0.10f, 0.16f, 132.0f, 48.0f, 112.0f, 10, 260.0f, 0.28f, 0.0f, true, 0.20f },
@@ -78,13 +78,13 @@ namespace {
             "Evade War-Arrow",
             "Rolls back for range & fires a power arrow.",
             "Skill: Jump-Kick (W+K), Roll (U) dodges Punch/Chain",
-            "HP: 95   |  Speed: Fast  |  Bow & Arrow",
+            "HP: 95   |  Very Fast |  Bow & Arrow",
             WeaponType::WAR_BOW,
             true, true, false, false,
-            0.10f, 0.08f, 0.13f,
+            0.025f, 0.025f, 0.032f,
             0.95f, 0.72f, 0.25f, // Amber-gold bow aura
-            78.0f, 178.0f,
-            95, 295.0f, 795.0f, 10.5f,
+            80.0f, 176.0f,
+            95, 355.0f, 835.0f, 10.5f,
             // 3-hit combo: Bow Strike -> Arrow Slash -> Point-Blank Piercing Shot
             {
                 { 0.06f, 0.09f, 0.14f,  96.0f, 46.0f, 114.0f,  8, 240.0f, 0.26f, 0.0f, true, 0.20f },
@@ -111,13 +111,13 @@ namespace {
             "Fan Rush Knee",
             "Throws 2 fans -> sprints, grabs head & knees!",
             "Skill: Jump-Kick (W+K), Roll (U) dodges Punch/Chain",
-            "HP: 95   |  Speed: Fast  |  Twin War Fans",
+            "HP: 95   |  Max Agile |  Twin War Fans",
             WeaponType::DUAL_FANS,
             true, true, false, false,
-            0.12f, 0.07f, 0.10f,
+            0.025f, 0.025f, 0.032f,
             0.96f, 0.28f, 0.48f, // Crimson lotus rose
-            78.0f, 178.0f,
-            95, 305.0f, 800.0f, 11.0f,
+            80.0f, 176.0f,
+            95, 370.0f, 845.0f, 11.0f,
             // 3-hit combo: Fan Crescent -> Cross Scissor -> Spinning Cyclone Fans
             {
                 { 0.05f, 0.09f, 0.14f, 102.0f, 48.0f, 112.0f,  9, 240.0f, 0.26f, 0.0f, true, 0.20f },
@@ -144,13 +144,13 @@ namespace {
             "10-Spear Sky Storm",
             "Raises spear -> 10 sky spears -> force throw!",
             "Pure Spear Combos (J), Kick (K), Block (I)",
-            "HP: 115  |  Reach: Max    |  Spear Master",
+            "HP: 125  |  Heavy Muscle |  Spear Master",
             WeaponType::WAR_SPEAR,
             false, false, false, true,
-            0.13f, 0.08f, 0.08f,
+            0.025f, 0.025f, 0.032f,
             1.0f, 0.58f, 0.15f, // Burning imperial gold-amber
-            88.0f, 188.0f,
-            115, 248.0f, 735.0f, 10.0f,
+            104.0f, 196.0f,
+            125, 232.0f, 715.0f, 10.0f,
             // 3-hit combo (100% spear strikes, no fists): Jab -> Overhead Cleave -> Impaler Thrust
             {
                 { 0.08f, 0.10f, 0.17f, 138.0f, 44.0f, 114.0f, 10, 270.0f, 0.28f, 0.0f, true, 0.20f },

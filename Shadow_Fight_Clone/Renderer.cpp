@@ -268,6 +268,34 @@ void Renderer::drawLimb(float x1, float y1, float x2, float y2,
     drawCircle(x2, y2, r2, r, g, b, alpha, 16);
 }
 
+void Renderer::drawSculptedLimb(float x1, float y1, float xm, float ym, float x2, float y2,
+                                float r1, float rMid, float r2,
+                                float r, float g, float b, float alpha) const {
+    drawLimb(x1, y1, xm, ym, r1, rMid, r, g, b, alpha);
+    drawLimb(xm, ym, x2, y2, rMid, r2, r, g, b, alpha);
+}
+
+void Renderer::drawPolygon(const float* xs, const float* ys, int count,
+                           float r, float g, float b, float alpha) const {
+    if (count < 3 || xs == nullptr || ys == nullptr) return;
+    bool hasAlpha = (alpha < 0.999f);
+    if (hasAlpha) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    glColor4f(r, g, b, alpha);
+    glBegin(GL_POLYGON);
+        for (int i = 0; i < count; ++i) {
+            glVertex2f(xs[i], ys[i]);
+        }
+    glEnd();
+
+    if (hasAlpha) {
+        glDisable(GL_BLEND);
+    }
+}
+
 void Renderer::drawTextCentered(float centerX, float y, const char* text,
                                 float r, float g, float b, bool large) const {
     void* font = large ? GLUT_BITMAP_TIMES_ROMAN_24 : GLUT_BITMAP_HELVETICA_18;

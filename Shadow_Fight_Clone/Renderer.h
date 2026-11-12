@@ -72,6 +72,15 @@ public:
                   float r1, float r2,
                   float r, float g, float b, float alpha = 1.0f) const;
 
+    // Sculpted 3-point anatomical limb (shoulder->bicep->elbow or hip->quad->knee)
+    void drawSculptedLimb(float x1, float y1, float xm, float ym, float x2, float y2,
+                          float r1, float rMid, float r2,
+                          float r, float g, float b, float alpha = 1.0f) const;
+
+    // Filled polygon for contoured human silhouettes, armor, and boots
+    void drawPolygon(const float* xs, const float* ys, int count,
+                     float r, float g, float b, float alpha = 1.0f) const;
+
     // (x, y) is the bottom-left of the first letter.
     void drawText(float x, float y, const char* text,
                   float r, float g, float b) const;

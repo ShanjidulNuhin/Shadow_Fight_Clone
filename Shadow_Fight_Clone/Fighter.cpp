@@ -73,14 +73,14 @@ namespace {
             float y1 = hand.y + std::sin(a1) * radius;
             float shade = (i % 2 == 0) ? 0.92f : 0.72f;
             renderer.drawTriangle(hand.x, hand.y, x0, y0, x1, y1,
-                                  accR * shade, accG * shade, accB * shade);
-            renderer.drawLine(hand.x, hand.y, x0, y0, bodyR * 1.4f, bodyG * 1.4f, bodyB * 1.4f, 0.95f, 1.8f);
+                                  bodyR * shade * 1.4f, bodyG * shade * 1.4f, bodyB * shade * 1.4f);
+            renderer.drawLine(hand.x, hand.y, x0, y0, 0.16f, 0.16f, 0.18f, 0.95f, 1.5f);
         }
         float aEnd = baseAngle + 0.5f * spreadRad;
         renderer.drawLine(hand.x, hand.y,
                           hand.x + std::cos(aEnd) * radius,
                           hand.y + std::sin(aEnd) * radius,
-                          1.0f, 0.9f, 0.45f, 0.95f, 2.0f);
+                          0.22f, 0.20f, 0.20f, 0.95f, 1.8f);
     }
 
     void drawWeapon(const Renderer& renderer, const Fighter& fighter, WeaponType weapon,
@@ -90,9 +90,9 @@ namespace {
                     float bodyR, float bodyG, float bodyB,
                     float accR, float accG, float accB,
                     bool hideFan1, bool hideFan2, bool hideMainSpear) {
-        float steelR = std::min(1.0f, bodyR * 1.5f + 0.20f);
-        float steelG = std::min(1.0f, bodyG * 1.5f + 0.22f);
-        float steelB = std::min(1.0f, bodyB * 1.5f + 0.26f);
+        float steelR = std::min(1.0f, bodyR + 0.13f);
+        float steelG = std::min(1.0f, bodyG + 0.13f);
+        float steelB = std::min(1.0f, bodyB + 0.15f);
 
         bool isComboStrike = (state == FighterState::PUNCH || state == FighterState::COMBO2 || state == FighterState::COMBO3);
         bool activeSwing = (isComboStrike || state == FighterState::SPECIAL) && (phase == AttackPhase::ACTIVE);
@@ -101,20 +101,19 @@ namespace {
         float dy = handF.y - elbowF.y;
         float len = std::sqrt(dx * dx + dy * dy);
         float ux = (len > 1.0f) ? (dx / len) : dir;
-        float uy = (len > 1.0f) ? (dy / len) : 0.15f;
+        float uy = (len > 1.0f) ? (dy / len) : -0.35f;
         if (state == FighterState::IDLE || state == FighterState::WALK) {
-            ux = dir * 0.85f;
-            uy = 0.52f;
+            ux = dir * 0.78f;
+            uy = -0.62f;
         }
         float nx = -uy;
         float ny =  ux;
 
         switch (weapon) {
             case WeaponType::NONE_UNARMED: {
-                // Pure martial artist: bare hands with knuckle wraps and impact streaks only
                 if (activeSwing) {
-                    renderer.drawLine(elbowF.x, elbowF.y, handF.x + ux * 26.0f, handF.y + uy * 26.0f,
-                                      accR, accG, accB, 0.70f, 3.8f);
+                    renderer.drawLine(elbowF.x, elbowF.y, handF.x + ux * 22.0f, handF.y + uy * 22.0f,
+                                      accR, accG, accB, 0.65f, 3.2f);
                 }
                 if (state == FighterState::SPECIAL) {
                     float pulse = 18.0f + std::sin(stateTime * 35.0f) * 5.0f;
@@ -129,107 +128,112 @@ namespace {
                     float ext = (phase == AttackPhase::STARTUP) ? actionProgress * 70.0f : (120.0f + std::sin(actionProgress * 1.57f) * 185.0f);
                     float tipX = handF.x + dir * ext;
                     float tipY = handF.y + std::sin(stateTime * 28.0f) * 6.0f;
-                    // Draw chain links along the shot
                     int links = 14;
                     float px = handF.x, py = handF.y;
                     for (int i = 1; i <= links; ++i) {
                         float t = (float)i / (float)links;
                         float lx = handF.x + (tipX - handF.x) * t;
                         float ly = handF.y + (tipY - handF.y) * t + std::sin(t * 9.0f + stateTime * 20.0f) * 4.0f;
-                        renderer.drawLine(px, py, lx, ly, steelR, steelG, steelB, 0.95f, 3.2f);
-                        if (i % 2 == 0) renderer.drawCircle(lx, ly, 3.0f, accR * 0.7f, accG * 0.7f, accB * 0.7f, 0.85f, 6);
+                        renderer.drawLine(px, py, lx, ly, bodyR, bodyG, bodyB, 0.98f, 3.6f);
+                        if (i % 2 == 0) renderer.drawCircle(lx, ly, 2.8f, steelR, steelG, steelB, 0.90f, 6);
                         px = lx; py = ly;
                     }
-                    // Spiked grappling ball/claw at the tip
-                    renderer.drawCircle(tipX, tipY, 8.5f, steelR, steelG, steelB, 1.0f, 12);
-                    renderer.drawTriangle(tipX, tipY + 6.0f, tipX, tipY - 6.0f, tipX + dir * 16.0f, tipY, accR, accG, accB);
-                    renderer.drawTriangle(tipX - 4.0f, tipY + 5.0f, tipX + 4.0f, tipY + 5.0f, tipX, tipY + 15.0f, steelR, steelG, steelB);
-                    renderer.drawTriangle(tipX - 4.0f, tipY - 5.0f, tipX + 4.0f, tipY - 5.0f, tipX, tipY - 15.0f, steelR, steelG, steelB);
+                    renderer.drawCircle(tipX, tipY, 8.5f, bodyR, bodyG, bodyB, 1.0f, 12);
+                    renderer.drawTriangle(tipX, tipY + 6.0f, tipX, tipY - 6.0f, tipX + dir * 16.0f, tipY, steelR, steelG, steelB);
+                    renderer.drawTriangle(tipX - 4.0f, tipY + 5.0f, tipX + 4.0f, tipY + 5.0f, tipX, tipY + 15.0f, bodyR, bodyG, bodyB);
+                    renderer.drawTriangle(tipX - 4.0f, tipY - 5.0f, tipX + 4.0f, tipY - 5.0f, tipX, tipY - 15.0f, bodyR, bodyG, bodyB);
                 } else if (state == FighterState::SPECIAL) {
                     float ext = (phase == AttackPhase::STARTUP) ? 45.0f : (phase == AttackPhase::ACTIVE ? 215.0f : 70.0f);
                     float tipX = handF.x + dir * ext;
                     float tipY = handF.y + 4.0f;
-                    renderer.drawLine(handF.x, handF.y, tipX, tipY, steelR, steelG, steelB, 1.0f, 3.5f);
+                    renderer.drawLine(handF.x, handF.y, tipX, tipY, bodyR, bodyG, bodyB, 1.0f, 3.8f);
                     drawLightningBolt(renderer, handF.x, handF.y, tipX, tipY, stateTime, 12.0f, 0.35f, 0.92f, 1.0f, 2.8f);
                     drawLightningBolt(renderer, handF.x, handF.y, tipX, tipY, stateTime + 1.7f, 8.0f, 0.95f, 1.0f, 1.0f, 1.6f);
                     renderer.drawCircle(tipX, tipY, 9.5f, 0.35f, 0.90f, 1.0f, 0.95f, 12);
                 } else {
-                    float chainLen = activeSwing ? 92.0f : 42.0f;
+                    float chainLen = activeSwing ? 94.0f : 56.0f;
                     if (!activeSwing) {
-                        ux = dir * 0.45f;
-                        uy = -0.89f;
+                        ux = dir * 0.62f;
+                        uy = -0.78f;
                     }
                     float tipX = handF.x + ux * chainLen;
                     float tipY = handF.y + uy * chainLen;
-                    for (int i = 0; i < 6; ++i) {
-                        float t0 = (float)i / 6.0f;
-                        float t1 = (float)(i + 1) / 6.0f;
+                    // Serrated/spiked curved chain blade silhouette like reference weapon
+                    for (int i = 0; i < 7; ++i) {
+                        float t0 = (float)i / 7.0f;
+                        float t1 = (float)(i + 1) / 7.0f;
                         float ax = handF.x + ux * chainLen * t0;
                         float ay = handF.y + uy * chainLen * t0;
                         float bx = handF.x + ux * chainLen * t1;
                         float by = handF.y + uy * chainLen * t1;
-                        renderer.drawLine(ax, ay, bx, by, steelR, steelG, steelB, 0.95f, (i % 2 == 0) ? 3.5f : 2.2f);
+                        renderer.drawLine(ax, ay, bx, by, bodyR, bodyG, bodyB, 1.0f, (i % 2 == 0) ? 4.2f : 2.8f);
+                        if (i >= 2) {
+                            float spX = bx - uy * 6.5f * dir;
+                            float spY = by + ux * 6.5f * dir;
+                            renderer.drawTriangle(ax, ay, bx, by, spX, spY, bodyR, bodyG, bodyB);
+                        }
                     }
-                    renderer.drawCircle(tipX, tipY, 7.5f, steelR, steelG, steelB, 1.0f, 10);
+                    renderer.drawCircle(tipX, tipY, 6.8f, bodyR, bodyG, bodyB, 1.0f, 10);
                     renderer.drawTriangle(tipX - 3.0f, tipY + 4.0f, tipX + 3.0f, tipY + 4.0f,
-                                          tipX + ux * 11.0f, tipY + uy * 11.0f, accR, accG, accB);
+                                          tipX + ux * 12.0f, tipY + uy * 12.0f, bodyR, bodyG, bodyB);
                     if (activeSwing) {
-                        renderer.drawLine(handF.x, handF.y, tipX + ux * 22.0f, tipY + uy * 22.0f, accR, accG, accB, 0.70f, 3.0f);
+                        renderer.drawLine(handF.x, handF.y, tipX + ux * 20.0f, tipY + uy * 20.0f, accR, accG, accB, 0.65f, 3.0f);
                     }
                 }
                 break;
             }
 
             case WeaponType::WAR_BOW: {
-                // Quiver on back
-                renderer.drawQuad(chest.x - dir * 12.0f, chest.y + 12.0f,
-                                  chest.x - dir * 5.0f,  chest.y + 10.0f,
-                                  chest.x - dir * 14.0f, chest.y - 16.0f,
-                                  chest.x - dir * 21.0f, chest.y - 14.0f,
-                                  bodyR * 1.25f, bodyG * 1.25f, bodyB * 1.25f);
-                renderer.drawLine(chest.x - dir * 10.0f, chest.y + 12.0f, chest.x - dir * 14.0f, chest.y + 22.0f, accR, accG, accB, 0.95f, 2.0f);
-                renderer.drawLine(chest.x - dir * 7.0f,  chest.y + 11.0f, chest.x - dir * 9.0f,  chest.y + 21.0f, accR, accG, accB, 0.95f, 2.0f);
+                // Quiver on back in deep shadow silhouette
+                renderer.drawQuad(chest.x - dir * 10.0f, chest.y + 10.0f,
+                                  chest.x - dir * 4.0f,  chest.y + 8.0f,
+                                  chest.x - dir * 12.0f, chest.y - 16.0f,
+                                  chest.x - dir * 18.0f, chest.y - 14.0f,
+                                  bodyR, bodyG, bodyB);
+                renderer.drawLine(chest.x - dir * 9.0f, chest.y + 10.0f, chest.x - dir * 13.0f, chest.y + 21.0f, bodyR, bodyG, bodyB, 1.0f, 2.2f);
+                renderer.drawLine(chest.x - dir * 6.0f, chest.y + 9.0f,  chest.x - dir * 8.0f,  chest.y + 20.0f, steelR, steelG, steelB, 1.0f, 2.0f);
 
-                // Curved War Bow centered on front hand
-                float bowX = handF.x + dir * 4.0f;
+                float bowX = handF.x + dir * 3.0f;
                 float bowY = handF.y;
-                float topX = bowX - dir * 10.0f, topY = bowY + 34.0f;
-                float midTopX = bowX + dir * 7.0f, midTopY = bowY + 18.0f;
-                float midBotX = bowX + dir * 7.0f, midBotY = bowY - 18.0f;
-                float botX = bowX - dir * 10.0f, botY = bowY - 34.0f;
+                float topX = bowX - dir * 10.0f, topY = bowY + 32.0f;
+                float midTopX = bowX + dir * 7.0f, midTopY = bowY + 16.0f;
+                float midBotX = bowX + dir * 7.0f, midBotY = bowY - 16.0f;
+                float botX = bowX - dir * 10.0f, botY = bowY - 32.0f;
 
-                renderer.drawLine(topX, topY, midTopX, midTopY, steelR, steelG, steelB, 1.0f, 3.2f);
-                renderer.drawLine(midTopX, midTopY, midBotX, midBotY, accR, accG, accB, 1.0f, 3.8f);
-                renderer.drawLine(midBotX, midBotY, botX, botY, steelR, steelG, steelB, 1.0f, 3.2f);
+                renderer.drawLine(topX, topY, midTopX, midTopY, bodyR, bodyG, bodyB, 1.0f, 3.4f);
+                renderer.drawLine(midTopX, midTopY, midBotX, midBotY, steelR, steelG, steelB, 1.0f, 3.8f);
+                renderer.drawLine(midBotX, midBotY, botX, botY, bodyR, bodyG, bodyB, 1.0f, 3.4f);
 
-                // Bowstring drawn back during combo 3 or special
                 bool drawingBow = (state == FighterState::COMBO3) || (state == FighterState::SPECIAL && stateTime >= 0.34f && stateTime < 0.60f);
                 float stringPullX = drawingBow ? (handB.x) : (topX);
-                float stringPullY = drawingBow ? (bowY) : (bowY);
-                renderer.drawLine(topX, topY, stringPullX, stringPullY, 0.90f, 0.90f, 0.95f, 0.85f, 1.4f);
-                renderer.drawLine(stringPullX, stringPullY, botX, botY, 0.90f, 0.90f, 0.95f, 0.85f, 1.4f);
+                float stringPullY = bowY;
+                renderer.drawLine(topX, topY, stringPullX, stringPullY, 0.35f, 0.35f, 0.38f, 0.85f, 1.2f);
+                renderer.drawLine(stringPullX, stringPullY, botX, botY, 0.35f, 0.35f, 0.38f, 0.85f, 1.2f);
                 if (drawingBow) {
-                    renderer.drawLine(stringPullX, stringPullY, bowX + dir * 32.0f, bowY, accR, accG, accB, 1.0f, 2.8f);
+                    renderer.drawLine(stringPullX, stringPullY, bowX + dir * 32.0f, bowY, accR, accG, accB, 1.0f, 2.6f);
                     renderer.drawTriangle(bowX + dir * 28.0f, bowY + 4.0f,
                                           bowX + dir * 28.0f, bowY - 4.0f,
                                           bowX + dir * 39.0f, bowY, 1.0f, 0.95f, 0.65f);
                 }
                 if (activeSwing && state != FighterState::SPECIAL) {
-                    renderer.drawLine(handF.x, handF.y, handF.x + ux * 32.0f, handF.y + uy * 32.0f, accR, accG, accB, 0.70f, 3.0f);
+                    renderer.drawLine(handF.x, handF.y, handF.x + ux * 28.0f, handF.y + uy * 28.0f, accR, accG, accB, 0.65f, 2.8f);
                 }
                 break;
             }
 
             case WeaponType::DUAL_FANS: {
                 if (!hideFan1) {
-                    float fRadius = (activeSwing || state == FighterState::IDLE) ? 26.0f : 20.0f;
-                    float fSpread = activeSwing ? 1.55f : 1.15f;
+                    float fRadius = (activeSwing || state == FighterState::IDLE) ? 24.0f : 19.0f;
+                    float fSpread = activeSwing ? 1.50f : 1.15f;
                     drawOpenFan(renderer, handF, ux, uy, fRadius, fSpread, bodyR, bodyG, bodyB, accR, accG, accB);
+                    if (activeSwing) {
+                        renderer.drawLine(handF.x, handF.y, handF.x + ux * 28.0f, handF.y + uy * 28.0f, accR, accG, accB, 0.70f, 2.8f);
+                    }
                 }
                 if (!hideFan2) {
-                    float bx = dir * 0.75f;
-                    float by = 0.65f;
-                    drawOpenFan(renderer, handB, bx, by, 21.0f, 1.10f, bodyR, bodyG, bodyB, accR * 0.85f, accG * 0.85f, accB * 0.85f);
+                    float bx = -dir * 0.45f;
+                    float by = -0.88f;
+                    drawOpenFan(renderer, handB, bx, by, 19.0f, 1.05f, bodyR, bodyG, bodyB, accR * 0.8f, accG * 0.8f, accB * 0.8f);
                 }
                 break;
             }
@@ -238,11 +242,9 @@ namespace {
                 if (hideMainSpear) break;
 
                 if (state == FighterState::BLOCK) {
-                    // Vertical spear shaft guard
                     ux = 0.08f * dir;
                     uy = 0.99f;
                 } else if (state == FighterState::SPECIAL) {
-                    // Raise spear straight up toward the sky in one hand, or wind up to throw!
                     if (stateTime < 1.38f) {
                         ux = 0.0f;
                         uy = 1.0f;
@@ -251,7 +253,6 @@ namespace {
                         uy = 0.03f;
                     }
                 } else if (state == FighterState::COMBO2 && phase == AttackPhase::ACTIVE) {
-                    // Overhead sweeping spear cleave angle
                     ux = dir * 0.78f;
                     uy = -0.62f + actionProgress * 0.9f;
                     float l = std::sqrt(ux * ux + uy * uy);
@@ -260,8 +261,8 @@ namespace {
                     ux = dir;
                     uy = 0.04f;
                 } else if (state == FighterState::IDLE || state == FighterState::WALK) {
-                    ux = dir * 0.94f;
-                    uy = 0.34f;
+                    ux = dir * 0.88f;
+                    uy = -0.47f; // Natural downward-forward warrior spear angle like reference image
                 }
                 nx = -uy; ny = ux;
 
@@ -269,33 +270,427 @@ namespace {
                 float anchorY = (state == FighterState::SPECIAL && stateTime < 1.38f) ? handF.y : (handF.y + handB.y) * 0.5f;
                 if (state == FighterState::BLOCK) { anchorX = handF.x + dir * 4.0f; anchorY = chest.y - 6.0f; }
 
-                float tailX = anchorX - ux * 58.0f;
-                float tailY = anchorY - uy * 58.0f;
+                float tailX = anchorX - ux * 54.0f;
+                float tailY = anchorY - uy * 54.0f;
                 float headBaseX = anchorX + ux * 58.0f;
                 float headBaseY = anchorY + uy * 58.0f;
-                float tipX = anchorX + ux * 82.0f;
-                float tipY = anchorY + uy * 82.0f;
+                float tipX = anchorX + ux * 84.0f;
+                float tipY = anchorY + uy * 84.0f;
 
-                renderer.drawLine(tailX, tailY, headBaseX, headBaseY, bodyR * 1.25f, bodyG * 1.25f, bodyB * 1.25f, 1.0f, 4.6f);
+                renderer.drawLine(tailX, tailY, headBaseX, headBaseY, bodyR, bodyG, bodyB, 1.0f, 4.5f);
                 renderer.drawTriangle(headBaseX + nx * 5.5f, headBaseY + ny * 5.5f,
                                       headBaseX - nx * 5.5f, headBaseY - ny * 5.5f,
-                                      tipX, tipY, steelR, steelG, steelB);
-                renderer.drawLine(headBaseX, headBaseY, tipX, tipY, accR, accG, accB, 0.95f, 2.0f);
-                renderer.drawLine(headBaseX - ux * 4.0f, headBaseY - uy * 4.0f,
-                                  headBaseX - ux * 10.0f - ny * 8.0f, headBaseY - uy * 4.0f - 10.0f,
-                                  accR, accG, accB, 0.95f, 3.0f);
+                                      tipX, tipY, bodyR, bodyG, bodyB);
+                renderer.drawLine(headBaseX, headBaseY, tipX, tipY, steelR, steelG, steelB, 0.95f, 1.6f);
 
                 if (state == FighterState::SPECIAL && stateTime < 1.38f) {
                     float glow = 16.0f + std::sin(stateTime * 30.0f) * 5.0f;
                     renderer.drawCircle(tipX, tipY, glow, accR, accG, accB, 0.60f, 16);
                     renderer.drawCircle(tipX, tipY, glow * 0.45f, 1.0f, 1.0f, 0.85f, 0.95f, 10);
                 } else if (activeSwing) {
-                    renderer.drawLine(headBaseX, headBaseY, tipX + ux * 32.0f, tipY + uy * 32.0f, accR, accG, accB, 0.82f, 4.5f);
+                    renderer.drawLine(headBaseX, headBaseY, tipX + ux * 32.0f, tipY + uy * 32.0f, accR, accG, accB, 0.78f, 4.0f);
                 }
                 break;
             }
         }
         (void)fighter;
+    }
+
+    // =========================================================================
+    // ANATOMICAL REAL-HUMAN SILHOUETTE BUILDERS (MALE MUSCLE, HEAVY WARRIOR & FEMALE FIGURE)
+    // =========================================================================
+    struct BodyBuild {
+        bool  isFemale;
+        bool  isHeavyWarrior;
+        float shoulderOut;
+        float shoulderBackOut;
+        float chestFront;
+        float chestBack;
+        float waistFront;
+        float waistBack;
+        float hipFront;
+        float hipBack;
+        float neckBotR;
+        float neckTopR;
+        float deltoidR;
+        float bicepHipR;
+        float bicepMidR;
+        float elbowR;
+        float foreTopR;
+        float foreMidR;
+        float wristR;
+        float handScale;
+        float thighTopR;
+        float thighMidR;
+        float kneeR;
+        float calfTopR;
+        float calfMidR;
+        float ankleR;
+        float bootCuffR;
+        float craniumR;
+        float faceScale;
+    };
+
+    BodyBuild getBodyBuild(CharacterId charId, bool isFemale) {
+        if (isFemale) {
+            return {
+                true, false,
+                10.5f, 10.0f,   // Soft feminine shoulder span
+                19.2f, 12.2f,   // Real curved bust projection & upper back
+                9.2f,  8.8f,    // Trim feminine hourglass waist
+                14.8f, 18.2f,   // Full curved hips & glutes
+                4.7f,  4.2f,    // Graceful neck
+                6.5f,           // Soft deltoid
+                6.2f,  5.5f,  4.3f,   // Slender sculpted upper arm
+                4.4f,  4.7f,  3.3f,   // Tapered forearm
+                0.84f,                // Feminine hand
+                13.8f, 12.2f, 7.4f,   // Full shapely thigh tapering to knee
+                7.0f,  8.2f,  4.4f,   // Toned calf & slender ankle
+                4.9f,                 // Sleek boot cuff
+                10.0f, 0.90f          // Refined cranium & facial profile
+            };
+        }
+
+        if (charId == CharacterId::SPEAR_WARRIOR) {
+            // TAKEDA: Heavy armored & heavily muscled powerhouse spear warrior
+            return {
+                false, true,
+                18.5f, 17.5f,   // Massive broad shoulders
+                27.0f, 25.0f,   // Thick barrel chest & wide lats
+                17.2f, 16.2f,   // Thick powerful waist & core
+                21.0f, 20.5f,   // Heavy hips & war plates
+                9.4f,  8.2f,    // Bull neck & thick traps
+                15.2f,          // Huge muscular deltoid / war pauldron
+                12.2f, 11.4f, 8.2f,   // Heavy muscular bicep & tricep
+                8.4f,  9.0f,  5.6f,   // Thick powerful forearm
+                1.22f,                // Big warrior gauntlet/fist
+                18.2f, 17.0f, 11.6f,  // Tree-trunk quad & hamstring
+                11.2f, 12.4f, 7.2f,   // Massive calf muscle
+                8.4f,                 // Heavy greave cuff
+                12.0f, 1.08f          // Strong jaw & larger warrior cranium
+            };
+        }
+
+        // Strong muscular male build (KAI & KURO, Kuro slightly broader/armored)
+        float bulk = (charId == CharacterId::CHAIN_WARRIOR) ? 1.07f : 1.00f;
+        return {
+            false, false,
+            14.8f * bulk, 14.0f * bulk,   // Broad muscular shoulders
+            21.8f * bulk, 19.8f * bulk,   // Strong chest/pecs & V-taper lats
+            13.2f * bulk, 12.6f * bulk,   // Athletic defined waist
+            16.8f * bulk, 16.4f * bulk,   // Solid hips
+            7.8f  * bulk, 6.8f  * bulk,   // Strong neck
+            11.8f * bulk,                 // Rounded muscular deltoid
+            9.8f  * bulk, 9.1f  * bulk, 6.6f * bulk,   // Sculpted bicep/tricep
+            7.0f  * bulk, 7.5f  * bulk, 4.8f * bulk,   // Strong forearm
+            1.05f * bulk,                              // Strong male fist/hand
+            15.2f * bulk, 14.0f * bulk, 9.5f * bulk,   // Muscular quads
+            9.2f  * bulk, 9.9f  * bulk, 5.8f * bulk,   // Athletic calves
+            6.8f  * bulk,                              // Cinched warrior boot cuff
+            11.2f, 1.02f                               // Strong masculine jawline
+        };
+    }
+
+    void drawHumanBoot(const Renderer& renderer, Vec2 ankle, Vec2 toe, float dir, const BodyBuild& b,
+                       float r, float g, float bCol) {
+        float heelBack = b.isFemale ? 5.2f : (b.isHeavyWarrior ? 8.6f : 7.4f);
+        float soleDrop = b.isFemale ? 3.5f : (b.isHeavyWarrior ? 5.0f : 4.2f);
+        float frontTop = b.isFemale ? 7.6f : (b.isHeavyWarrior ? 11.8f : 10.0f);
+        float archBack = b.isFemale ? 4.2f : (b.isHeavyWarrior ? 7.2f : 5.8f);
+        float soleY    = std::min(ankle.y, toe.y) - soleDrop;
+
+        float xs[6] = {
+            ankle.x - dir * heelBack,
+            ankle.x - dir * (heelBack + 1.5f),
+            ankle.x + dir * frontTop,
+            toe.x + dir * (b.isHeavyWarrior ? 4.2f : 2.8f),
+            toe.x,
+            ankle.x + dir * archBack
+        };
+        float ys[6] = {
+            ankle.y + (b.isFemale ? 1.8f : 2.4f),
+            soleY,
+            soleY,
+            soleY + 1.4f,
+            toe.y + (b.isFemale ? 3.2f : (b.isHeavyWarrior ? 5.2f : 4.2f)),
+            ankle.y + 1.5f
+        };
+        renderer.drawPolygon(xs, ys, 6, r, g, bCol);
+    }
+
+    void drawHumanLeg(const Renderer& renderer, Vec2 hip, Vec2 knee, Vec2 ankle, Vec2 toe,
+                      float dir, const BodyBuild& b, float r, float g, float bCol) {
+        Vec2 midThigh = {
+            (hip.x + knee.x) * 0.5f + dir * (b.isFemale ? 2.4f : 2.0f),
+            (hip.y + knee.y) * 0.5f + 1.0f
+        };
+        Vec2 midCalf = {
+            (knee.x + ankle.x) * 0.5f - dir * (b.isFemale ? 2.6f : 3.2f),
+            (knee.y + ankle.y) * 0.5f + 5.0f
+        };
+
+        renderer.drawSculptedLimb(hip.x, hip.y, midThigh.x, midThigh.y, knee.x, knee.y,
+                                  b.thighTopR, b.thighMidR, b.kneeR, r, g, bCol);
+        renderer.drawSculptedLimb(knee.x, knee.y, midCalf.x, midCalf.y, ankle.x, ankle.y,
+                                  b.calfTopR, b.calfMidR, b.ankleR, r, g, bCol);
+        renderer.drawCircle(ankle.x, ankle.y + (b.isFemale ? 5.5f : 7.5f), b.bootCuffR, r, g, bCol, 1.0f, 12);
+        drawHumanBoot(renderer, ankle, toe, dir, b, r, g, bCol);
+    }
+
+    void drawHumanHand(const Renderer& renderer, Vec2 elbow, Vec2 hand, float dir, const BodyBuild& b,
+                       float r, float g, float bCol) {
+        float dx = hand.x - elbow.x;
+        float dy = hand.y - elbow.y;
+        float len = std::sqrt(dx * dx + dy * dy);
+        float ux = (len > 1.0f) ? (dx / len) : dir;
+        float uy = (len > 1.0f) ? (dy / len) : 0.0f;
+        float nx = -uy;
+        float ny =  ux;
+
+        float s = b.handScale;
+        float xs[5] = {
+            hand.x - nx * 4.2f * s,
+            hand.x + ux * 6.8f * s - nx * 3.8f * s,
+            hand.x + ux * 8.6f * s + nx * 1.6f * s,
+            hand.x + ux * 4.8f * s + nx * 5.2f * s,
+            hand.x + nx * 4.4f * s
+        };
+        float ys[5] = {
+            hand.y - ny * 4.2f * s,
+            hand.y + uy * 6.8f * s - ny * 3.8f * s,
+            hand.y + uy * 8.6f * s + ny * 1.6f * s,
+            hand.y + uy * 4.8f * s + ny * 5.2f * s,
+            hand.y + ny * 4.4f * s
+        };
+        renderer.drawPolygon(xs, ys, 5, r, g, bCol);
+    }
+
+    void drawHumanArm(const Renderer& renderer, Vec2 shoulder, Vec2 elbow, Vec2 hand,
+                      float dir, const BodyBuild& b, float r, float g, float bCol) {
+        Vec2 midUpper = {
+            (shoulder.x + elbow.x) * 0.5f + dir * (b.isFemale ? 0.8f : 2.2f),
+            (shoulder.y + elbow.y) * 0.5f + 2.0f
+        };
+        Vec2 midFore = {
+            (elbow.x + hand.x) * 0.5f + dir * (b.isFemale ? 0.4f : 1.0f),
+            (elbow.y + hand.y) * 0.5f + 1.5f
+        };
+
+        renderer.drawSculptedLimb(shoulder.x, shoulder.y, midUpper.x, midUpper.y, elbow.x, elbow.y,
+                                  b.bicepHipR, b.bicepMidR, b.elbowR, r, g, bCol);
+        renderer.drawSculptedLimb(elbow.x, elbow.y, midFore.x, midFore.y, hand.x, hand.y,
+                                  b.foreTopR, b.foreMidR, b.wristR, r, g, bCol);
+        drawHumanHand(renderer, elbow, hand, dir, b, r, g, bCol);
+    }
+
+    void drawHumanTorso(const Renderer& renderer, Vec2 chest, Vec2 waist, Vec2 hips,
+                        Vec2 shoulderF, Vec2 shoulderB, Vec2 neck, float dir, const BodyBuild& b,
+                        CharacterId charId, FighterState state, float stateTime,
+                        float r, float g, float bCol, float backR, float backG, float backB) {
+        if (b.isFemale) {
+            // Real-life woman hourglass figure: smooth upper chest -> curved bust -> under-bust -> narrow waist -> curved glutes & hips
+            float upperChestY = chest.y + 3.0f;
+            float bustPeakY   = chest.y - 8.5f;
+            float underBustY  = chest.y - 18.0f;
+            float ribMidY     = (chest.y + waist.y) * 0.50f;
+            float hipY        = hips.y - 3.0f;
+
+            float xs[10] = {
+                chest.x - dir * b.chestBack,        // upper back / shoulder blade
+                chest.x + dir * 11.2f,              // collarbone / upper sternum
+                chest.x + dir * b.chestFront,       // full rounded feminine bust contour
+                chest.x + dir * 11.6f,              // smooth curve under bust
+                waist.x + dir * b.waistFront,       // narrow shapely front waist
+                hips.x  + dir * b.hipFront,         // curved front hip
+                hips.x  - dir * b.hipBack,          // rounded feminine hip / glute curve
+                waist.x - dir * b.waistBack,        // hollow lumbar curve
+                chest.x - dir * (b.chestBack * 0.92f),
+                chest.x - dir * b.chestBack
+            };
+            float ys[10] = {
+                upperChestY,
+                upperChestY,
+                bustPeakY,
+                underBustY,
+                waist.y,
+                hipY,
+                hipY,
+                waist.y,
+                ribMidY,
+                upperChestY - 4.0f
+            };
+            renderer.drawPolygon(xs, ys, 10, r, g, bCol);
+
+            // Soft rounded bust & curved glute contour smoothing so side profile looks completely organic
+            renderer.drawCircle(chest.x + dir * 11.5f, chest.y - 9.0f, 7.6f, r, g, bCol, 1.0f, 16);
+            renderer.drawCircle(hips.x - dir * 8.0f, hips.y - 1.5f, 10.6f, r, g, bCol, 1.0f, 16);
+            renderer.drawCircle(hips.x + dir * 5.0f, hips.y - 2.0f, 9.6f, r, g, bCol, 1.0f, 16);
+
+            // Feminine shoulders & graceful neck
+            renderer.drawCircle(shoulderF.x, shoulderF.y, b.deltoidR, r, g, bCol, 1.0f, 14);
+            renderer.drawCircle(shoulderB.x, shoulderB.y, b.deltoidR * 0.92f, backR, backG, backB, 1.0f, 14);
+            renderer.drawTriangle(shoulderB.x, shoulderB.y + 1.5f,
+                                  shoulderF.x, shoulderF.y + 1.5f,
+                                  neck.x, neck.y + 2.0f, r, g, bCol);
+            renderer.drawLimb(neck.x, neck.y - 5.0f, neck.x + dir * 1.5f, neck.y + 10.0f, b.neckBotR, b.neckTopR, r, g, bCol);
+
+            // Light fluttering martial waist ribbon (trails behind without hiding waist-hip curves)
+            if (state != FighterState::DEAD) {
+                float sway = std::sin(stateTime * 8.5f) * 5.0f;
+                renderer.drawQuad(waist.x - dir * 6.0f, waist.y + 2.0f,
+                                  waist.x - dir * 9.0f, waist.y - 3.0f,
+                                  hips.x - dir * (22.0f + sway), hips.y - 22.0f,
+                                  hips.x - dir * (16.0f + sway), hips.y - 19.0f,
+                                  backR, backG, backB);
+            }
+        } else {
+            // Real muscular man V-taper torso: broad pecs & lats -> strong ribcage -> athletic waist -> muscular hips
+            float pecY  = chest.y - 9.0f;
+            float ribY  = (chest.y + waist.y) * 0.48f;
+            float hipY  = hips.y - 4.0f;
+            float xs[10] = {
+                chest.x - dir * b.chestBack,            // broad back latissimus
+                chest.x + dir * (b.chestFront * 0.86f), // upper chest
+                chest.x + dir * b.chestFront,           // full muscular pectoral projection
+                chest.x + dir * (b.chestFront * 0.82f), // lower pecs
+                waist.x + dir * b.waistFront,           // strong obliques / front waist
+                hips.x  + dir * b.hipFront,             // front hip
+                hips.x  - dir * b.hipBack,              // back hip / glutes
+                waist.x - dir * b.waistBack,            // lower back
+                chest.x - dir * (b.chestBack * 0.90f),  // mid lats
+                chest.x - dir * b.chestBack
+            };
+            float ys[10] = {
+                chest.y + 5.0f,
+                chest.y + 5.0f,
+                pecY,
+                ribY + 6.0f,
+                waist.y,
+                hipY,
+                hipY,
+                waist.y,
+                ribY,
+                pecY
+            };
+            renderer.drawPolygon(xs, ys, 10, r, g, bCol);
+
+            // Broad muscular chest fill & pelvis connection
+            renderer.drawCircle(chest.x + dir * (b.chestFront * 0.35f), pecY + 1.0f, b.chestFront * 0.52f, r, g, bCol, 1.0f, 16);
+            renderer.drawCircle(hips.x, hips.y - 2.0f, b.hipFront * 0.72f, r, g, bCol, 1.0f, 16);
+
+            // Heavy trapezius muscles sloping from thick neck into broad shoulders
+            float trapLift = b.isHeavyWarrior ? 8.5f : 5.5f;
+            renderer.drawTriangle(shoulderB.x - dir * 3.0f, shoulderB.y + 2.0f,
+                                  shoulderF.x + dir * 3.0f, shoulderF.y + 2.0f,
+                                  neck.x, neck.y + trapLift, r, g, bCol);
+            renderer.drawLimb(neck.x, neck.y - 6.0f, neck.x + dir * 1.5f, neck.y + 11.0f,
+                              b.neckBotR, b.neckTopR, r, g, bCol);
+
+            // Muscular rounded deltoid / warrior shoulder armor domes clearly framing arms
+            renderer.drawCircle(shoulderF.x, shoulderF.y + 1.5f, b.deltoidR, r, g, bCol, 1.0f, 18);
+            renderer.drawCircle(shoulderB.x, shoulderB.y + 1.5f, b.deltoidR * 0.94f, backR, backG, backB, 1.0f, 18);
+
+            // Warrior obi & armored waist tassets (heavier & wider for Takeda heavy spear warrior)
+            if (state != FighterState::DEAD) {
+                float sway = std::sin(stateTime * 6.0f) * 3.0f;
+                float flairOut = b.isHeavyWarrior ? 25.0f : (charId == CharacterId::CHAIN_WARRIOR ? 21.0f : 18.0f);
+                float tassetDrop = b.isHeavyWarrior ? 22.0f : 16.0f;
+                renderer.drawQuad(waist.x - dir * (b.waistBack + 2.0f), waist.y + 2.0f,
+                                  waist.x + dir * (b.waistFront + 2.0f), waist.y + 2.0f,
+                                  hips.x + dir * flairOut, hips.y - tassetDrop,
+                                  hips.x - dir * (flairOut + 2.0f + sway), hips.y - (tassetDrop + 2.0f),
+                                  r, g, bCol);
+            }
+        }
+    }
+
+    void drawHumanHead(const Renderer& renderer, Vec2 headCenter, Vec2 chest,
+                       float dir, const BodyBuild& b, CharacterId charId,
+                       FighterState state, float stateTime,
+                       float r, float g, float bCol, float backR, float backG, float backB) {
+        renderer.drawCircle(headCenter.x - dir * 1.0f, headCenter.y + 1.0f, b.craniumR, r, g, bCol, 1.0f, 20);
+
+        // Sculpted human facial jaw, brow, nose & chin silhouette profile facing dir
+        float fs = b.faceScale;
+        float fxs[5] = {
+            headCenter.x + dir * 3.0f * fs,
+            headCenter.x + dir * 12.2f * fs,
+            headCenter.x + dir * 11.4f * fs,
+            headCenter.x + dir * 9.0f * fs,
+            headCenter.x - dir * 1.0f * fs
+        };
+        float fys[5] = {
+            headCenter.y + 8.6f * fs,
+            headCenter.y + 1.6f * fs,
+            headCenter.y - 4.5f * fs,
+            headCenter.y - 10.6f * fs,
+            headCenter.y - 8.6f * fs
+        };
+        renderer.drawPolygon(fxs, fys, 5, r, g, bCol);
+
+        if (charId == CharacterId::BRAWLER) {
+            // Kai: Martial cowl + knotted dark headband + fluttering tails
+            if (state != FighterState::DEAD) {
+                float w1 = std::sin(stateTime * 10.0f) * 4.5f;
+                float w2 = std::cos(stateTime * 8.0f)  * 5.0f;
+                renderer.drawCircle(headCenter.x - dir * 11.5f, headCenter.y + 3.0f, 4.0f, r, g, bCol);
+                renderer.drawQuad(headCenter.x - dir * 11.5f, headCenter.y + 5.0f,
+                                  headCenter.x - dir * 11.5f, headCenter.y + 1.0f,
+                                  headCenter.x - dir * 33.0f, headCenter.y - 4.0f + w1,
+                                  headCenter.x - dir * 33.0f, headCenter.y + 1.0f + w1, r, g, bCol);
+                renderer.drawQuad(headCenter.x - dir * 11.5f, headCenter.y + 3.0f,
+                                  headCenter.x - dir * 11.5f, headCenter.y - 1.0f,
+                                  headCenter.x - dir * 39.0f, headCenter.y - 12.0f + w2,
+                                  headCenter.x - dir * 39.0f, headCenter.y - 7.0f  + w2, backR, backG, backB);
+            }
+        } else if (charId == CharacterId::CHAIN_WARRIOR) {
+            // Kuro: Exact horned samurai/oni silhouette from reference image + strapped back hilt
+            renderer.drawTriangle(headCenter.x + dir * 2.0f, headCenter.y + 8.0f,
+                                  headCenter.x + dir * 7.8f, headCenter.y + 8.0f,
+                                  headCenter.x + dir * 10.4f, headCenter.y + 25.0f, r, g, bCol);
+            renderer.drawTriangle(headCenter.x - dir * 2.5f, headCenter.y + 8.0f,
+                                  headCenter.x + dir * 2.5f, headCenter.y + 8.0f,
+                                  headCenter.x + dir * 4.2f, headCenter.y + 22.0f, backR, backG, backB);
+            renderer.drawQuad(headCenter.x - dir * 4.0f, headCenter.y + 2.0f,
+                              headCenter.x - dir * 14.5f, headCenter.y - 11.5f,
+                              headCenter.x - dir * 10.5f, headCenter.y - 14.5f,
+                              headCenter.x + dir * 1.0f, headCenter.y - 5.0f, r, g, bCol);
+            if (state != FighterState::DEAD) {
+                renderer.drawQuad(chest.x - dir * 11.0f, chest.y + 4.0f,
+                                  chest.x - dir * 5.0f, chest.y + 2.0f,
+                                  chest.x - dir * 19.0f, chest.y + 28.0f,
+                                  chest.x - dir * 25.0f, chest.y + 25.0f, r, g, bCol);
+            }
+        } else if (charId == CharacterId::ARCHER) {
+            // Akari (Female): High tied sweeping ponytail silhouette
+            if (state != FighterState::DEAD) {
+                float hairWave = std::sin(stateTime * 9.5f) * 4.8f;
+                renderer.drawCircle(headCenter.x - dir * 10.5f, headCenter.y + 6.0f, 4.4f, r, g, bCol);
+                renderer.drawQuad(headCenter.x - dir * 10.5f, headCenter.y + 8.5f,
+                                  headCenter.x - dir * 10.5f, headCenter.y + 2.5f,
+                                  headCenter.x - dir * 35.0f, headCenter.y - 16.0f + hairWave,
+                                  headCenter.x - dir * 31.0f, headCenter.y - 5.0f + hairWave, r, g, bCol);
+            }
+        } else if (charId == CharacterId::FAN_DANCER) {
+            // Mei-Ling (Female): Twin elegant chignon hair buns + crossed hairpin silhouettes
+            renderer.drawCircle(headCenter.x - dir * 7.5f, headCenter.y + 10.5f, 5.2f, r, g, bCol);
+            renderer.drawCircle(headCenter.x + dir * 1.5f, headCenter.y + 11.5f, 4.6f, r, g, bCol);
+            if (state != FighterState::DEAD) {
+                renderer.drawLine(headCenter.x - dir * 15.0f, headCenter.y + 17.5f,
+                                  headCenter.x + dir * 3.0f,  headCenter.y + 7.5f, r, g, bCol, 1.0f, 2.0f);
+                renderer.drawLine(headCenter.x - dir * 3.0f,  headCenter.y + 19.0f,
+                                  headCenter.x + dir * 10.5f, headCenter.y + 8.5f, r, g, bCol, 1.0f, 2.0f);
+            }
+        } else {
+            // Takeda: Heavy imperial Kabuto war helmet + sweeping crest + thick neck shikoro armor plates
+            renderer.drawTriangle(headCenter.x - dir * 15.0f, headCenter.y + 6.5f,
+                                  headCenter.x + dir * 13.0f, headCenter.y + 6.5f,
+                                  headCenter.x + dir * 2.0f,  headCenter.y + 27.5f, r, g, bCol);
+            renderer.drawQuad(headCenter.x - dir * 3.0f, headCenter.y + 2.0f,
+                              headCenter.x - dir * 18.0f, headCenter.y - 14.0f,
+                              headCenter.x - dir * 13.0f, headCenter.y - 17.0f,
+                              headCenter.x + dir * 1.0f, headCenter.y - 6.0f, r, g, bCol);
+        }
     }
 }
 
@@ -386,7 +781,8 @@ void Fighter::setBlocking(bool wantsToBlock) {
 }
 
 void Fighter::startRoll(float rollDir) {
-    if (!getProfile().hasAcrobaticKit) return;
+    const CharacterProfile& prof = getProfile();
+    if (!prof.hasAcrobaticKit) return;
     if (!canAct() || !onGround) return;
 
     float dir = (rollDir != 0.0f) ? (rollDir > 0.0f ? 1.0f : -1.0f) : (facingRight ? 1.0f : -1.0f);
@@ -394,7 +790,7 @@ void Fighter::startRoll(float rollDir) {
     state = FighterState::ROLL;
     stateTime = 0.0f;
     rollTimer = ROLL_DURATION;
-    rollVelocityX = dir * ROLL_SPEED;
+    rollVelocityX = dir * (prof.isFemale ? ROLL_SPEED * 1.18f : ROLL_SPEED);
     crouching = false;
     blocking = false;
     height = crouchHeight * 0.72f;
@@ -1078,9 +1474,9 @@ void Fighter::draw(const Renderer& renderer) const {
         bodyR *= 0.45f; bodyG *= 0.45f; bodyB *= 0.45f;
     }
 
-    float backR = bodyR * 0.70f;
-    float backG = bodyG * 0.70f;
-    float backB = bodyB * 0.70f;
+    float backR = std::min(1.0f, bodyR + 0.032f);
+    float backG = std::min(1.0f, bodyG + 0.032f);
+    float backB = std::min(1.0f, bodyB + 0.038f);
 
     float drawW = width  * pose.scaleX;
     float drawH = height * pose.scaleY;
@@ -1088,21 +1484,14 @@ void Fighter::draw(const Renderer& renderer) const {
     float drawY = y + pose.offsetY;
     float cx    = drawX + drawW * 0.5f;
     float dir   = facingRight ? 1.0f : -1.0f;
-
-    // Female proportions subtly sleeker
-    float chestHalfW = prof.isFemale ? 13.5f : 17.0f;
-    float waistHalfW = prof.isFemale ? 9.0f  : 12.0f;
-    float hipHalfW   = prof.isFemale ? 13.5f : 14.5f;
-    float limbThick  = prof.isFemale ? 0.82f : 1.0f;
+    float hScale = standingHeight / 186.0f;
+    BodyBuild build = getBodyBuild(characterId, prof.isFemale);
 
     Vec2 headCenter, neck, chest, waist, hips;
     Vec2 shoulderF, elbowF, handF;
     Vec2 shoulderB, elbowB, handB;
     Vec2 hipF, kneeF, ankleF, toeF;
     Vec2 hipB, kneeB, ankleB, toeB;
-
-    float headRadius = prof.isFemale ? 13.5f : 14.5f;
-    bool  drawEye    = (state != FighterState::DEAD);
 
     if (state == FighterState::DEAD) {
         float col = pose.collapse;
@@ -1132,7 +1521,7 @@ void Fighter::draw(const Renderer& renderer) const {
         elbowB    = { cx + dir * (-6.0f * invCol + 34.0f * col), drawY + 108.0f * invCol + 11.0f * col };
         handB     = { cx + dir * (14.0f * invCol + 48.0f * col), drawY + 122.0f * invCol + 11.0f * col };
 
-        if (col >= 0.85f) drawEye = false;
+        if (col >= 0.85f) (void)0;
 
     } else if (state == FighterState::ROLL ||
                (state == FighterState::SPECIAL && characterId == CharacterId::ARCHER && stateTime < 0.34f)) {
@@ -1223,32 +1612,33 @@ void Fighter::draw(const Renderer& renderer) const {
 
     } else if (state == FighterState::WALK ||
                (state == FighterState::SPECIAL && characterId == CharacterId::FAN_DANCER && fanSpecialStage == 1)) {
-        float phaseWave = stateTime * ((fanSpecialStage == 1) ? 18.0f : 9.5f);
+        float baseWalkFreq = prof.isFemale ? 12.2f : (build.isHeavyWarrior ? 7.8f : 9.5f);
+        float phaseWave = stateTime * ((fanSpecialStage == 1) ? 19.0f : baseWalkFreq);
         float stride = std::sin(phaseWave);
 
-        hips       = { cx + dir * pose.torsoLeanX * 0.6f, drawY + 86.0f + std::fabs(stride) * 3.0f };
-        waist      = { cx + dir * pose.torsoLeanX * 1.0f, drawY + 104.0f + std::fabs(stride) * 3.0f };
-        chest      = { cx + dir * (5.0f + pose.torsoLeanX * 1.5f), drawY + 138.0f + std::fabs(stride) * 3.0f };
+        hips       = { cx + dir * pose.torsoLeanX * 0.6f, drawY + (90.0f + std::fabs(stride) * 3.0f) * hScale };
+        waist      = { cx + dir * pose.torsoLeanX * 1.0f, drawY + (112.0f + std::fabs(stride) * 3.0f) * hScale };
+        chest      = { cx + dir * (6.0f + pose.torsoLeanX * 1.5f), drawY + (142.0f + std::fabs(stride) * 3.0f) * hScale };
         neck       = { chest.x + dir * 3.5f, chest.y + 16.0f };
         headCenter = { neck.x + dir * 2.5f,  neck.y + 16.0f };
 
-        hipF   = { hips.x + dir * 8.0f, hips.y };
-        ankleF = { cx + dir * (28.0f + stride * 22.0f), drawY + 6.0f + std::max(0.0f, stride) * 14.0f };
+        hipF   = { hips.x + dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
+        ankleF = { cx + dir * (28.0f + stride * 23.0f), drawY + 6.0f + std::max(0.0f, stride) * 14.0f };
         toeF   = { ankleF.x + dir * 13.0f, ankleF.y - 2.0f };
         kneeF  = { (hipF.x + ankleF.x) * 0.5f + dir * 8.0f, (hipF.y + ankleF.y) * 0.5f + 6.0f };
 
-        hipB   = { hips.x - dir * 8.0f, hips.y };
-        ankleB = { cx + dir * (-26.0f - stride * 22.0f), drawY + 6.0f + std::max(0.0f, -stride) * 14.0f };
+        hipB   = { hips.x - dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
+        ankleB = { cx + dir * (-26.0f - stride * 23.0f), drawY + 6.0f + std::max(0.0f, -stride) * 14.0f };
         toeB   = { ankleB.x + dir * 10.0f, ankleB.y - 2.0f };
         kneeB  = { (hipB.x + ankleB.x) * 0.5f + dir * 5.0f, (hipB.y + ankleB.y) * 0.5f + 6.0f };
 
-        shoulderF = { chest.x + dir * 8.0f, chest.y };
-        elbowF    = { cx + dir * (28.0f - stride * 10.0f), drawY + 112.0f };
-        handF     = { cx + dir * (36.0f - stride * 15.0f), drawY + 132.0f };
+        shoulderF = { chest.x + dir * build.shoulderOut, chest.y };
+        elbowF    = { cx + dir * (28.0f - stride * 10.0f), drawY + 114.0f * hScale };
+        handF     = { cx + dir * (37.0f - stride * 15.0f), drawY + 132.0f * hScale };
 
-        shoulderB = { chest.x - dir * 7.0f, chest.y };
-        elbowB    = { cx + dir * (-6.0f + stride * 10.0f), drawY + 108.0f };
-        handB     = { cx + dir * (14.0f + stride * 15.0f), drawY + 122.0f };
+        shoulderB = { chest.x - dir * build.shoulderBackOut, chest.y };
+        elbowB    = { cx + dir * (-16.0f + stride * 10.0f), drawY + 110.0f * hScale };
+        handB     = { cx + dir * (-2.0f + stride * 15.0f),  drawY + 122.0f * hScale };
 
     } else if (state == FighterState::CROUCH) {
         hips       = { cx - dir * 8.0f,  drawY + 44.0f };
@@ -1384,24 +1774,24 @@ void Fighter::draw(const Renderer& renderer) const {
 
     } else if (state == FighterState::PUNCH || state == FighterState::COMBO2 ||
                state == FighterState::COMBO3 || state == FighterState::CHAIN_GRAB) {
-        hips       = { cx + dir * (5.0f + pose.torsoLeanX * 0.5f),  drawY + 86.0f };
-        waist      = { cx + dir * (10.0f + pose.torsoLeanX * 1.0f), drawY + 104.0f };
-        chest      = { cx + dir * (18.0f + pose.torsoLeanX * 1.6f), drawY + 138.0f };
-        neck       = { chest.x + dir * 4.5f,                        chest.y + 16.0f };
-        headCenter = { neck.x + dir * 4.5f,                         neck.y + 16.0f };
+        hips       = { cx + dir * (5.0f + pose.torsoLeanX * 0.5f),  drawY + 88.0f * hScale };
+        waist      = { cx + dir * (10.0f + pose.torsoLeanX * 1.0f), drawY + 108.0f * hScale };
+        chest      = { cx + dir * (18.0f + pose.torsoLeanX * 1.6f), drawY + 140.0f * hScale };
+        neck       = { chest.x + dir * 4.5f,                        chest.y + 15.0f * hScale };
+        headCenter = { neck.x + dir * 4.5f,                         neck.y + 15.0f * hScale };
 
-        hipF   = { hips.x + dir * 8.0f, hips.y };
-        kneeF  = { cx + dir * 34.0f, drawY + 46.0f };
+        hipF   = { hips.x + dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
+        kneeF  = { cx + dir * 34.0f, drawY + 48.0f * hScale };
         ankleF = { cx + dir * 36.0f, drawY + 6.0f };
         toeF   = { cx + dir * 48.0f, drawY + 4.0f };
 
-        hipB   = { hips.x - dir * 8.0f, hips.y };
-        kneeB  = { cx - dir * 20.0f, drawY + 42.0f };
+        hipB   = { hips.x - dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
+        kneeB  = { cx - dir * 20.0f, drawY + 44.0f * hScale };
         ankleB = { cx - dir * 34.0f, drawY + 6.0f };
         toeB   = { cx - dir * 20.0f, drawY + 4.0f };
 
-        shoulderF = { chest.x + dir * 8.0f, chest.y };
-        shoulderB = { chest.x - dir * 7.0f, chest.y };
+        shoulderF = { chest.x + dir * build.shoulderOut, chest.y };
+        shoulderB = { chest.x - dir * build.shoulderBackOut, chest.y };
 
         const AttackData* atk = getCurrentAttack();
         float visualReach   = atk ? std::min(atk->reach, 88.0f) : 80.0f;
@@ -1480,33 +1870,33 @@ void Fighter::draw(const Renderer& renderer) const {
             toeF   = { ankleF.x + dir * 10.0f, ankleF.y - 2.0f };
         }
 
-        shoulderF = { chest.x + dir * 7.0f, chest.y };
-        elbowF    = { cx + dir * 8.0f,  drawY + 126.0f };
-        handF     = { cx + dir * 20.0f, drawY + 130.0f };
+        shoulderF = { chest.x + dir * build.shoulderOut, chest.y };
+        elbowF    = { cx + dir * 8.0f,  drawY + 126.0f * hScale };
+        handF     = { cx + dir * 20.0f, drawY + 130.0f * hScale };
 
-        shoulderB = { chest.x - dir * 7.0f, chest.y };
-        elbowB    = { cx - dir * 30.0f, drawY + 112.0f };
-        handB     = { cx - dir * 38.0f, drawY + 100.0f };
+        shoulderB = { chest.x - dir * build.shoulderBackOut, chest.y };
+        elbowB    = { cx - dir * 30.0f, drawY + 112.0f * hScale };
+        handB     = { cx - dir * 38.0f, drawY + 100.0f * hScale };
 
     } else if (state == FighterState::SPECIAL) {
-        hips       = { cx + dir * (5.0f + pose.torsoLeanX * 0.45f), drawY + 86.0f };
-        waist      = { cx + dir * (11.0f + pose.torsoLeanX * 0.9f), drawY + 104.0f };
-        chest      = { cx + dir * (19.0f + pose.torsoLeanX * 1.6f), drawY + 138.0f };
-        neck       = { chest.x + dir * 4.5f,                        chest.y + 16.0f };
-        headCenter = { neck.x + dir * 4.5f,                         neck.y + 16.0f };
+        hips       = { cx + dir * (5.0f + pose.torsoLeanX * 0.45f), drawY + 88.0f * hScale };
+        waist      = { cx + dir * (11.0f + pose.torsoLeanX * 0.9f), drawY + 108.0f * hScale };
+        chest      = { cx + dir * (19.0f + pose.torsoLeanX * 1.6f), drawY + 140.0f * hScale };
+        neck       = { chest.x + dir * 4.5f,                        chest.y + 15.0f * hScale };
+        headCenter = { neck.x + dir * 4.5f,                         neck.y + 15.0f * hScale };
 
-        hipF   = { hips.x + dir * 8.0f, hips.y };
-        kneeF  = { cx + dir * 36.0f, drawY + 44.0f };
+        hipF   = { hips.x + dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
+        kneeF  = { cx + dir * 36.0f, drawY + 46.0f * hScale };
         ankleF = { cx + dir * 42.0f, drawY + 6.0f };
         toeF   = { cx + dir * 54.0f, drawY + 4.0f };
 
-        hipB   = { hips.x - dir * 8.0f, hips.y };
-        kneeB  = { cx - dir * 24.0f, drawY + 38.0f };
+        hipB   = { hips.x - dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
+        kneeB  = { cx - dir * 24.0f, drawY + 40.0f * hScale };
         ankleB = { cx - dir * 36.0f, drawY + 6.0f };
         toeB   = { cx - dir * 24.0f, drawY + 4.0f };
 
-        shoulderF = { chest.x + dir * 9.0f, chest.y };
-        shoulderB = { chest.x - dir * 8.0f, chest.y };
+        shoulderF = { chest.x + dir * build.shoulderOut, chest.y };
+        shoulderB = { chest.x - dir * build.shoulderBackOut, chest.y };
 
         const AttackData& sAtk = prof.specialAttack;
         float visualReach   = std::min(sAtk.reach, 96.0f);
@@ -1532,114 +1922,61 @@ void Fighter::draw(const Renderer& renderer) const {
         handB  = { cx - dir * 24.0f, drawY + 104.0f };
 
     } else {
-        hips       = { cx,                drawY + 86.0f + pose.breathY * 0.5f };
-        waist      = { cx + dir * 3.0f,   drawY + 104.0f + pose.breathY * 0.9f };
-        chest      = { cx + dir * 7.0f,   drawY + 138.0f + pose.breathY * 1.3f };
-        neck       = { cx + dir * 9.0f,   drawY + 154.0f + pose.breathY * 1.2f };
-        headCenter = { cx + dir * 11.0f,  drawY + 170.0f + pose.breathY * 1.2f };
+        // Real human grounded martial stance (muscular men & heavy Takeda vs curved agile women)
+        float breath = pose.breathY;
+        float stanceSpread = prof.isFemale ? 24.0f : (build.isHeavyWarrior ? 34.0f : 29.0f);
+        hips       = { cx,                drawY + (92.0f + breath * 0.4f) * hScale };
+        waist      = { cx + dir * 3.0f,   drawY + (113.0f + breath * 0.7f) * hScale };
+        chest      = { cx + dir * (prof.isFemale ? 5.5f : 7.5f), drawY + (143.0f + breath * 1.1f) * hScale };
+        neck       = { chest.x + dir * 1.5f, chest.y + 15.0f * hScale };
+        headCenter = { neck.x + dir * 2.0f,  neck.y + 15.0f * hScale };
 
-        hipF   = { hips.x + dir * 8.0f, hips.y };
-        kneeF  = { cx + dir * 26.0f, drawY + 46.0f };
-        ankleF = { cx + dir * 28.0f, drawY + 6.0f };
-        toeF   = { cx + dir * 40.0f, drawY + 4.0f };
+        hipF   = { hips.x + dir * (prof.isFemale ? 7.5f : (build.isHeavyWarrior ? 11.5f : 9.5f)), hips.y };
+        kneeF  = { cx + dir * (stanceSpread - 3.0f), drawY + 52.0f * hScale };
+        ankleF = { cx + dir * stanceSpread, drawY + 11.0f };
+        toeF   = { ankleF.x + dir * 13.0f, drawY + 3.5f };
 
-        hipB   = { hips.x - dir * 8.0f, hips.y };
-        kneeB  = { cx - dir * 16.0f, drawY + 46.0f };
-        ankleB = { cx - dir * 26.0f, drawY + 6.0f };
-        toeB   = { cx - dir * 14.0f, drawY + 4.0f };
+        hipB   = { hips.x - dir * (prof.isFemale ? 7.5f : (build.isHeavyWarrior ? 11.5f : 9.5f)), hips.y };
+        kneeB  = { cx - dir * (stanceSpread - 5.0f), drawY + 52.0f * hScale };
+        ankleB = { cx - dir * (stanceSpread - 1.0f), drawY + 11.0f };
+        toeB   = { ankleB.x + dir * 12.0f, drawY + 3.5f };
 
-        shoulderF = { chest.x + dir * 8.0f, chest.y };
-        elbowF    = { cx + dir * 28.0f, drawY + 112.0f + pose.breathY * 1.0f };
-        handF     = { cx + dir * 36.0f, drawY + 132.0f + pose.breathY * 1.5f };
+        bool readyGuard = (characterId == CharacterId::BRAWLER || characterId == CharacterId::ARCHER);
+        shoulderF = { chest.x + dir * build.shoulderOut, chest.y };
+        elbowF    = readyGuard
+                    ? Vec2{ cx + dir * (prof.isFemale ? 24.0f : 31.0f), drawY + (114.0f + breath * 0.9f) * hScale }
+                    : Vec2{ cx + dir * (build.isHeavyWarrior ? 32.0f : 26.0f), drawY + (116.0f + breath * 0.9f) * hScale };
+        handF     = readyGuard
+                    ? Vec2{ cx + dir * (prof.isFemale ? 34.0f : 40.0f), drawY + (129.0f + breath * 1.2f) * hScale }
+                    : Vec2{ cx + dir * (build.isHeavyWarrior ? 44.0f : 37.0f), drawY + (96.0f  + breath * 1.1f) * hScale };
 
-        shoulderB = { chest.x - dir * 7.0f, chest.y };
-        elbowB    = { cx - dir * 7.0f,  drawY + 108.0f + pose.breathY * 0.8f };
-        handB     = { cx + dir * 14.0f, drawY + 122.0f + pose.breathY * 1.2f };
+        shoulderB = { chest.x - dir * build.shoulderBackOut, chest.y };
+        elbowB    = { cx - dir * (prof.isFemale ? 20.0f : (build.isHeavyWarrior ? 30.0f : 25.0f)),
+                      drawY + (114.0f + breath * 0.8f) * hScale };
+        handB     = readyGuard
+                    ? Vec2{ cx + dir * (prof.isFemale ? 13.0f : 17.0f), drawY + (120.0f + breath * 1.0f) * hScale }
+                    : Vec2{ cx - dir * (prof.isFemale ? 18.0f : (build.isHeavyWarrior ? 26.0f : 22.0f)),
+                            drawY + (95.0f  + breath * 1.0f) * hScale };
     }
 
     // =========================================================================
-    // LAYER 1: BACK LIMBS & ATTIRE SILHOUETTE
+    // LAYER 1: BACK LIMBS (Real Sculpted Human Back Leg & Arm)
     // =========================================================================
-    renderer.drawLimb(hipB.x, hipB.y, kneeB.x, kneeB.y, 10.5f * limbThick, 8.8f * limbThick, backR, backG, backB);
-    renderer.drawLimb(kneeB.x, kneeB.y, ankleB.x, ankleB.y, 8.8f * limbThick, 6.5f * limbThick, backR, backG, backB);
-    renderer.drawLimb(ankleB.x, ankleB.y, toeB.x, toeB.y, 6.5f * limbThick, 5.2f * limbThick, backR, backG, backB);
-    renderer.drawCircle(ankleB.x - dir * 2.5f, ankleB.y - 1.5f, 5.5f * limbThick, backR, backG, backB);
-
-    renderer.drawLimb(shoulderB.x, shoulderB.y, elbowB.x, elbowB.y, 7.8f * limbThick, 6.5f * limbThick, backR, backG, backB);
-    renderer.drawLimb(elbowB.x, elbowB.y, handB.x, handB.y, 6.5f * limbThick, 5.6f * limbThick, backR, backG, backB);
-    renderer.drawCircle(handB.x, handB.y, 6.2f * limbThick, backR, backG, backB);
-    renderer.drawCircle(handB.x + dir * 2.5f, handB.y + 0.5f, 4.8f * limbThick, backR, backG, backB);
-
-    if (characterId == CharacterId::SPEAR_WARRIOR || characterId == CharacterId::CHAIN_WARRIOR) {
-        float skirtWave = (state == FighterState::DEAD) ? 0.0f : std::sin(stateTime * 7.0f) * 5.0f;
-        renderer.drawQuad(waist.x - dir * 5.0f, waist.y,
-                          waist.x - dir * 13.0f, waist.y,
-                          cx - dir * (46.0f + skirtWave), drawY + 12.0f,
-                          cx - dir * (30.0f + skirtWave), drawY + 12.0f,
-                          backR, backG, backB);
-    } else if (prof.isFemale) {
-        // Flowing silk combat skirt / ribbon tails for Akari & Mei-Ling
-        float flow = (state == FighterState::DEAD) ? 0.0f : std::sin(stateTime * 8.0f) * 6.0f;
-        renderer.drawQuad(waist.x - dir * 3.0f, waist.y,
-                          waist.x - dir * 10.0f, waist.y,
-                          cx - dir * (34.0f + flow), drawY + 34.0f,
-                          cx - dir * (16.0f + flow), drawY + 34.0f,
-                          backR, backG, backB);
-    }
+    drawHumanLeg(renderer, hipB, kneeB, ankleB, toeB, dir, build, backR, backG, backB);
+    drawHumanArm(renderer, shoulderB, elbowB, handB, dir, build, backR, backG, backB);
 
     // =========================================================================
-    // LAYER 2: TORSO & BELT / SASH
+    // LAYER 2: REAL MALE / FEMALE TORSO & WAIST SILHOUETTE
     // =========================================================================
-    renderer.drawQuad(chest.x - chestHalfW, chest.y,
-                      chest.x + chestHalfW, chest.y,
-                      waist.x + waistHalfW, waist.y,
-                      waist.x - waistHalfW, waist.y,
-                      bodyR, bodyG, bodyB);
-
-    renderer.drawQuad(waist.x - waistHalfW, waist.y,
-                      waist.x + waistHalfW, waist.y,
-                      hips.x + hipHalfW,    hips.y,
-                      hips.x - hipHalfW,    hips.y,
-                      bodyR, bodyG, bodyB);
-
-    renderer.drawLimb(neck.x, neck.y - 4.0f, headCenter.x, headCenter.y - 8.0f, 5.4f * limbThick, 6.4f * limbThick, bodyR, bodyG, bodyB);
-
-    // Belt / Sash
-    renderer.drawRect(waist.x - (waistHalfW + 1.0f), waist.y - 4.5f, (waistHalfW + 1.0f) * 2.0f, 9.0f, accentR, accentG, accentB);
-
-    if (characterId == CharacterId::BRAWLER || prof.isFemale) {
-        if (state != FighterState::DEAD) {
-            float sashWave = std::sin(stateTime * 6.0f) * 4.0f;
-            renderer.drawQuad(waist.x - dir * 4.0f, waist.y - 3.0f,
-                              waist.x - dir * 11.0f, waist.y - 3.0f,
-                              waist.x - dir * 18.0f + sashWave, waist.y - 26.0f,
-                              waist.x - dir * 10.0f + sashWave, waist.y - 26.0f,
-                              accentR, accentG, accentB);
-        }
-    } else {
-        renderer.drawRectOutline(waist.x - 14.0f, waist.y - 5.0f, 28.0f, 10.0f, 0.45f, 0.45f, 0.50f);
-        if (characterId == CharacterId::CHAIN_WARRIOR) {
-            renderer.drawTriangle(shoulderF.x - 8.0f, shoulderF.y,
-                                  shoulderF.x + 10.0f, shoulderF.y,
-                                  shoulderF.x - dir * 3.0f, shoulderF.y + 16.0f,
-                                  bodyR * 1.35f, bodyG * 1.35f, bodyB * 1.35f);
-        }
-    }
+    drawHumanTorso(renderer, chest, waist, hips, shoulderF, shoulderB, neck,
+                   dir, build, characterId, state, stateTime,
+                   bodyR, bodyG, bodyB, backR, backG, backB);
 
     // =========================================================================
-    // LAYER 3: FRONT LIMBS & WEAPON
+    // LAYER 3: FRONT LIMBS & WEAPON SILHOUETTE
     // =========================================================================
-    renderer.drawLimb(hipF.x, hipF.y, kneeF.x, kneeF.y, 10.5f * limbThick, 8.8f * limbThick, bodyR, bodyG, bodyB);
-    renderer.drawLimb(kneeF.x, kneeF.y, ankleF.x, ankleF.y, 8.8f * limbThick, 6.5f * limbThick, bodyR, bodyG, bodyB);
-    renderer.drawLimb(ankleF.x, ankleF.y, toeF.x, toeF.y, 6.5f * limbThick, 5.2f * limbThick, bodyR, bodyG, bodyB);
-    renderer.drawCircle(ankleF.x - dir * 2.5f, ankleF.y - 1.5f, 5.5f * limbThick, bodyR, bodyG, bodyB);
-
-    renderer.drawCircle(shoulderF.x, shoulderF.y, 8.8f * limbThick, bodyR, bodyG, bodyB);
-    renderer.drawLimb(shoulderF.x, shoulderF.y, elbowF.x, elbowF.y, 7.8f * limbThick, 6.5f * limbThick, bodyR, bodyG, bodyB);
-    renderer.drawLimb(elbowF.x, elbowF.y, handF.x, handF.y, 6.5f * limbThick, 5.6f * limbThick, bodyR, bodyG, bodyB);
-
-    renderer.drawCircle(handF.x, handF.y, 6.8f * limbThick, bodyR, bodyG, bodyB);
-    renderer.drawLimb(handF.x, handF.y, handF.x + dir * 4.5f, handF.y + 0.6f, 6.0f * limbThick, 4.8f * limbThick, bodyR, bodyG, bodyB);
+    drawHumanLeg(renderer, hipF, kneeF, ankleF, toeF, dir, build, bodyR, bodyG, bodyB);
+    drawHumanArm(renderer, shoulderF, elbowF, handF, dir, build, bodyR, bodyG, bodyB);
 
     if (state != FighterState::DEAD) {
         bool hideFan1 = (characterId == CharacterId::FAN_DANCER && state == FighterState::SPECIAL && fan1Fired && fanSpecialStage == 0);
@@ -1653,77 +1990,10 @@ void Fighter::draw(const Renderer& renderer) const {
     }
 
     // =========================================================================
-    // LAYER 4: HEAD, HAIR / HELMET & EYES
+    // LAYER 4: REAL HUMAN CRANIUM, JAW PROFILE & HAIR / HELM SILHOUETTE
     // =========================================================================
-    renderer.drawCircle(headCenter.x, headCenter.y, headRadius, bodyR, bodyG, bodyB);
-
-    if (characterId == CharacterId::BRAWLER) {
-        // Kai: Bare-hand martial cowl + fluttering cyan headband
-        if (state != FighterState::DEAD) {
-            renderer.drawRect(headCenter.x - 14.0f, headCenter.y + 0.5f, 28.0f, 5.5f, accentR, accentG, accentB);
-            float w1 = std::sin(stateTime * 10.0f) * 4.5f;
-            float w2 = std::cos(stateTime * 8.0f)  * 5.0f;
-            renderer.drawQuad(headCenter.x - dir * 13.0f, headCenter.y + 5.0f,
-                              headCenter.x - dir * 13.0f, headCenter.y + 1.0f,
-                              headCenter.x - dir * 34.0f, headCenter.y - 3.0f + w1,
-                              headCenter.x - dir * 34.0f, headCenter.y + 2.0f + w1,
-                              accentR, accentG, accentB);
-            renderer.drawQuad(headCenter.x - dir * 13.0f, headCenter.y + 3.0f,
-                              headCenter.x - dir * 13.0f, headCenter.y - 1.0f,
-                              headCenter.x - dir * 42.0f, headCenter.y - 10.0f + w2,
-                              headCenter.x - dir * 42.0f, headCenter.y - 6.0f  + w2,
-                              accentR * 0.85f, accentG * 0.85f, accentB * 0.85f);
-        }
-    } else if (characterId == CharacterId::ARCHER) {
-        // Akari (Female Archer): Swept-back ponytail + archer headband
-        if (state != FighterState::DEAD) {
-            float hairWave = std::sin(stateTime * 9.0f) * 5.0f;
-            renderer.drawCircle(headCenter.x - dir * 13.0f, headCenter.y + 7.0f, 5.5f, accentR, accentG, accentB);
-            renderer.drawQuad(headCenter.x - dir * 13.0f, headCenter.y + 10.0f,
-                              headCenter.x - dir * 13.0f, headCenter.y + 3.0f,
-                              headCenter.x - dir * 38.0f, headCenter.y - 12.0f + hairWave,
-                              headCenter.x - dir * 35.0f, headCenter.y - 2.0f + hairWave,
-                              bodyR, bodyG, bodyB);
-        }
-    } else if (characterId == CharacterId::FAN_DANCER) {
-        // Mei-Ling (Female Fan Dancer): Twin Chinese buns + glowing crimson hairpins
-        renderer.drawCircle(headCenter.x - dir * 8.0f, headCenter.y + 13.0f, 6.0f, bodyR, bodyG, bodyB);
-        renderer.drawCircle(headCenter.x + dir * 2.0f, headCenter.y + 14.0f, 5.2f, bodyR, bodyG, bodyB);
-        if (state != FighterState::DEAD) {
-            renderer.drawLine(headCenter.x - dir * 18.0f, headCenter.y + 20.0f,
-                              headCenter.x + dir * 4.0f,  headCenter.y + 9.0f, accentR, accentG, accentB, 0.95f, 2.2f);
-            renderer.drawLine(headCenter.x - dir * 4.0f,  headCenter.y + 22.0f,
-                              headCenter.x + dir * 12.0f, headCenter.y + 10.0f, accentR, accentG, accentB, 0.95f, 2.2f);
-        }
-    } else if (characterId == CharacterId::CHAIN_WARRIOR) {
-        // Kuro: Menacing horned iron mask crest
-        renderer.drawTriangle(headCenter.x + dir * 4.0f, headCenter.y + 9.0f,
-                              headCenter.x + dir * 11.0f, headCenter.y + 9.0f,
-                              headCenter.x + dir * 16.0f, headCenter.y + 27.0f,
-                              accentR, accentG, accentB);
-        renderer.drawQuad(headCenter.x - dir * 4.0f, headCenter.y + 6.0f,
-                          headCenter.x + dir * 16.5f, headCenter.y + 2.5f,
-                          headCenter.x + dir * 14.0f, headCenter.y - 2.0f,
-                          headCenter.x - dir * 3.0f, headCenter.y + 2.0f,
-                          bodyR * 1.3f, bodyG * 1.3f, bodyB * 1.3f);
-    } else {
-        // Takeda: Imperial peaked Kabuto spearman helmet
-        renderer.drawTriangle(headCenter.x - dir * 12.0f, headCenter.y + 8.0f,
-                              headCenter.x + dir * 11.0f, headCenter.y + 8.0f,
-                              headCenter.x - dir * 2.0f,  headCenter.y + 28.0f,
-                              bodyR * 1.15f, bodyG * 1.15f, bodyB * 1.15f);
-        renderer.drawLine(headCenter.x - dir * 13.0f, headCenter.y + 8.0f,
-                          headCenter.x + dir * 13.0f, headCenter.y + 8.0f, accentR, accentG, accentB, 0.90f, 2.5f);
-    }
-
-    if (drawEye && state != FighterState::DEAD) {
-        float eyeX = headCenter.x + dir * 6.0f;
-        float eyeY = headCenter.y + 0.1f;
-        renderer.drawLine(eyeX - dir * 4.0f, eyeY - 1.1f,
-                          eyeX + dir * 5.0f, eyeY + 1.1f,
-                          accentR, accentG, accentB, 1.0f, 3.0f);
-        renderer.drawCircle(eyeX + dir * 2.0f, eyeY + 0.4f, 2.0f, 1.0f, 1.0f, 1.0f, 0.95f, 8);
-    }
+    drawHumanHead(renderer, headCenter, chest, dir, build, characterId,
+                  state, stateTime, bodyR, bodyG, bodyB, backR, backG, backB);
 
     // =========================================================================
     // LAYER 5: COMBAT AURAS, STUN STARS & ELECTRIC SHOCK ARCS
