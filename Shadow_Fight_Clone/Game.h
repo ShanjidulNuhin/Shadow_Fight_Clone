@@ -9,6 +9,7 @@
 #include "Background.h"
 #include "Effects.h"
 #include "Config.h"
+#include "StatsManager.h"
 
 enum class GameState {
     MENU,         // the title screen
@@ -19,8 +20,9 @@ enum class GameState {
 };
 
 enum class MenuScreen {
-    MAIN,             // [Start Game] [Options] [Exit]
+    MAIN,             // [Start Game] [Stats & Records] [Options] [Exit]
     CHARACTER_SELECT, // Choose Your Fighter (left) + Opponent (right)
+    STATS,            // Career stats & high scores + fighter mastery
     OPTIONS,          // [Game Controls] [Game Mode] [Back]
     CONTROLS,         // All controls display + [Back]
     DIFFICULTY        // [Easy] [Normal] [Hard] + [Back] & [OK]
@@ -101,6 +103,7 @@ private:
     Effects      effects;
     Player       player;
     Enemy        enemy;
+    StatsManager stats;
 
     GameState    state;
     MenuScreen   menuScreen;
@@ -116,6 +119,7 @@ private:
     int          enemyWins;
     float        roundIntroTimer;
     float        roundOverTimer;
+    float        roundElapsedSec;
 
     float        mouseX;
     float        mouseY;
@@ -125,6 +129,7 @@ private:
 
     bool         matchInProgress;
     bool         isStartGameFlow;
+    bool         confirmStatsReset;
     PopupType    popupType;
     bool         showDebugBoxes;
     bool         quitRequested;

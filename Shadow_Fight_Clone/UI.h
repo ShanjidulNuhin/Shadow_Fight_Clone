@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "Config.h"
 #include "CharacterData.h"
+#include "StatsManager.h"
 
 class Fighter;
 class Enemy;
@@ -22,9 +23,14 @@ struct RectButton {
 
 namespace UIButtons {
     // Main menu buttons
-    const RectButton BTN_MAIN_START    = { 260.0f, 320.0f, 280.0f, 48.0f, "START GAME" };
-    const RectButton BTN_MAIN_OPTIONS  = { 260.0f, 250.0f, 280.0f, 48.0f, "OPTIONS" };
-    const RectButton BTN_MAIN_EXIT     = { 260.0f, 180.0f, 280.0f, 48.0f, "EXIT" };
+    const RectButton BTN_MAIN_START    = { 260.0f, 340.0f, 280.0f, 46.0f, "START GAME" };
+    const RectButton BTN_MAIN_STATS    = { 260.0f, 282.0f, 280.0f, 46.0f, "STATS & RECORDS" };
+    const RectButton BTN_MAIN_OPTIONS  = { 260.0f, 224.0f, 280.0f, 46.0f, "OPTIONS" };
+    const RectButton BTN_MAIN_EXIT     = { 260.0f, 166.0f, 280.0f, 46.0f, "EXIT" };
+
+    // Stats screen buttons
+    const RectButton BTN_STATS_BACK    = { 190.0f, 34.0f,  190.0f, 44.0f, "BACK" };
+    const RectButton BTN_STATS_RESET   = { 420.0f, 34.0f,  190.0f, 44.0f, "RESET STATS" };
 
     // Options menu buttons
     const RectButton BTN_OPT_CONTROLS  = { 240.0f, 330.0f, 320.0f, 48.0f, "GAME CONTROLS" };
@@ -81,17 +87,21 @@ public:
 
     void drawDebugBoxes(const Fighter& fighter) const;
 
-    // The in-fight HUD with health, energy, rounds, stage banner, and settings gear icon
+    // The in-fight HUD with health, energy, rounds, live score, and settings gear icon
     void drawHUD(const Fighter& player, const Enemy& enemy,
                  int roundNumber, int playerWins, int enemyWins,
-                 float mouseX = -1.0f, float mouseY = -1.0f) const;
+                 float mouseX = -1.0f, float mouseY = -1.0f,
+                 int currentScore = 0, int highScore = 0) const;
 
     void drawButton(const RectButton& btn, bool hovered, bool active = false,
                     const char* customLabel = nullptr, bool disabled = false) const;
     void drawSettingsIcon(bool hovered) const;
 
     // Menu Screens
-    void drawMainMenu(float mouseX, float mouseY, int selectedIndex = -1) const;
+    void drawMainMenu(float mouseX, float mouseY, int selectedIndex = -1,
+                      const CareerStats* career = nullptr) const;
+    void drawStatsScreen(float mouseX, float mouseY, const CareerStats& career,
+                         bool confirmReset = false) const;
     void drawCharacterSelect(float mouseX, float mouseY,
                              CharacterId playerChar, CharacterId enemyChar) const;
     void drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const;
@@ -108,7 +118,8 @@ public:
 
     void drawRoundIntro(int roundNumber, bool showFight, const char* stageInfo = nullptr) const;
     void drawRoundOver(const char* detail) const;
-    void drawGameOver(bool playerWon, int playerWins, int enemyWins) const;
+    void drawGameOver(bool playerWon, int playerWins, int enemyWins,
+                      const MatchStats& match, const CareerStats& career) const;
 
 private:
     void drawHealthBar(float x, float y, float width, float height,

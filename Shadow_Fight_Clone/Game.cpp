@@ -30,6 +30,7 @@ Game::Game()
       effects(),
       player(PLAYER_START_X, Config::GROUND_HEIGHT, CharacterId::BRAWLER),
       enemy(ENEMY_START_X, Config::GROUND_HEIGHT, CharacterId::CHAIN_WARRIOR),
+      stats(),
       state(GameState::MENU),
       menuScreen(MenuScreen::MAIN),
       pauseScreen(PauseScreen::PAUSE_MAIN),
@@ -43,6 +44,7 @@ Game::Game()
       enemyWins(0),
       roundIntroTimer(0.0f),
       roundOverTimer(0.0f),
+      roundElapsedSec(0.0f),
       mouseX(-1.0f),
       mouseY(-1.0f),
       selectedButtonIndex(-1),
@@ -50,6 +52,7 @@ Game::Game()
       windowHeight(Config::WORLD_HEIGHT),
       matchInProgress(false),
       isStartGameFlow(false),
+      confirmStatsReset(false),
       popupType(PopupType::NONE),
       showDebugBoxes(false), // Disable green box by default as requested!
       quitRequested(false) {
@@ -59,6 +62,7 @@ void Game::init() {
     renderer.init();
     enemy.setDifficulty(gameMode);
     SoundManager::init();
+    stats.load();
 }
 
 void Game::startMatch() {
@@ -68,6 +72,7 @@ void Game::startMatch() {
     matchInProgress = true;
     isStartGameFlow = false;
     popupType       = PopupType::NONE;
+    stats.beginMatch();
     background.randomizeThemeAndLocation();
     startRound();
 }
@@ -80,10 +85,12 @@ void Game::startRound() {
     projectiles.clear();
     input.clearJustPressed();
     effects.reset();
+    stats.beginRound();
 
     roundResult     = RoundResult::NONE;
     roundIntroTimer = ROUND_INTRO_TIME;
     roundOverTimer  = 0.0f;
+    roundElapsedSec = 0.0f;
     state           = GameState::FIGHT;
     SoundManager::play(SoundEffect::ROUND_START);
 }
@@ -101,6 +108,10 @@ void Game::endRound() {
         roundResult = RoundResult::ENEMY_WON;
         enemyWins++;
     }
+
+    stats.recordRoundEnd(roundResult == RoundResult::PLAYER_WON, enemyDown,
+                         player.getHealth(), player.getMaxHealth(),
+                         roundElapsedSec, gameMode);
 
     roundOverTimer = 0.0f;
     state = GameState::ROUND_OVER;
@@ -128,6 +139,8 @@ void Game::updateFight(float deltaTime) {
         return;
     }
 
+    roundElapsedSec += deltaTime;
+
     float playerXBefore = player.getHurtbox().x;
     float enemyXBefore  = enemy.getHurtbox().x;
 
@@ -146,8 +159,23 @@ void Game::updateFight(float deltaTime) {
     spawnProjectilesFrom(enemy, false);
     updateProjectiles(deltaTime);
 
-    CombatSystem::resolveAttack(player, enemy, &effects);
-    CombatSystem::resolveAttack(enemy, player, &effects);
+    HitOutcome pHit = { false, false, false, false, 0 };
+    HitOutcome eHit = { false, false, false, false, 0 };
+    CombatSystem::resolveAttack(player, enemy, &effects, &pHit);
+    CombatSystem::resolveAttack(enemy, player, &effects, &eHit);
+
+    if (pHit.connected && pHit.damageDealt > 0) {
+        stats.recordPlayerHit(pHit.damageDealt, pHit.wasSpecial && !pHit.blocked, gameMode);
+    }
+    if (eHit.dodged) {
+        stats.recordPlayerDodged(gameMode);
+    } else if (eHit.connected) {
+        if (eHit.blocked) {
+            stats.recordPlayerBlocked(eHit.damageDealt, gameMode);
+        } else {
+            stats.recordEnemyHitPlayer(eHit.damageDealt);
+        }
+    }
 
     input.clearJustPressed();
 
@@ -224,7 +252,16 @@ void Game::updateFanSpecialDriver(Fighter& attacker, Fighter& defender, float de
                 stun = 0.20f;
                 kbScale = 0.40f;
             }
+            int hpBefore = defender.getHealth();
             defender.receiveHit(attacker.getProfile().specialAttack, dirToDef, dmg, stun, kbScale);
+            int actualDmg = std::max(0, hpBefore - defender.getHealth());
+            if (&attacker == &player) {
+                stats.recordPlayerHit(actualDmg, true, gameMode);
+            } else if (defender.getState() == FighterState::BLOCK && !defender.isRolling()) {
+                stats.recordPlayerBlocked(actualDmg, gameMode);
+            } else {
+                stats.recordEnemyHitPlayer(actualDmg);
+            }
             float hitX = (attCenter + defCenter) * 0.5f;
             float hitY = defBox.y + defBox.height * 0.85f; // Face height!
             effects.triggerHit(hitX, hitY, dirToDef, defender.isDead() ? SparkStyle::KO : SparkStyle::SPECIAL);
@@ -277,7 +314,17 @@ void Game::updateProjectiles(float deltaTime) {
                     kbScale = 0.35f;
                 }
 
+                int hpBefore = defender.getHealth();
                 defender.receiveHit(tempAtk, pushDir, rawDmg, stun, kbScale);
+                int actualDmg = std::max(0, hpBefore - defender.getHealth());
+
+                if (p.fromPlayer) {
+                    stats.recordPlayerHit(actualDmg, true, gameMode);
+                } else if (defender.getState() == FighterState::BLOCK && !defender.isRolling()) {
+                    stats.recordPlayerBlocked(actualDmg, gameMode);
+                } else {
+                    stats.recordEnemyHitPlayer(actualDmg);
+                }
 
                 if (p.kind == ProjectileKind::CHINESE_FAN) {
                     attacker.onFanProjectileHit();
@@ -378,6 +425,7 @@ void Game::updateRoundOver(float deltaTime) {
         bool matchDecided = (playerWins >= Config::ROUNDS_TO_WIN) || (enemyWins >= Config::ROUNDS_TO_WIN);
 
         if (matchDecided) {
+            stats.recordMatchEnd(playerWins >= Config::ROUNDS_TO_WIN, playerCharacter, gameMode);
             state = GameState::GAME_OVER;
             SoundManager::play(playerWins >= Config::ROUNDS_TO_WIN ? SoundEffect::VICTORY : SoundEffect::DEFEAT);
         } else {
@@ -412,12 +460,17 @@ void Game::draw() {
     renderer.resetCamera();
     effects.drawVignette(renderer);
 
+    int liveScore = stats.getMatch().score;
+    int bestScore = stats.getCareer().highScore;
+
     switch (state) {
         case GameState::MENU:
             if (menuScreen == MenuScreen::MAIN) {
-                ui.drawMainMenu(mouseX, mouseY, selectedButtonIndex);
+                ui.drawMainMenu(mouseX, mouseY, selectedButtonIndex, &stats.getCareer());
             } else if (menuScreen == MenuScreen::CHARACTER_SELECT) {
                 ui.drawCharacterSelect(mouseX, mouseY, playerCharacter, enemyCharacter);
+            } else if (menuScreen == MenuScreen::STATS) {
+                ui.drawStatsScreen(mouseX, mouseY, stats.getCareer(), confirmStatsReset);
             } else if (menuScreen == MenuScreen::OPTIONS) {
                 ui.drawOptionsMenu(mouseX, mouseY, selectedButtonIndex, gameMode);
             } else if (menuScreen == MenuScreen::CONTROLS) {
@@ -428,7 +481,7 @@ void Game::draw() {
             break;
 
         case GameState::FIGHT:
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY, liveScore, bestScore);
             if (roundIntroTimer > 0.0f) {
                 char stageInfo[64];
                 std::snprintf(stageInfo, sizeof(stageInfo), "%s  -  %s",
@@ -438,7 +491,7 @@ void Game::draw() {
             break;
 
         case GameState::PAUSED:
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY, liveScore, bestScore);
             if (pauseScreen == PauseScreen::PAUSE_MAIN) {
                 ui.drawPauseMenu(mouseX, mouseY, selectedButtonIndex);
             } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
@@ -462,7 +515,7 @@ void Game::draw() {
             break;
 
         case GameState::ROUND_OVER: {
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY, liveScore, bestScore);
             char message[64];
             if (roundResult == RoundResult::PLAYER_WON) {
                 std::snprintf(message, sizeof(message), "You won round %d", roundNumber);
@@ -476,8 +529,9 @@ void Game::draw() {
         }
 
         case GameState::GAME_OVER:
-            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY);
-            ui.drawGameOver(playerWins >= Config::ROUNDS_TO_WIN, playerWins, enemyWins);
+            ui.drawHUD(player, enemy, roundNumber, playerWins, enemyWins, mouseX, mouseY, liveScore, bestScore);
+            ui.drawGameOver(playerWins >= Config::ROUNDS_TO_WIN, playerWins, enemyWins,
+                            stats.getMatch(), stats.getCareer());
             break;
     }
 
@@ -495,12 +549,33 @@ void Game::handleMenuClick(float mx, float my) {
                 int nextIdx = ((int)playerCharacter + 1) % Characters::COUNT;
                 enemyCharacter = Characters::getByIndex(nextIdx).id;
             }
+        } else if (UIButtons::BTN_MAIN_STATS.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
+            confirmStatsReset = false;
+            menuScreen = MenuScreen::STATS;
         } else if (UIButtons::BTN_MAIN_OPTIONS.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
             menuScreen = MenuScreen::OPTIONS;
         } else if (UIButtons::BTN_MAIN_EXIT.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_BACK);
             quitRequested = true;
+        }
+    } else if (menuScreen == MenuScreen::STATS) {
+        if (confirmStatsReset) {
+            if (UIButtons::BTN_CONFIRM_YES.contains(mx, my)) {
+                SoundManager::play(SoundEffect::UI_CLICK);
+                stats.resetAll();
+                confirmStatsReset = false;
+            } else if (UIButtons::BTN_CONFIRM_NO.contains(mx, my)) {
+                SoundManager::play(SoundEffect::UI_BACK);
+                confirmStatsReset = false;
+            }
+        } else if (UIButtons::BTN_STATS_BACK.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_BACK);
+            menuScreen = MenuScreen::MAIN;
+        } else if (UIButtons::BTN_STATS_RESET.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
+            confirmStatsReset = true;
         }
     } else if (menuScreen == MenuScreen::CHARACTER_SELECT) {
         for (int i = 0; i < Characters::COUNT; i++) {
@@ -710,6 +785,17 @@ void Game::onKeyDown(unsigned char key) {
 
     switch (state) {
         case GameState::MENU:
+            if (menuScreen == MenuScreen::STATS && confirmStatsReset) {
+                if (key == 'y' || key == 'Y' || key == KEY_ENTER) {
+                    SoundManager::play(SoundEffect::UI_CLICK);
+                    stats.resetAll();
+                    confirmStatsReset = false;
+                } else if (key == 'n' || key == 'N' || key == KEY_ESCAPE) {
+                    SoundManager::play(SoundEffect::UI_BACK);
+                    confirmStatsReset = false;
+                }
+                break;
+            }
             if (key == KEY_ENTER) {
                 if (menuScreen == MenuScreen::MAIN) {
                     SoundManager::play(SoundEffect::UI_CLICK);
@@ -721,6 +807,9 @@ void Game::onKeyDown(unsigned char key) {
                     menuScreen = MenuScreen::DIFFICULTY;
                     isStartGameFlow = true;
                     selectedDifficulty = gameMode;
+                } else if (menuScreen == MenuScreen::STATS) {
+                    SoundManager::play(SoundEffect::UI_BACK);
+                    menuScreen = MenuScreen::MAIN;
                 } else if (menuScreen == MenuScreen::OPTIONS) {
                     SoundManager::play(SoundEffect::UI_CLICK);
                     menuScreen = MenuScreen::MAIN;
@@ -745,6 +834,7 @@ void Game::onKeyDown(unsigned char key) {
                     isStartGameFlow = false;
                     menuScreen = MenuScreen::MAIN;
                 }
+                else if (menuScreen == MenuScreen::STATS) menuScreen = MenuScreen::MAIN;
                 else if (menuScreen == MenuScreen::OPTIONS) menuScreen = MenuScreen::MAIN;
                 else if (menuScreen == MenuScreen::CONTROLS) menuScreen = MenuScreen::OPTIONS;
                 else if (menuScreen == MenuScreen::DIFFICULTY) {

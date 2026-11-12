@@ -75,6 +75,8 @@
 		<Unit filename="Renderer.h" />
 		<Unit filename="SoundManager.cpp" />
 		<Unit filename="SoundManager.h" />
+		<Unit filename="StatsManager.cpp" />
+		<Unit filename="StatsManager.h" />
 		<Unit filename="UI.cpp" />
 		<Unit filename="UI.h" />
 		<Unit filename="main.cpp" />

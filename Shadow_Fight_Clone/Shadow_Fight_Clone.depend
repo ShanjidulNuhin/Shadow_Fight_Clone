@@ -163,7 +163,7 @@
 1794470045 source:d:\games\shadow_fight_clone\shadow_fight_clone\collision.cpp
 	"Collision.h"
 
-1794474079 source:d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
+1794476647 source:d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.cpp
 	"CombatSystem.h"
 	"Fighter.h"
 	"Collision.h"
@@ -172,7 +172,7 @@
 	<cmath>
 	<algorithm>
 
-1794470045 d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.h
+1794476645 d:\games\shadow_fight_clone\shadow_fight_clone\combatsystem.h
 
 1794473871 d:\games\shadow_fight_clone\shadow_fight_clone\effects.h
 	<vector>
@@ -205,7 +205,7 @@
 	<cmath>
 	<algorithm>
 
-1794474380 source:d:\games\shadow_fight_clone\shadow_fight_clone\game.cpp
+1794476841 source:d:\games\shadow_fight_clone\shadow_fight_clone\game.cpp
 	"Game.h"
 	"CombatSystem.h"
 	"Config.h"
@@ -215,7 +215,7 @@
 	<cmath>
 	<algorithm>
 
-1794474216 d:\games\shadow_fight_clone\shadow_fight_clone\game.h
+1794476792 d:\games\shadow_fight_clone\shadow_fight_clone\game.h
 	"InputManager.h"
 	"Renderer.h"
 	"UI.h"
@@ -224,13 +224,15 @@
 	"Background.h"
 	"Effects.h"
 	"Config.h"
+	"StatsManager.h"
 
 1794473867 d:\games\shadow_fight_clone\shadow_fight_clone\inputmanager.h
 
-1794474218 d:\games\shadow_fight_clone\shadow_fight_clone\ui.h
+1794476716 d:\games\shadow_fight_clone\shadow_fight_clone\ui.h
 	"Renderer.h"
 	"Config.h"
 	"CharacterData.h"
+	"StatsManager.h"
 
 1794474403 d:\games\shadow_fight_clone\shadow_fight_clone\player.h
 	"Fighter.h"
@@ -257,7 +259,7 @@
 	<GL/glut.h>
 	<cmath>
 
-1794474223 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
+1794476750 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
 	"UI.h"
 	"Fighter.h"
 	"Enemy.h"
@@ -294,4 +296,17 @@
 
 1794476187 source:d:\games\shadow_fight_clone\shadow_fight_clone\characterdata.cpp
 	"CharacterData.h"
+
+1794476619 d:\games\shadow_fight_clone\shadow_fight_clone\statsmanager.h
+	"CharacterData.h"
+	"Config.h"
+
+1794476622 source:d:\games\shadow_fight_clone\shadow_fight_clone\statsmanager.cpp
+	"StatsManager.h"
+	<fstream>
+	<sstream>
+	<string>
+	<cmath>
+	<algorithm>
+	<cstdio>
 

@@ -152,7 +152,8 @@ void UI::drawRoundPips(float x, float y, int wins) const {
 
 void UI::drawHUD(const Fighter& player, const Enemy& enemy,
                  int roundNumber, int playerWins, int enemyWins,
-                 float mouseX, float mouseY) const {
+                 float mouseX, float mouseY,
+                 int currentScore, int highScore) const {
     const float worldW = (float)Config::WORLD_WIDTH;
     const float worldH = (float)Config::WORLD_HEIGHT;
 
@@ -173,6 +174,13 @@ void UI::drawHUD(const Fighter& player, const Enemy& enemy,
     char label[64];
     std::snprintf(label, sizeof(label), "ROUND %d", roundNumber);
     renderer.drawTextCentered(worldW / 2.0f, worldH - 42.0f, label, 1.0f, 0.90f, 0.35f, false);
+
+    std::snprintf(label, sizeof(label), "SCORE  %d", currentScore);
+    renderer.drawTextCentered(worldW / 2.0f, worldH - 64.0f, label, 0.95f, 0.95f, 1.0f, false);
+
+    int displayedBest = (currentScore > highScore) ? currentScore : highScore;
+    std::snprintf(label, sizeof(label), "BEST  %d", displayedBest);
+    renderer.drawTextSmall(worldW / 2.0f - 34.0f, worldH - 83.0f, label, 0.65f, 0.90f, 0.68f);
 
     bool iconHovered = UIButtons::BTN_SETTINGS_ICON.contains(mouseX, mouseY);
     drawSettingsIcon(iconHovered);
@@ -263,27 +271,160 @@ void UI::drawCharacterSelect(float mouseX, float mouseY,
     drawButton(UIButtons::BTN_CHAR_NEXT, hNext);
 }
 
-void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex) const {
+void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex,
+                      const CareerStats* career) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
     renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.65f);
 
-    renderer.drawTextCentered(centerX, 480.0f, "SHADOW FIGHT", 1.0f, 1.0f, 1.0f, true);
-    renderer.drawTextCentered(centerX, 440.0f, "- THE SHADOW CLONE -", 1.0f, 0.85f, 0.35f, false);
+    renderer.drawTextCentered(centerX, 495.0f, "SHADOW FIGHT", 1.0f, 1.0f, 1.0f, true);
+    renderer.drawTextCentered(centerX, 455.0f, "- THE SHADOW CLONE -", 1.0f, 0.85f, 0.35f, false);
 
-    renderer.drawLine(centerX - 180.0f, 415.0f, centerX + 180.0f, 415.0f,
+    renderer.drawLine(centerX - 180.0f, 430.0f, centerX + 180.0f, 430.0f,
                       0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
     bool h0 = UIButtons::BTN_MAIN_START.contains(mouseX, mouseY)   || (selectedIndex == 0);
-    bool h1 = UIButtons::BTN_MAIN_OPTIONS.contains(mouseX, mouseY) || (selectedIndex == 1);
-    bool h2 = UIButtons::BTN_MAIN_EXIT.contains(mouseX, mouseY)    || (selectedIndex == 2);
+    bool h1 = UIButtons::BTN_MAIN_STATS.contains(mouseX, mouseY)   || (selectedIndex == 1);
+    bool h2 = UIButtons::BTN_MAIN_OPTIONS.contains(mouseX, mouseY) || (selectedIndex == 2);
+    bool h3 = UIButtons::BTN_MAIN_EXIT.contains(mouseX, mouseY)    || (selectedIndex == 3);
 
     drawButton(UIButtons::BTN_MAIN_START, h0);
-    drawButton(UIButtons::BTN_MAIN_OPTIONS, h1);
-    drawButton(UIButtons::BTN_MAIN_EXIT, h2);
+    drawButton(UIButtons::BTN_MAIN_STATS, h1);
+    drawButton(UIButtons::BTN_MAIN_OPTIONS, h2);
+    drawButton(UIButtons::BTN_MAIN_EXIT, h3);
 
-    renderer.drawTextCentered(centerX, 120.0f, "Select with Mouse or use Arrow Keys + ENTER",
+    if (career != nullptr) {
+        char banner[96];
+        std::snprintf(banner, sizeof(banner), "HIGH SCORE: %d   |   WINS: %d / %d   |   BEST STREAK: %d",
+                      career->highScore, career->matchesWon, career->matchesPlayed, career->bestWinStreak);
+        renderer.drawTextCentered(centerX, 122.0f, banner, 0.60f, 0.92f, 0.68f, false);
+    }
+
+    renderer.drawTextCentered(centerX, 90.0f, "Select with Mouse or Press ENTER to Fight",
                               0.60f, 0.60f, 0.65f, false);
+}
+
+void UI::drawStatsScreen(float mouseX, float mouseY, const CareerStats& career,
+                         bool confirmReset) const {
+    const float centerX = Config::WORLD_WIDTH / 2.0f;
+
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.82f);
+
+    renderer.drawTextCentered(centerX, 554.0f, "CAREER STATS & HIGH SCORES", 1.0f, 1.0f, 1.0f, true);
+    renderer.drawLine(40.0f, 526.0f, 760.0f, 526.0f, 0.85f, 0.68f, 0.25f, 0.75f, 1.5f);
+
+    // Left Card: Lifetime Combat Records
+    float lx = 36.0f, ly = 98.0f, lw = 360.0f, lh = 412.0f;
+    renderer.drawRectAlpha(lx + 4.0f, ly - 4.0f, lw, lh, 0.0f, 0.0f, 0.0f, 0.55f);
+    renderer.drawRectAlpha(lx, ly, lw, lh, 0.08f, 0.08f, 0.12f, 0.94f);
+    renderer.drawRectOutline(lx, ly, lw, lh, 0.65f, 0.52f, 0.25f);
+
+    renderer.drawText(lx + 18.0f, ly + lh - 30.0f, "LIFETIME RECORDS", 1.0f, 0.85f, 0.30f);
+    renderer.drawLine(lx + 16.0f, ly + lh - 40.0f, lx + lw - 16.0f, ly + lh - 40.0f, 0.55f, 0.45f, 0.25f, 0.7f, 1.0f);
+
+    auto drawStatRow = [&](float yPos, const char* label, const char* val,
+                           float vr = 0.95f, float vg = 0.95f, float vb = 1.0f) {
+        renderer.drawTextSmall(lx + 18.0f, yPos, label, 0.75f, 0.78f, 0.85f);
+        renderer.drawTextSmall(lx + 215.0f, yPos, val, vr, vg, vb);
+    };
+
+    char buf[64];
+    float rowY = ly + lh - 68.0f;
+    float step = 28.0f;
+
+    std::snprintf(buf, sizeof(buf), "%d", career.highScore);
+    drawStatRow(rowY, "Best Match Score:", buf, 1.0f, 0.88f, 0.28f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%lld", career.totalScore);
+    drawStatRow(rowY, "Cumulative Score:", buf, 0.60f, 0.92f, 1.0f); rowY -= step;
+
+    int winPct = (career.matchesPlayed > 0) ? (career.matchesWon * 100 / career.matchesPlayed) : 0;
+    std::snprintf(buf, sizeof(buf), "%dW - %dL  (%d%%)", career.matchesWon, career.matchesLost, winPct);
+    drawStatRow(rowY, "Matches Record:", buf, 0.55f, 0.95f, 0.65f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%d   (Best: %d)", career.currentWinStreak, career.bestWinStreak);
+    drawStatRow(rowY, "Win Streak:", buf, 1.0f, 0.80f, 0.35f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%dW - %dL", career.roundsWon, career.roundsLost);
+    drawStatRow(rowY, "Rounds Record:", buf); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%d   (%d Perfect)", career.totalKnockouts, career.perfectRounds);
+    drawStatRow(rowY, "Total K.O.s:", buf, 1.0f, 0.55f, 0.35f); rowY -= step;
+
+    if (career.fastestRoundWinSec > 0.0f) {
+        std::snprintf(buf, sizeof(buf), "%.2f sec", career.fastestRoundWinSec);
+    } else {
+        std::snprintf(buf, sizeof(buf), "--");
+    }
+    drawStatRow(rowY, "Fastest Round Win:", buf, 0.65f, 0.90f, 1.0f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%d", career.totalHitsLanded);
+    drawStatRow(rowY, "Hits Landed:", buf); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%d", career.totalSpecialsLanded);
+    drawStatRow(rowY, "Special Hits Landed:", buf, 1.0f, 0.72f, 0.25f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%d   |   %d Blk", career.totalDodges, career.totalBlocks);
+    drawStatRow(rowY, "Roll Dodges / Blocks:", buf, 0.55f, 0.88f, 1.0f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%lld", career.totalDamageDealt);
+    drawStatRow(rowY, "Total Damage Dealt:", buf, 0.95f, 0.55f, 0.50f); rowY -= step;
+
+    std::snprintf(buf, sizeof(buf), "%lld", career.totalDamageTaken);
+    drawStatRow(rowY, "Total Damage Taken:", buf, 0.78f, 0.78f, 0.85f);
+
+    // Right Card: Per-Character Fighter Mastery
+    float rx = 412.0f, ry = 98.0f, rw = 352.0f, rh = 412.0f;
+    renderer.drawRectAlpha(rx + 4.0f, ry - 4.0f, rw, rh, 0.0f, 0.0f, 0.0f, 0.55f);
+    renderer.drawRectAlpha(rx, ry, rw, rh, 0.08f, 0.08f, 0.12f, 0.94f);
+    renderer.drawRectOutline(rx, ry, rw, rh, 0.65f, 0.52f, 0.25f);
+
+    renderer.drawText(rx + 18.0f, ry + rh - 30.0f, "FIGHTER MASTERY", 0.38f, 0.90f, 1.0f);
+    renderer.drawLine(rx + 16.0f, ry + rh - 40.0f, rx + rw - 16.0f, ry + rh - 40.0f, 0.35f, 0.55f, 0.70f, 0.7f, 1.0f);
+
+    float cy = ry + rh - 64.0f;
+    for (int i = 0; i < Characters::COUNT; ++i) {
+        const CharacterProfile& prof = Characters::getByIndex(i);
+        int m = career.charMatches[i];
+        int w = career.charWins[i];
+        int pct = (m > 0) ? (w * 100 / m) : 0;
+
+        // Character card box
+        float boxH = 60.0f;
+        float boxY = cy - boxH + 14.0f;
+        renderer.drawRectAlpha(rx + 16.0f, boxY, rw - 32.0f, boxH, 0.12f, 0.13f, 0.18f, 0.85f);
+        renderer.drawRect(rx + 16.0f, boxY, 5.0f, boxH, prof.accentR, prof.accentG, prof.accentB);
+        renderer.drawRectOutline(rx + 16.0f, boxY, rw - 32.0f, boxH, 0.30f, 0.32f, 0.40f);
+
+        char nameLine[64];
+        std::snprintf(nameLine, sizeof(nameLine), "%s  -  %s", prof.name, prof.title);
+        renderer.drawTextSmall(rx + 28.0f, boxY + 38.0f, nameLine, prof.accentR, prof.accentG, prof.accentB);
+
+        char recLine[64];
+        std::snprintf(recLine, sizeof(recLine), "Matches: %d   Wins: %d   Win Rate: %d%%", m, w, pct);
+        renderer.drawTextSmall(rx + 28.0f, boxY + 20.0f, recLine, 0.86f, 0.88f, 0.92f);
+
+        // Win rate fill bar
+        float barX = rx + 28.0f, barY = boxY + 7.0f, barW = rw - 56.0f, barH = 6.0f;
+        renderer.drawRect(barX, barY, barW, barH, 0.06f, 0.07f, 0.10f);
+        if (m > 0 && w > 0) {
+            renderer.drawRect(barX, barY, barW * ((float)w / (float)m), barH, prof.accentR, prof.accentG, prof.accentB);
+        }
+
+        cy -= 69.0f;
+    }
+
+    bool hBack  = !confirmReset && UIButtons::BTN_STATS_BACK.contains(mouseX, mouseY);
+    bool hReset = !confirmReset && UIButtons::BTN_STATS_RESET.contains(mouseX, mouseY);
+    drawButton(UIButtons::BTN_STATS_BACK, hBack);
+    drawButton(UIButtons::BTN_STATS_RESET, hReset);
+
+    if (confirmReset) {
+        drawConfirmDialog("RESET ALL STATS?",
+                          "This will erase your high scores and combat records.",
+                          "Are you sure you want to reset everything?",
+                          mouseX, mouseY, "RESET", "CANCEL");
+    }
 }
 
 void UI::drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const {
@@ -525,22 +666,68 @@ void UI::drawRoundOver(const char* detail) const {
     renderer.drawTextCentered(centerX, 340.0f, detail, 1.0f, 1.0f, 1.0f, false);
 }
 
-void UI::drawGameOver(bool playerWon, int playerWins, int enemyWins) const {
+void UI::drawGameOver(bool playerWon, int playerWins, int enemyWins,
+                      const MatchStats& match, const CareerStats& career) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
-    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.65f);
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.72f);
 
     if (playerWon) {
-        renderer.drawTextCentered(centerX, 420.0f, "VICTORY!", 1.0f, 0.85f, 0.30f, true);
-        renderer.drawTextCentered(centerX, 380.0f, "You proved your shadow supremacy", 0.90f, 0.90f, 0.95f, false);
+        renderer.drawTextCentered(centerX, 495.0f, "VICTORY!", 1.0f, 0.85f, 0.30f, true);
+        renderer.drawTextCentered(centerX, 460.0f, "You proved your shadow supremacy", 0.90f, 0.90f, 0.95f, false);
     } else {
-        renderer.drawTextCentered(centerX, 420.0f, "DEFEATED", 1.0f, 0.30f, 0.30f, true);
-        renderer.drawTextCentered(centerX, 380.0f, "The imperial warrior stands victorious", 0.85f, 0.85f, 0.90f, false);
+        renderer.drawTextCentered(centerX, 495.0f, "DEFEATED", 1.0f, 0.30f, 0.30f, true);
+        renderer.drawTextCentered(centerX, 460.0f, "The imperial warrior stands victorious", 0.85f, 0.85f, 0.90f, false);
     }
 
-    char score[64];
-    std::snprintf(score, sizeof(score), "Final Match Score:   %d  -  %d", playerWins, enemyWins);
-    renderer.drawTextCentered(centerX, 330.0f, score, 1.0f, 1.0f, 1.0f, false);
+    char roundScore[64];
+    std::snprintf(roundScore, sizeof(roundScore), "Rounds:   %d  -  %d", playerWins, enemyWins);
+    renderer.drawTextCentered(centerX, 428.0f, roundScore, 1.0f, 1.0f, 1.0f, false);
 
-    renderer.drawTextCentered(centerX, 270.0f, "ENTER : Rematch     ESC / M : Home Screen", 1.0f, 0.85f, 0.35f, false);
+    // Match Stats & Score Summary Card
+    float boxW = 460.0f, boxH = 228.0f;
+    float boxX = centerX - boxW * 0.5f;
+    float boxY = 178.0f;
+    renderer.drawRectAlpha(boxX + 4.0f, boxY - 4.0f, boxW, boxH, 0.0f, 0.0f, 0.0f, 0.60f);
+    renderer.drawRectAlpha(boxX, boxY, boxW, boxH, 0.09f, 0.09f, 0.14f, 0.95f);
+    renderer.drawRectOutline(boxX, boxY, boxW, boxH, 0.95f, 0.78f, 0.30f);
+
+    if (match.isNewHighScore) {
+        renderer.drawTextCentered(centerX, boxY + boxH - 26.0f, "NEW HIGH SCORE!", 1.0f, 0.90f, 0.25f, false);
+    } else {
+        renderer.drawTextCentered(centerX, boxY + boxH - 26.0f, "MATCH SUMMARY & STATS", 0.45f, 0.90f, 1.0f, false);
+    }
+    renderer.drawLine(boxX + 20.0f, boxY + boxH - 38.0f, boxX + boxW - 20.0f, boxY + boxH - 38.0f,
+                      0.65f, 0.55f, 0.28f, 0.75f, 1.2f);
+
+    char line[80];
+    std::snprintf(line, sizeof(line), "Match Score: %d", match.score);
+    renderer.drawText(boxX + 28.0f, boxY + 158.0f, line, 1.0f, 0.88f, 0.30f);
+    std::snprintf(line, sizeof(line), "All-Time Best: %d", career.highScore);
+    renderer.drawText(boxX + 245.0f, boxY + 158.0f, line, 0.60f, 0.95f, 0.65f);
+
+    std::snprintf(line, sizeof(line), "Hits Landed: %d", match.hitsLanded);
+    renderer.drawTextSmall(boxX + 28.0f, boxY + 126.0f, line, 0.90f, 0.92f, 0.98f);
+    std::snprintf(line, sizeof(line), "Specials Landed: %d", match.specialsLanded);
+    renderer.drawTextSmall(boxX + 245.0f, boxY + 126.0f, line, 1.0f, 0.75f, 0.30f);
+
+    std::snprintf(line, sizeof(line), "Damage Dealt: %d", match.damageDealt);
+    renderer.drawTextSmall(boxX + 28.0f, boxY + 100.0f, line, 0.95f, 0.55f, 0.50f);
+    std::snprintf(line, sizeof(line), "Damage Taken: %d", match.damageTaken);
+    renderer.drawTextSmall(boxX + 245.0f, boxY + 100.0f, line, 0.78f, 0.80f, 0.88f);
+
+    std::snprintf(line, sizeof(line), "Dodges: %d   |   Blocks: %d", match.dodges, match.blocks);
+    renderer.drawTextSmall(boxX + 28.0f, boxY + 74.0f, line, 0.55f, 0.88f, 1.0f);
+    if (match.fastestRoundSec > 0.0f) {
+        std::snprintf(line, sizeof(line), "Fastest Win: %.2fs", match.fastestRoundSec);
+    } else {
+        std::snprintf(line, sizeof(line), "Fastest Win: --");
+    }
+    renderer.drawTextSmall(boxX + 245.0f, boxY + 74.0f, line, 0.75f, 0.90f, 1.0f);
+
+    std::snprintf(line, sizeof(line), "Current Win Streak: %d   (Best Streak: %d)   |   Lifetime K.O.s: %d",
+                  career.currentWinStreak, career.bestWinStreak, career.totalKnockouts);
+    renderer.drawTextSmall(boxX + 28.0f, boxY + 34.0f, line, 0.72f, 0.90f, 0.75f);
+
+    renderer.drawTextCentered(centerX, 125.0f, "ENTER / Click : Rematch     ESC / M : Home Screen", 1.0f, 0.85f, 0.35f, false);
 }

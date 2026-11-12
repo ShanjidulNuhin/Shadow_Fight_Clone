@@ -8,7 +8,10 @@
 
 namespace CombatSystem {
 
-bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
+bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects, HitOutcome* outOutcome) {
+    if (outOutcome != nullptr) {
+        *outOutcome = { false, false, false, false, 0 };
+    }
     if (defender.isDead()) return false;
     if (defender.isInvulnerable()) return false;
 
@@ -44,6 +47,9 @@ bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
             effects->triggerHit(hitX, hitY, pushDirection, SparkStyle::DODGE);
         }
         SoundManager::play(SoundEffect::PUNCH_WHOOSH);
+        if (outOutcome != nullptr) {
+            outOutcome->dodged = true;
+        }
         return false;
     }
 
@@ -84,7 +90,16 @@ bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
         knockScale = 0.35f;
     }
 
+    int hpBefore = defender.getHealth();
     defender.receiveHit(*attack, pushDirection, damageToApply, customStun, knockScale);
+    int actualDamage = std::max(0, hpBefore - defender.getHealth());
+
+    if (outOutcome != nullptr) {
+        outOutcome->connected   = true;
+        outOutcome->blocked     = wasBlocking;
+        outOutcome->wasSpecial  = (atkState == FighterState::SPECIAL || atkState == FighterState::CHAIN_GRAB);
+        outOutcome->damageDealt = actualDamage;
+    }
 
     if (effects != nullptr) {
         SparkStyle style = SparkStyle::PUNCH;
