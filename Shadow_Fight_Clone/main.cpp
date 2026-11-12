@@ -26,6 +26,7 @@ void idle() {
     if (deltaTime > 0.25f) deltaTime = 0.25f;
 
     game.update(deltaTime);
+    if (game.shouldQuit()) std::exit(0);
 
     fpsFrames++;
     fpsTimer += elapsedMs;
@@ -47,6 +48,14 @@ void keyboardDown(unsigned char key, int, int) {
 
 void keyboardUp(unsigned char key, int, int) {
     game.onKeyUp(key);
+}
+
+void specialDown(int key, int, int) {
+    game.onSpecialKey(key, false);
+}
+
+void specialUp(int key, int, int) {
+    game.onSpecialKey(key, true);
 }
 
 void mouseClick(int button, int state, int x, int y) {
@@ -89,6 +98,8 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboardDown);
     glutKeyboardUpFunc(keyboardUp);
+    glutSpecialFunc(specialDown);
+    glutSpecialUpFunc(specialUp);
     glutMouseFunc(mouseClick);
     glutMotionFunc(mouseMotion);
     glutPassiveMotionFunc(mousePassiveMotion);

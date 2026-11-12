@@ -9,6 +9,7 @@
 namespace {
     const float CROUCH_HEIGHT_RATIO = 0.60f;
     const float CROUCH_SPEED_RATIO  = 0.45f;
+    const float RUN_SPEED_RATIO     = 1.55f;
     const float ROLL_DURATION       = 0.36f;
     const float ROLL_SPEED          = 470.0f;
 
@@ -702,7 +703,7 @@ Fighter::Fighter(float startX, float startY, float bodyWidth, float bodyHeight)
       velocityY(0.0f), airMomentumX(0.0f), knockbackVelocityX(0.0f),
       rollVelocityX(0.0f), rollTimer(0.0f),
       moveDirection(0.0f), facingRight(true),
-      onGround(false), crouching(false), blocking(false),
+      onGround(false), crouching(false), blocking(false), running(false),
       state(FighterState::IDLE), stateTime(0.0f), hitStunDuration(0.0f),
       blockFlashTimer(0.0f), invulnerableTimer(0.0f), electrocuteTimer(0.0f),
       chainGrabCooldown(0.0f), comboQueued(false),
@@ -736,14 +737,19 @@ void Fighter::keepInsideWorld() {
 }
 
 void Fighter::moveHorizontal(float direction, float deltaTime) {
-    if (!canAct() || blocking) direction = 0.0f;
+    if (!canAct() || blocking) {
+        direction = 0.0f;
+        running = false;
+    }
     moveDirection = direction;
 
     if (!onGround && direction != 0.0f) {
-        airMomentumX = direction * moveSpeed * 0.85f;
+        float airFactor = running ? 1.15f : 0.85f;
+        airMomentumX = direction * moveSpeed * airFactor;
     }
 
-    float speed = crouching ? moveSpeed * CROUCH_SPEED_RATIO : moveSpeed;
+    float speedMult = crouching ? CROUCH_SPEED_RATIO : (running ? RUN_SPEED_RATIO : 1.0f);
+    float speed = moveSpeed * speedMult;
     x += direction * speed * deltaTime;
 
     if (direction > 0.0f) facingRight = true;
@@ -756,7 +762,8 @@ void Fighter::jump() {
     if (onGround && canAct()) {
         velocityY = jumpSpeed;
         onGround = false;
-        airMomentumX = moveDirection * moveSpeed * 0.85f;
+        float airFactor = running ? 1.15f : 0.85f;
+        airMomentumX = moveDirection * moveSpeed * airFactor;
         SoundManager::play(SoundEffect::JUMP);
     }
 }
@@ -766,6 +773,7 @@ void Fighter::setCrouching(bool wantsToCrouch) {
 
     if (wantsToCrouch && onGround) {
         crouching = true;
+        running = false;
         height = crouchHeight;
     } else {
         crouching = false;
@@ -778,6 +786,18 @@ void Fighter::setCrouching(bool wantsToCrouch) {
 void Fighter::setBlocking(bool wantsToBlock) {
     if (!canAct() || crouching || !onGround) wantsToBlock = false;
     blocking = wantsToBlock;
+    if (blocking) running = false;
+}
+
+void Fighter::setRunning(bool wantsToRun) {
+    if (!canAct() || crouching || blocking || moveDirection == 0.0f) {
+        wantsToRun = false;
+    }
+    running = wantsToRun;
+}
+
+bool Fighter::isRunning() const {
+    return running;
 }
 
 void Fighter::startRoll(float rollDir) {
@@ -1613,22 +1633,25 @@ void Fighter::draw(const Renderer& renderer) const {
     } else if (state == FighterState::WALK ||
                (state == FighterState::SPECIAL && characterId == CharacterId::FAN_DANCER && fanSpecialStage == 1)) {
         float baseWalkFreq = prof.isFemale ? 12.2f : (build.isHeavyWarrior ? 7.8f : 9.5f);
+        if (running) baseWalkFreq *= 1.55f;
         float phaseWave = stateTime * ((fanSpecialStage == 1) ? 19.0f : baseWalkFreq);
         float stride = std::sin(phaseWave);
+        float sprintLean = running ? 6.5f : 0.0f;
+        float strideDist = running ? 30.0f : 23.0f;
 
-        hips       = { cx + dir * pose.torsoLeanX * 0.6f, drawY + (90.0f + std::fabs(stride) * 3.0f) * hScale };
-        waist      = { cx + dir * pose.torsoLeanX * 1.0f, drawY + (112.0f + std::fabs(stride) * 3.0f) * hScale };
-        chest      = { cx + dir * (6.0f + pose.torsoLeanX * 1.5f), drawY + (142.0f + std::fabs(stride) * 3.0f) * hScale };
+        hips       = { cx + dir * (pose.torsoLeanX * 0.6f + sprintLean * 0.4f), drawY + (90.0f + std::fabs(stride) * 3.5f) * hScale };
+        waist      = { cx + dir * (pose.torsoLeanX * 1.0f + sprintLean * 0.7f), drawY + (112.0f + std::fabs(stride) * 3.5f) * hScale };
+        chest      = { cx + dir * (6.0f + pose.torsoLeanX * 1.5f + sprintLean),  drawY + (142.0f + std::fabs(stride) * 3.5f) * hScale };
         neck       = { chest.x + dir * 3.5f, chest.y + 16.0f };
         headCenter = { neck.x + dir * 2.5f,  neck.y + 16.0f };
 
         hipF   = { hips.x + dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
-        ankleF = { cx + dir * (28.0f + stride * 23.0f), drawY + 6.0f + std::max(0.0f, stride) * 14.0f };
+        ankleF = { cx + dir * (28.0f + stride * strideDist), drawY + 6.0f + std::max(0.0f, stride) * 16.0f };
         toeF   = { ankleF.x + dir * 13.0f, ankleF.y - 2.0f };
         kneeF  = { (hipF.x + ankleF.x) * 0.5f + dir * 8.0f, (hipF.y + ankleF.y) * 0.5f + 6.0f };
 
         hipB   = { hips.x - dir * (prof.isFemale ? 7.5f : 10.0f), hips.y };
-        ankleB = { cx + dir * (-26.0f - stride * 23.0f), drawY + 6.0f + std::max(0.0f, -stride) * 14.0f };
+        ankleB = { cx + dir * (-26.0f - stride * strideDist), drawY + 6.0f + std::max(0.0f, -stride) * 16.0f };
         toeB   = { ankleB.x + dir * 10.0f, ankleB.y - 2.0f };
         kneeB  = { (hipB.x + ankleB.x) * 0.5f + dir * 5.0f, (hipB.y + ankleB.y) * 0.5f + 6.0f };
 

@@ -5,6 +5,7 @@
 #include "Config.h"
 #include "CharacterData.h"
 #include "StatsManager.h"
+#include "InputManager.h"
 
 class Fighter;
 class Enemy;
@@ -37,8 +38,16 @@ namespace UIButtons {
     const RectButton BTN_OPT_MODE      = { 240.0f, 260.0f, 320.0f, 48.0f, "GAME MODE" };
     const RectButton BTN_OPT_BACK      = { 240.0f, 180.0f, 320.0f, 48.0f, "BACK" };
 
-    // Controls screen back button
-    const RectButton BTN_CTRL_BACK     = { 300.0f, 75.0f,  200.0f, 44.0f, "BACK" };
+    // Controls screen buttons & row geometry
+    const RectButton BTN_CTRL_TAB_KB   = { 215.0f, 502.0f, 175.0f, 30.0f, "KEYBOARD" };
+    const RectButton BTN_CTRL_TAB_PAD  = { 410.0f, 502.0f, 175.0f, 30.0f, "GAMEPAD" };
+    const RectButton BTN_CTRL_BACK     = { 175.0f, 44.0f,  195.0f, 44.0f, "BACK" };
+    const RectButton BTN_CTRL_RESET    = { 410.0f, 44.0f,  220.0f, 44.0f, "RESET DEFAULTS" };
+
+    inline RectButton controlRowButton(int actionIdx) {
+        float rowY = 442.0f - actionIdx * 29.0f;
+        return { 62.0f, rowY - 6.0f, 676.0f, 26.0f, "" };
+    }
 
     // Difficulty screen buttons (OK placed beside BACK)
     const RectButton BTN_DIFF_EASY     = { 80.0f,  330.0f, 190.0f, 50.0f, "EASY" };
@@ -99,13 +108,17 @@ public:
 
     // Menu Screens
     void drawMainMenu(float mouseX, float mouseY, int selectedIndex = -1,
-                      const CareerStats* career = nullptr) const;
+                      const CareerStats* career = nullptr,
+                      bool gamepadConnected = false, const char* gamepadName = nullptr) const;
     void drawStatsScreen(float mouseX, float mouseY, const CareerStats& career,
                          bool confirmReset = false) const;
     void drawCharacterSelect(float mouseX, float mouseY,
-                             CharacterId playerChar, CharacterId enemyChar) const;
+                             CharacterId playerChar, CharacterId enemyChar,
+                             bool gamepadMode = false, int gamepadColumn = 0) const;
     void drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const;
-    void drawControlsScreen(float mouseX, float mouseY, int selectedIndex = -1) const;
+    void drawControlsScreen(float mouseX, float mouseY, int selectedIndex = -1,
+                            const InputManager* input = nullptr,
+                            bool showGamepadTab = false) const;
     void drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode displayedMode, bool isStartGame = false) const;
     void drawAlertDialog(const char* title, const char* line1, const char* line2,
                          float mouseX, float mouseY, const char* okLabel = "OK") const;

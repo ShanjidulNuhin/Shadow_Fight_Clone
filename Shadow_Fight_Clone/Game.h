@@ -72,7 +72,7 @@ public:
 
     void onKeyDown(unsigned char key);
     void onKeyUp(unsigned char key);
-    void onSpecialKey(int key);
+    void onSpecialKey(int key, bool released = false);
     void onMouseMove(float worldX, float worldY);
     void onMouseClick(int button, int state, float worldX, float worldY);
     void onResize(int windowW, int windowH);
@@ -90,6 +90,9 @@ private:
 
     void handleMenuClick(float mx, float my);
     void handlePauseClick(float mx, float my);
+    void handleControlsClick(float mx, float my, bool fromPause);
+    bool shouldShowGamepadControls() const;
+    void handleGamepadNavigation();
     void spawnProjectilesFrom(Fighter& owner, bool fromPlayer);
     void updateFanSpecialDriver(Fighter& attacker, Fighter& defender, float deltaTime);
     void updateProjectiles(float deltaTime);
@@ -124,6 +127,8 @@ private:
     float        mouseX;
     float        mouseY;
     int          selectedButtonIndex;
+    int          charSelectColumn;
+    int          controlsTabOverride; // -1 = auto, 0 = keyboard, 1 = gamepad
     int          windowWidth;
     int          windowHeight;
 

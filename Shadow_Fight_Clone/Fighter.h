@@ -69,6 +69,8 @@ public:
     void jump();
     void setCrouching(bool wantsToCrouch);
     void setBlocking(bool wantsToBlock);
+    void setRunning(bool wantsToRun);
+    bool isRunning() const;
     void startRoll(float rollDir);
     void startPunch();       // Also queues Combo 2 / Combo 3 if tapped during combo
     void startKick();        // Ground kick OR Flying Jump Kick if airborne (Ch 1, 3, 4)
@@ -163,6 +165,7 @@ private:
     bool  onGround;
     bool  crouching;
     bool  blocking;
+    bool  running;
     FighterState state;
     float stateTime;
     float hitStunDuration;

@@ -225,22 +225,37 @@ void UI::drawCharacterDetailsCard(float x, float y, float width, float height,
 }
 
 void UI::drawCharacterSelect(float mouseX, float mouseY,
-                             CharacterId playerChar, CharacterId enemyChar) const {
+                             CharacterId playerChar, CharacterId enemyChar,
+                             bool gamepadMode, int gamepadColumn) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
     renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.80f);
 
     renderer.drawTextCentered(centerX, 556.0f, "CHOOSE YOUR FIGHTERS", 1.0f, 1.0f, 1.0f, true);
-    renderer.drawTextCentered(centerX, 530.0f,
-                              "Pick your fighter on the left, then select a different opponent on the right",
-                              1.0f, 0.85f, 0.35f, false);
+    if (gamepadMode) {
+        renderer.drawTextCentered(centerX, 530.0f,
+                                  "Gamepad: Up/Down Pick  |  Left/Right Switch Side  |  A Fight Mode  |  B Back",
+                                  1.0f, 0.85f, 0.35f, false);
+    } else {
+        renderer.drawTextCentered(centerX, 530.0f,
+                                  "Pick your fighter on the left, then select a different opponent on the right",
+                                  1.0f, 0.85f, 0.35f, false);
+    }
     renderer.drawLine(45.0f, 514.0f, 755.0f, 514.0f, 0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
     // Center divider between Your Fighter (left) and Opponent (right)
     renderer.drawLine(centerX, 86.0f, centerX, 504.0f, 0.55f, 0.48f, 0.28f, 0.55f, 1.5f);
 
-    renderer.drawTextCentered(210.0f, 486.0f, "YOUR FIGHTER", 0.35f, 0.90f, 1.0f, false);
-    renderer.drawTextCentered(590.0f, 486.0f, "OPPONENT", 1.0f, 0.48f, 0.30f, false);
+    if (gamepadMode && gamepadColumn == 0) {
+        renderer.drawTextCentered(210.0f, 486.0f, "> YOUR FIGHTER <", 1.0f, 0.92f, 0.35f, false);
+    } else {
+        renderer.drawTextCentered(210.0f, 486.0f, "YOUR FIGHTER", 0.35f, 0.90f, 1.0f, false);
+    }
+    if (gamepadMode && gamepadColumn == 1) {
+        renderer.drawTextCentered(590.0f, 486.0f, "> OPPONENT <", 1.0f, 0.92f, 0.35f, false);
+    } else {
+        renderer.drawTextCentered(590.0f, 486.0f, "OPPONENT", 1.0f, 0.48f, 0.30f, false);
+    }
 
     for (int i = 0; i < Characters::COUNT; i++) {
         const CharacterProfile& prof = Characters::getByIndex(i);
@@ -272,7 +287,8 @@ void UI::drawCharacterSelect(float mouseX, float mouseY,
 }
 
 void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex,
-                      const CareerStats* career) const {
+                      const CareerStats* career,
+                      bool gamepadConnected, const char* gamepadName) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
     renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.65f);
@@ -297,11 +313,18 @@ void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex,
         char banner[96];
         std::snprintf(banner, sizeof(banner), "HIGH SCORE: %d   |   WINS: %d / %d   |   BEST STREAK: %d",
                       career->highScore, career->matchesWon, career->matchesPlayed, career->bestWinStreak);
-        renderer.drawTextCentered(centerX, 122.0f, banner, 0.60f, 0.92f, 0.68f, false);
+        renderer.drawTextCentered(centerX, 126.0f, banner, 0.60f, 0.92f, 0.68f, false);
     }
 
-    renderer.drawTextCentered(centerX, 90.0f, "Select with Mouse or Press ENTER to Fight",
-                              0.60f, 0.60f, 0.65f, false);
+    if (gamepadConnected) {
+        char gpText[96];
+        std::snprintf(gpText, sizeof(gpText), "GAMEPAD CONNECTED (%s)  -  Use D-Pad / Stick + A Button",
+                      gamepadName ? gamepadName : "Ready");
+        renderer.drawTextCentered(centerX, 92.0f, gpText, 0.45f, 0.90f, 1.0f, false);
+    } else {
+        renderer.drawTextCentered(centerX, 92.0f, "Mouse / Keyboard or Plug in Any Gamepad Controller",
+                                  0.60f, 0.60f, 0.65f, false);
+    }
 }
 
 void UI::drawStatsScreen(float mouseX, float mouseY, const CareerStats& career,
@@ -450,46 +473,109 @@ void UI::drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode
     drawButton(UIButtons::BTN_OPT_BACK, h2);
 }
 
-void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex) const {
+void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex,
+                            const InputManager* input, bool showGamepadTab) const {
     const float centerX = Config::WORLD_WIDTH / 2.0f;
 
-    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.75f);
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.78f);
 
-    renderer.drawTextCentered(centerX, 515.0f, "GAME CONTROLS", 1.0f, 1.0f, 1.0f, true);
-    renderer.drawLine(centerX - 160.0f, 480.0f, centerX + 160.0f, 480.0f,
-                      0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
+    bool gpConn = (input != nullptr) && input->isGamepadConnected();
+    const char* gpName = (input != nullptr) ? input->getGamepadBackendName() : nullptr;
 
-    float cardX = 80.0f;
-    float cardY = 135.0f;
-    float cardW = 640.0f;
-    float cardH = 335.0f;
+    renderer.drawTextCentered(centerX, 556.0f,
+                              showGamepadTab ? "GAMEPAD CONTROLS" : "KEYBOARD CONTROLS",
+                              1.0f, 1.0f, 1.0f, true);
 
-    renderer.drawRectAlpha(cardX + 4.0f, cardY - 4.0f, cardW, cardH, 0.0f, 0.0f, 0.0f, 0.45f);
-    renderer.drawRectAlpha(cardX, cardY, cardW, cardH, 0.08f, 0.08f, 0.12f, 0.90f);
-    renderer.drawRectOutline(cardX, cardY, cardW, cardH, 0.45f, 0.45f, 0.52f);
+    if (gpConn) {
+        char gpStatus[96];
+        std::snprintf(gpStatus, sizeof(gpStatus), "Controller Active: %s  (Auto-selected)",
+                      gpName ? gpName : "Gamepad");
+        renderer.drawTextCentered(centerX, 536.0f, gpStatus, 0.45f, 0.92f, 1.0f, false);
+    } else {
+        renderer.drawTextCentered(centerX, 536.0f,
+                                  "No Gamepad Detected  -  Showing Keyboard Controls",
+                                  0.78f, 0.80f, 0.85f, false);
+    }
 
-    float startY = 438.0f;
-    float stepY  = 29.0f;
+    drawButton(UIButtons::BTN_CTRL_TAB_KB,
+               UIButtons::BTN_CTRL_TAB_KB.contains(mouseX, mouseY), !showGamepadTab);
+    drawButton(UIButtons::BTN_CTRL_TAB_PAD,
+               UIButtons::BTN_CTRL_TAB_PAD.contains(mouseX, mouseY), showGamepadTab);
 
-    auto drawRow = [&](int row, const char* key, const char* desc, float kr, float kg, float kb) {
-        float ry = startY - row * stepY;
-        renderer.drawText(cardX + 30.0f, ry, key, kr, kg, kb);
-        renderer.drawText(cardX + 210.0f, ry, desc, 0.92f, 0.92f, 0.95f);
-    };
+    float cardX = 50.0f;
+    float cardY = 122.0f;
+    float cardW = 700.0f;
+    float cardH = 370.0f;
 
-    drawRow(0, "A  /  D", "Move Left and Right", 1.0f, 0.85f, 0.35f);
-    drawRow(1, "W  or  SPACE", "Jump (Leap into air / cross over)", 1.0f, 0.85f, 0.35f);
-    drawRow(2, "S", "Crouch (Duck under high attacks)", 1.0f, 0.85f, 0.35f);
-    drawRow(3, "J  (Tap x3)", "Attack / 3-Hit Martial Combo", 0.35f, 0.85f, 1.0f);
-    drawRow(4, "K / W+K", "Kick (Unblockable) / Air Flying Kick", 1.0f, 0.55f, 0.25f);
-    drawRow(5, "U", "Dodge Roll (Ch 1,3,4 evade Punch/Chain)", 0.45f, 0.95f, 0.70f);
-    drawRow(6, "O", "Long Chain Grab + 2s Stun (Ch 2 Kuro)", 0.35f, 0.82f, 1.0f);
-    drawRow(7, "L", "Character Critical / Special Attack", 1.0f, 0.85f, 0.20f);
-    drawRow(8, "I", "Block Guard (Hold to absorb attacks)", 0.50f, 0.80f, 1.0f);
-    drawRow(9, "P  or  ESC", "Pause Game / In-Fight Settings Menu", 0.80f, 0.80f, 0.80f);
+    renderer.drawRectAlpha(cardX + 4.0f, cardY - 4.0f, cardW, cardH, 0.0f, 0.0f, 0.0f, 0.50f);
+    renderer.drawRectAlpha(cardX, cardY, cardW, cardH, 0.08f, 0.08f, 0.12f, 0.94f);
+    renderer.drawRectOutline(cardX, cardY, cardW, cardH, 0.55f, 0.50f, 0.35f);
 
-    bool hBack = UIButtons::BTN_CTRL_BACK.contains(mouseX, mouseY) || (selectedIndex == 0);
+    renderer.drawTextSmall(cardX + 20.0f,  cardY + cardH - 22.0f, "ACTION", 1.0f, 0.85f, 0.35f);
+    renderer.drawTextSmall(cardX + 225.0f, cardY + cardH - 22.0f,
+                           showGamepadTab ? "CONTROLLER BINDING" : "KEYBOARD BINDING",
+                           0.45f, 0.90f, 1.0f);
+    renderer.drawTextSmall(cardX + 435.0f, cardY + cardH - 22.0f, "EFFECT", 0.95f, 0.95f, 0.98f);
+    renderer.drawLine(cardX + 16.0f, cardY + cardH - 31.0f, cardX + cardW - 16.0f, cardY + cardH - 31.0f,
+                      0.55f, 0.45f, 0.25f, 0.65f, 1.0f);
+
+    bool isRebind = (input != nullptr) && input->isRebinding();
+    int  rebindIdx = isRebind ? (int)input->getRebindAction() : -1;
+
+    for (int i = 0; i < (int)GameAction::COUNT; ++i) {
+        GameAction act = (GameAction)i;
+        RectButton rowBtn = UIButtons::controlRowButton(i);
+        bool hovered  = !isRebind && rowBtn.contains(mouseX, mouseY);
+        bool selected = (selectedIndex == i);
+        bool waiting  = (rebindIdx == i);
+
+        if (waiting) {
+            renderer.drawRectAlpha(rowBtn.x, rowBtn.y, rowBtn.width, rowBtn.height, 0.38f, 0.28f, 0.06f, 0.92f);
+            renderer.drawRectOutline(rowBtn.x, rowBtn.y, rowBtn.width, rowBtn.height, 1.0f, 0.85f, 0.25f);
+        } else if (hovered || selected) {
+            renderer.drawRectAlpha(rowBtn.x, rowBtn.y, rowBtn.width, rowBtn.height, 0.20f, 0.24f, 0.34f, 0.78f);
+            renderer.drawRectOutline(rowBtn.x, rowBtn.y, rowBtn.width, rowBtn.height, 0.55f, 0.78f, 1.0f);
+        }
+
+        float textY = rowBtn.y + 8.0f;
+        renderer.drawTextSmall(cardX + 20.0f, textY, InputManager::getActionName(act), 0.96f, 0.96f, 0.98f);
+
+        char bindBuf[64];
+        if (waiting) {
+            if (showGamepadTab) {
+                std::snprintf(bindBuf, sizeof(bindBuf), "PRESS BUTTON (RT+Btn / START cancel)");
+            } else {
+                std::snprintf(bindBuf, sizeof(bindBuf), "PRESS ANY KEY (ESC to cancel)");
+            }
+            renderer.drawTextSmall(cardX + 225.0f, textY, bindBuf, 1.0f, 0.90f, 0.25f);
+        } else if (input != nullptr) {
+            if (showGamepadTab) {
+                InputManager::formatPadBinding(input->getPadBinding(act), bindBuf, sizeof(bindBuf));
+            } else {
+                int kc = input->getKeyBinding(act);
+                InputManager::formatKeyName(kc, bindBuf, sizeof(bindBuf));
+                if (act == GameAction::JUMP && kc == 'w') {
+                    std::snprintf(bindBuf, sizeof(bindBuf), "W  (or SPACE)");
+                } else if (act == GameAction::RUN_HOLD && kc == KeyCodes::SHIFT) {
+                    std::snprintf(bindBuf, sizeof(bindBuf), "SHIFT  (+ A / D)");
+                }
+            }
+            renderer.drawTextSmall(cardX + 225.0f, textY, bindBuf, 0.45f, 0.92f, 1.0f);
+        }
+
+        if (!waiting) {
+            renderer.drawTextSmall(cardX + 435.0f, textY, InputManager::getActionDesc(act), 0.78f, 0.80f, 0.86f);
+        }
+    }
+
+    renderer.drawTextCentered(centerX, 102.0f,
+                              "Click any row (or press A / Enter) to rebind   |   Pause: P / ESC / START",
+                              0.85f, 0.85f, 0.45f, false);
+
+    bool hBack  = !isRebind && UIButtons::BTN_CTRL_BACK.contains(mouseX, mouseY);
+    bool hReset = !isRebind && UIButtons::BTN_CTRL_RESET.contains(mouseX, mouseY);
     drawButton(UIButtons::BTN_CTRL_BACK, hBack);
+    drawButton(UIButtons::BTN_CTRL_RESET, hReset);
 }
 
 void UI::drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode displayedMode, bool isStartGame) const {

@@ -48,6 +48,8 @@ Game::Game()
       mouseX(-1.0f),
       mouseY(-1.0f),
       selectedButtonIndex(-1),
+      charSelectColumn(0),
+      controlsTabOverride(-1),
       windowWidth(Config::WORLD_WIDTH),
       windowHeight(Config::WORLD_HEIGHT),
       matchInProgress(false),
@@ -63,6 +65,66 @@ void Game::init() {
     enemy.setDifficulty(gameMode);
     SoundManager::init();
     stats.load();
+    input.loadBindings();
+}
+
+bool Game::shouldShowGamepadControls() const {
+    if (controlsTabOverride == 0) return false;
+    if (controlsTabOverride == 1) return true;
+    return input.isGamepadConnected();
+}
+
+void Game::handleControlsClick(float mx, float my, bool fromPause) {
+    if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
+        input.cancelRebind();
+        SoundManager::play(SoundEffect::UI_BACK);
+        if (fromPause) pauseScreen = PauseScreen::PAUSE_OPTIONS;
+        else           menuScreen  = MenuScreen::OPTIONS;
+        selectedButtonIndex = 0;
+        return;
+    }
+    if (UIButtons::BTN_CTRL_TAB_KB.contains(mx, my)) {
+        input.cancelRebind();
+        SoundManager::play(SoundEffect::UI_CLICK);
+        controlsTabOverride = 0;
+        return;
+    }
+    if (UIButtons::BTN_CTRL_TAB_PAD.contains(mx, my)) {
+        input.cancelRebind();
+        SoundManager::play(SoundEffect::UI_CLICK);
+        controlsTabOverride = 1;
+        return;
+    }
+    if (UIButtons::BTN_CTRL_RESET.contains(mx, my)) {
+        input.cancelRebind();
+        SoundManager::play(SoundEffect::UI_CLICK);
+        input.resetDefaultBindings();
+        input.saveBindings();
+        return;
+    }
+
+    bool showPad = shouldShowGamepadControls();
+    for (int i = 0; i < (int)GameAction::COUNT; ++i) {
+        if (UIButtons::controlRowButton(i).contains(mx, my)) {
+            if (input.isRebinding() &&
+                input.getRebindAction() == (GameAction)i &&
+                input.isRebindingGamepad() == showPad) {
+                input.cancelRebind();
+                SoundManager::play(SoundEffect::UI_BACK);
+            } else {
+                SoundManager::play(SoundEffect::UI_CLICK);
+                selectedButtonIndex = i;
+                if (showPad) input.beginPadRebind((GameAction)i);
+                else         input.beginKeyRebind((GameAction)i);
+            }
+            return;
+        }
+    }
+
+    if (input.isRebinding()) {
+        input.cancelRebind();
+        SoundManager::play(SoundEffect::UI_BACK);
+    }
 }
 
 void Game::startMatch() {
@@ -118,13 +180,256 @@ void Game::endRound() {
 }
 
 void Game::update(float deltaTime) {
+    input.pollGamepad();
+    handleGamepadNavigation();
+
     background.update(deltaTime);
     effects.update(deltaTime);
 
     switch (state) {
         case GameState::FIGHT:      updateFight(deltaTime);     break;
         case GameState::ROUND_OVER: updateRoundOver(deltaTime); break;
-        default: break;
+        default:
+            input.clearJustPressed();
+            break;
+    }
+}
+
+void Game::handleGamepadNavigation() {
+    if (input.isRebinding()) return;
+
+    bool navUp    = input.wasGamepadNavPressed(GamepadNav::UP);
+    bool navDown  = input.wasGamepadNavPressed(GamepadNav::DOWN);
+    bool navLeft  = input.wasGamepadNavPressed(GamepadNav::LEFT);
+    bool navRight = input.wasGamepadNavPressed(GamepadNav::RIGHT);
+    bool navOk    = input.wasGamepadNavPressed(GamepadNav::CONFIRM);
+    bool navBack  = input.wasGamepadNavPressed(GamepadNav::CANCEL);
+    bool navStart = input.wasGamepadNavPressed(GamepadNav::START);
+    bool navY     = input.wasGamepadNavPressed(GamepadNav::SPECIAL_Y);
+    bool navLB    = input.wasGamepadNavPressed(GamepadNav::LB);
+    bool navRB    = input.wasGamepadNavPressed(GamepadNav::RB);
+
+    auto clickBtn = [&](const RectButton& btn, bool isPause) {
+        float cx = btn.x + btn.width * 0.5f;
+        float cy = btn.y + btn.height * 0.5f;
+        if (isPause) handlePauseClick(cx, cy);
+        else         handleMenuClick(cx, cy);
+    };
+
+    auto handleControlsNav = [&](bool inPause) {
+        const int count = (int)GameAction::COUNT;
+        if (selectedButtonIndex < 0 || selectedButtonIndex >= count) selectedButtonIndex = 0;
+        if (navUp)   selectedButtonIndex = (selectedButtonIndex + count - 1) % count;
+        if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % count;
+        if (navLeft || navRight || navLB || navRB) {
+            bool curPad = shouldShowGamepadControls();
+            clickBtn(curPad ? UIButtons::BTN_CTRL_TAB_KB : UIButtons::BTN_CTRL_TAB_PAD, inPause);
+        } else if (navOk || navStart) {
+            clickBtn(UIButtons::controlRowButton(selectedButtonIndex), inPause);
+        } else if (navY) {
+            clickBtn(UIButtons::BTN_CTRL_RESET, inPause);
+        } else if (navBack) {
+            clickBtn(UIButtons::BTN_CTRL_BACK, inPause);
+            selectedButtonIndex = 0;
+        }
+    };
+
+    if (state == GameState::FIGHT) {
+        if (navStart) {
+            SoundManager::play(SoundEffect::UI_CLICK);
+            state = GameState::PAUSED;
+            pauseScreen = PauseScreen::PAUSE_MAIN;
+            selectedButtonIndex = 0;
+        }
+        return;
+    }
+
+    if (state == GameState::GAME_OVER) {
+        if (navOk || navStart) {
+            SoundManager::play(SoundEffect::UI_START);
+            startMatch();
+        } else if (navBack) {
+            SoundManager::play(SoundEffect::UI_BACK);
+            matchInProgress = false;
+            popupType = PopupType::NONE;
+            state = GameState::MENU;
+            menuScreen = MenuScreen::MAIN;
+            selectedButtonIndex = 0;
+        }
+        return;
+    }
+
+    if (state == GameState::MENU) {
+        if (menuScreen == MenuScreen::MAIN) {
+            if (selectedButtonIndex < 0 || selectedButtonIndex > 3) {
+                if (navUp || navDown) selectedButtonIndex = 0;
+            } else {
+                if (navUp)   selectedButtonIndex = (selectedButtonIndex + 3) % 4;
+                if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % 4;
+            }
+            if (navOk || navStart) {
+                int idx = (selectedButtonIndex >= 0 && selectedButtonIndex <= 3) ? selectedButtonIndex : 0;
+                const RectButton* btns[4] = {
+                    &UIButtons::BTN_MAIN_START, &UIButtons::BTN_MAIN_STATS,
+                    &UIButtons::BTN_MAIN_OPTIONS, &UIButtons::BTN_MAIN_EXIT
+                };
+                clickBtn(*btns[idx], false);
+                selectedButtonIndex = 0;
+                charSelectColumn = 0;
+            } else if (navBack) {
+                SoundManager::play(SoundEffect::UI_BACK);
+                quitRequested = true;
+            }
+        } else if (menuScreen == MenuScreen::CHARACTER_SELECT) {
+            if (navLeft || navRight || navLB || navRB) {
+                charSelectColumn = 1 - charSelectColumn;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            }
+            int step = navUp ? -1 : (navDown ? 1 : 0);
+            if (step != 0) {
+                if (charSelectColumn == 0) {
+                    int idx = ((int)playerCharacter + step + Characters::COUNT) % Characters::COUNT;
+                    playerCharacter = Characters::getByIndex(idx).id;
+                    if (enemyCharacter == playerCharacter) {
+                        enemyCharacter = Characters::getByIndex((idx + 1) % Characters::COUNT).id;
+                    }
+                } else {
+                    int idx = ((int)enemyCharacter + step + Characters::COUNT) % Characters::COUNT;
+                    if (idx == (int)playerCharacter) {
+                        idx = (idx + step + Characters::COUNT) % Characters::COUNT;
+                    }
+                    enemyCharacter = Characters::getByIndex(idx).id;
+                }
+                SoundManager::play(SoundEffect::UI_CLICK);
+            }
+            if (navStart) {
+                clickBtn(UIButtons::BTN_CHAR_NEXT, false);
+                selectedButtonIndex = 0;
+            } else if (navOk) {
+                if (charSelectColumn == 0) {
+                    charSelectColumn = 1;
+                    SoundManager::play(SoundEffect::UI_CLICK);
+                } else {
+                    clickBtn(UIButtons::BTN_CHAR_NEXT, false);
+                    selectedButtonIndex = 0;
+                }
+            } else if (navBack) {
+                if (charSelectColumn == 1) {
+                    charSelectColumn = 0;
+                    SoundManager::play(SoundEffect::UI_BACK);
+                } else {
+                    clickBtn(UIButtons::BTN_CHAR_BACK, false);
+                    selectedButtonIndex = 0;
+                }
+            }
+        } else if (menuScreen == MenuScreen::STATS) {
+            if (confirmStatsReset) {
+                if (navOk)        clickBtn(UIButtons::BTN_CONFIRM_YES, false);
+                else if (navBack) clickBtn(UIButtons::BTN_CONFIRM_NO, false);
+            } else {
+                if (navY)                    clickBtn(UIButtons::BTN_STATS_RESET, false);
+                else if (navOk || navBack) { clickBtn(UIButtons::BTN_STATS_BACK, false); selectedButtonIndex = 1; }
+            }
+        } else if (menuScreen == MenuScreen::OPTIONS) {
+            if (selectedButtonIndex < 0 || selectedButtonIndex > 2) selectedButtonIndex = 0;
+            if (navUp)   selectedButtonIndex = (selectedButtonIndex + 2) % 3;
+            if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % 3;
+            if (navOk || navStart) {
+                const RectButton* btns[3] = {
+                    &UIButtons::BTN_OPT_CONTROLS, &UIButtons::BTN_OPT_MODE, &UIButtons::BTN_OPT_BACK
+                };
+                clickBtn(*btns[selectedButtonIndex], false);
+                selectedButtonIndex = 0;
+            } else if (navBack) {
+                clickBtn(UIButtons::BTN_OPT_BACK, false);
+                selectedButtonIndex = 2;
+            }
+        } else if (menuScreen == MenuScreen::CONTROLS) {
+            handleControlsNav(false);
+        } else if (menuScreen == MenuScreen::DIFFICULTY) {
+            if (navLeft) {
+                int m = ((int)selectedDifficulty + 2) % 3;
+                selectedDifficulty = (GameMode)m;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            } else if (navRight) {
+                int m = ((int)selectedDifficulty + 1) % 3;
+                selectedDifficulty = (GameMode)m;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            }
+            if (navOk || navStart) {
+                clickBtn(UIButtons::BTN_DIFF_OK, false);
+                selectedButtonIndex = 0;
+            } else if (navBack) {
+                clickBtn(UIButtons::BTN_DIFF_BACK, false);
+                selectedButtonIndex = 0;
+            }
+        }
+        return;
+    }
+
+    if (state == GameState::PAUSED) {
+        if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
+            if (navOk || navStart) clickBtn(UIButtons::BTN_ALERT_OK, true);
+            else if (navBack) {
+                SoundManager::play(SoundEffect::UI_BACK);
+                popupType = PopupType::NONE;
+                selectedDifficulty = gameMode;
+            }
+            return;
+        }
+        if (popupType == PopupType::ROUND2_RESTART_PROMPT) {
+            if (navOk)        clickBtn(UIButtons::BTN_CONFIRM_YES, true);
+            else if (navBack) clickBtn(UIButtons::BTN_CONFIRM_NO, true);
+            return;
+        }
+
+        if (pauseScreen == PauseScreen::PAUSE_MAIN) {
+            if (selectedButtonIndex < 0 || selectedButtonIndex > 3) selectedButtonIndex = 0;
+            if (navUp)   selectedButtonIndex = (selectedButtonIndex + 3) % 4;
+            if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % 4;
+            if (navStart || navBack) {
+                clickBtn(UIButtons::BTN_PAUSE_RESUME, true);
+            } else if (navOk) {
+                const RectButton* btns[4] = {
+                    &UIButtons::BTN_PAUSE_RESUME, &UIButtons::BTN_PAUSE_RESTART,
+                    &UIButtons::BTN_PAUSE_OPTIONS, &UIButtons::BTN_PAUSE_EXIT
+                };
+                clickBtn(*btns[selectedButtonIndex], true);
+                selectedButtonIndex = 0;
+            }
+        } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
+            if (selectedButtonIndex < 0 || selectedButtonIndex > 2) selectedButtonIndex = 0;
+            if (navUp)   selectedButtonIndex = (selectedButtonIndex + 2) % 3;
+            if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % 3;
+            if (navOk || navStart) {
+                const RectButton* btns[3] = {
+                    &UIButtons::BTN_OPT_CONTROLS, &UIButtons::BTN_OPT_MODE, &UIButtons::BTN_OPT_BACK
+                };
+                clickBtn(*btns[selectedButtonIndex], true);
+                selectedButtonIndex = 0;
+            } else if (navBack) {
+                clickBtn(UIButtons::BTN_OPT_BACK, true);
+                selectedButtonIndex = 2;
+            }
+        } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
+            handleControlsNav(true);
+        } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
+            if (navLeft) {
+                int m = ((int)selectedDifficulty + 2) % 3;
+                selectedDifficulty = (GameMode)m;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            } else if (navRight) {
+                int m = ((int)selectedDifficulty + 1) % 3;
+                selectedDifficulty = (GameMode)m;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            }
+            if (navOk || navStart) {
+                clickBtn(UIButtons::BTN_DIFF_OK, true);
+            } else if (navBack) {
+                clickBtn(UIButtons::BTN_DIFF_BACK, true);
+                selectedButtonIndex = 0;
+            }
+        }
     }
 }
 
@@ -462,19 +767,21 @@ void Game::draw() {
 
     int liveScore = stats.getMatch().score;
     int bestScore = stats.getCareer().highScore;
+    bool gpConn   = input.isGamepadConnected();
+    const char* gpName = input.getGamepadBackendName();
 
     switch (state) {
         case GameState::MENU:
             if (menuScreen == MenuScreen::MAIN) {
-                ui.drawMainMenu(mouseX, mouseY, selectedButtonIndex, &stats.getCareer());
+                ui.drawMainMenu(mouseX, mouseY, selectedButtonIndex, &stats.getCareer(), gpConn, gpName);
             } else if (menuScreen == MenuScreen::CHARACTER_SELECT) {
-                ui.drawCharacterSelect(mouseX, mouseY, playerCharacter, enemyCharacter);
+                ui.drawCharacterSelect(mouseX, mouseY, playerCharacter, enemyCharacter, gpConn, charSelectColumn);
             } else if (menuScreen == MenuScreen::STATS) {
                 ui.drawStatsScreen(mouseX, mouseY, stats.getCareer(), confirmStatsReset);
             } else if (menuScreen == MenuScreen::OPTIONS) {
                 ui.drawOptionsMenu(mouseX, mouseY, selectedButtonIndex, gameMode);
             } else if (menuScreen == MenuScreen::CONTROLS) {
-                ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
+                ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex, &input, shouldShowGamepadControls());
             } else if (menuScreen == MenuScreen::DIFFICULTY) {
                 ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, selectedDifficulty, isStartGameFlow);
             }
@@ -497,7 +804,7 @@ void Game::draw() {
             } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
                 ui.drawOptionsMenu(mouseX, mouseY, selectedButtonIndex, gameMode);
             } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
-                ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex);
+                ui.drawControlsScreen(mouseX, mouseY, selectedButtonIndex, &input, shouldShowGamepadControls());
             } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
                 ui.drawGameModeScreen(mouseX, mouseY, selectedButtonIndex, selectedDifficulty, false);
                 if (popupType == PopupType::ROUND1_RESTART_CONFIRM) {
@@ -609,6 +916,9 @@ void Game::handleMenuClick(float mx, float my) {
     } else if (menuScreen == MenuScreen::OPTIONS) {
         if (UIButtons::BTN_OPT_CONTROLS.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
+            controlsTabOverride = -1;
+            input.cancelRebind();
+            selectedButtonIndex = -1;
             menuScreen = MenuScreen::CONTROLS;
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
@@ -620,10 +930,7 @@ void Game::handleMenuClick(float mx, float my) {
             menuScreen = MenuScreen::MAIN;
         }
     } else if (menuScreen == MenuScreen::CONTROLS) {
-        if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
-            SoundManager::play(SoundEffect::UI_BACK);
-            menuScreen = MenuScreen::OPTIONS;
-        }
+        handleControlsClick(mx, my, false);
     } else if (menuScreen == MenuScreen::DIFFICULTY) {
         if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
@@ -706,6 +1013,9 @@ void Game::handlePauseClick(float mx, float my) {
     } else if (pauseScreen == PauseScreen::PAUSE_OPTIONS) {
         if (UIButtons::BTN_OPT_CONTROLS.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
+            controlsTabOverride = -1;
+            input.cancelRebind();
+            selectedButtonIndex = -1;
             pauseScreen = PauseScreen::PAUSE_CONTROLS;
         } else if (UIButtons::BTN_OPT_MODE.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
@@ -717,10 +1027,7 @@ void Game::handlePauseClick(float mx, float my) {
             pauseScreen = PauseScreen::PAUSE_MAIN;
         }
     } else if (pauseScreen == PauseScreen::PAUSE_CONTROLS) {
-        if (UIButtons::BTN_CTRL_BACK.contains(mx, my)) {
-            SoundManager::play(SoundEffect::UI_BACK);
-            pauseScreen = PauseScreen::PAUSE_OPTIONS;
-        }
+        handleControlsClick(mx, my, true);
     } else if (pauseScreen == PauseScreen::PAUSE_DIFFICULTY) {
         if (UIButtons::BTN_DIFF_EASY.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
@@ -781,6 +1088,21 @@ void Game::onMouseClick(int button, int btnState, float worldX, float worldY) {
 }
 
 void Game::onKeyDown(unsigned char key) {
+    if (input.isRebinding()) {
+        if (key == KEY_ESCAPE || key == KEY_ENTER) {
+            input.cancelRebind();
+            SoundManager::play(SoundEffect::UI_BACK);
+            return;
+        }
+        if (!input.isRebindingGamepad() && input.feedKeyForRebind((int)key)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
+            return;
+        }
+        if (input.isRebindingGamepad()) {
+            return; // Ignore other keyboard presses while waiting for gamepad button
+        }
+    }
+
     input.keyDown(key);
 
     switch (state) {
@@ -941,8 +1263,16 @@ void Game::onKeyUp(unsigned char key) {
     input.keyUp(key);
 }
 
-void Game::onSpecialKey(int key) {
-    // Optional special key support (e.g. arrow keys)
+void Game::onSpecialKey(int key, bool released) {
+    if (released) {
+        input.specialKeyUp(key);
+    } else {
+        bool wasRebinding = input.isRebinding() && !input.isRebindingGamepad();
+        input.specialKeyDown(key);
+        if (wasRebinding && !input.isRebinding()) {
+            SoundManager::play(SoundEffect::UI_CLICK);
+        }
+    }
 }
 
 void Game::onResize(int windowW, int windowH) {
