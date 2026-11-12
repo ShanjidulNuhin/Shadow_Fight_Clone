@@ -89,6 +89,10 @@ public:
     void drawTextSmall(float x, float y, const char* text,
                        float r, float g, float b) const;
 
+    // Draw text using large font at (x, y)
+    void drawTextLarge(float x, float y, const char* text,
+                       float r, float g, float b) const;
+
     // Text centred horizontally on centerX. large = a bigger font for titles.
     void drawTextCentered(float centerX, float y, const char* text,
                           float r, float g, float b, bool large) const;
@@ -102,6 +106,12 @@ public:
 
     // A see-through colour laid over the whole screen (to dim the scene behind a menu).
     void drawOverlay(float r, float g, float b, float alpha) const;
+
+    // Transformation matrix helpers (for UI zooming, scaling, and character showcases)
+    void pushMatrix() const;
+    void popMatrix() const;
+    void translate(float x, float y) const;
+    void scale(float sx, float sy) const;
 
 private:
     void drawBitmapCentered(void* font, float centerX, float y, const char* text,

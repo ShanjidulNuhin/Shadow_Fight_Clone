@@ -299,32 +299,280 @@ void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex,
     renderer.drawLine(centerX - 180.0f, 430.0f, centerX + 180.0f, 430.0f,
                       0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
-    bool h0 = UIButtons::BTN_MAIN_START.contains(mouseX, mouseY)   || (selectedIndex == 0);
-    bool h1 = UIButtons::BTN_MAIN_STATS.contains(mouseX, mouseY)   || (selectedIndex == 1);
-    bool h2 = UIButtons::BTN_MAIN_OPTIONS.contains(mouseX, mouseY) || (selectedIndex == 2);
-    bool h3 = UIButtons::BTN_MAIN_EXIT.contains(mouseX, mouseY)    || (selectedIndex == 3);
+    bool h0 = UIButtons::BTN_MAIN_START.contains(mouseX, mouseY)      || (selectedIndex == 0);
+    bool h1 = UIButtons::BTN_MAIN_CHARACTERS.contains(mouseX, mouseY) || (selectedIndex == 1);
+    bool h2 = UIButtons::BTN_MAIN_STATS.contains(mouseX, mouseY)      || (selectedIndex == 2);
+    bool h3 = UIButtons::BTN_MAIN_OPTIONS.contains(mouseX, mouseY)    || (selectedIndex == 3);
+    bool h4 = UIButtons::BTN_MAIN_EXIT.contains(mouseX, mouseY)       || (selectedIndex == 4);
 
     drawButton(UIButtons::BTN_MAIN_START, h0);
-    drawButton(UIButtons::BTN_MAIN_STATS, h1);
-    drawButton(UIButtons::BTN_MAIN_OPTIONS, h2);
-    drawButton(UIButtons::BTN_MAIN_EXIT, h3);
+    drawButton(UIButtons::BTN_MAIN_CHARACTERS, h1);
+    drawButton(UIButtons::BTN_MAIN_STATS, h2);
+    drawButton(UIButtons::BTN_MAIN_OPTIONS, h3);
+    drawButton(UIButtons::BTN_MAIN_EXIT, h4);
 
     if (career != nullptr) {
         char banner[96];
         std::snprintf(banner, sizeof(banner), "HIGH SCORE: %d   |   WINS: %d / %d   |   BEST STREAK: %d",
                       career->highScore, career->matchesWon, career->matchesPlayed, career->bestWinStreak);
-        renderer.drawTextCentered(centerX, 126.0f, banner, 0.60f, 0.92f, 0.68f, false);
+        renderer.drawTextCentered(centerX, 110.0f, banner, 0.60f, 0.92f, 0.68f, false);
     }
 
     if (gamepadConnected) {
         char gpText[96];
         std::snprintf(gpText, sizeof(gpText), "GAMEPAD CONNECTED (%s)  -  Use D-Pad / Stick + A Button",
                       gamepadName ? gamepadName : "Ready");
-        renderer.drawTextCentered(centerX, 92.0f, gpText, 0.45f, 0.90f, 1.0f, false);
+        renderer.drawTextCentered(centerX, 80.0f, gpText, 0.45f, 0.90f, 1.0f, false);
     } else {
-        renderer.drawTextCentered(centerX, 92.0f, "Mouse / Keyboard or Plug in Any Gamepad Controller",
+        renderer.drawTextCentered(centerX, 80.0f, "Mouse / Keyboard or Plug in Any Gamepad Controller",
                                   0.60f, 0.60f, 0.65f, false);
     }
+}
+
+void UI::drawCharactersPage(float mouseX, float mouseY, CharacterId selectedChar,
+                            float animTimer, bool combatPose, bool gamepadMode) const {
+    const float centerX = Config::WORLD_WIDTH / 2.0f;
+    const CharacterProfile& prof = Characters::get(selectedChar);
+
+    // Dim background overlay
+    renderer.drawOverlay(0.01f, 0.015f, 0.03f, 0.82f);
+
+    // Header Title
+    renderer.drawTextCentered(centerX, 568.0f, "CHARACTER SHOWCASE & ROSTER", 1.0f, 1.0f, 1.0f, true);
+    if (gamepadMode) {
+        renderer.drawTextCentered(centerX, 544.0f,
+                                  "D-Pad / Stick / LB / RB : Switch Character   |   Y : Stance   |   B : Back",
+                                  0.45f, 0.90f, 1.0f, false);
+    } else {
+        renderer.drawTextCentered(centerX, 544.0f,
+                                  "Click tabs or use A / D / Arrows to inspect full body avatar, fighting style & critical moves",
+                                  0.78f, 0.82f, 0.90f, false);
+    }
+    renderer.drawLine(38.0f, 532.0f, 762.0f, 532.0f, 0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
+
+    // 5 Character Selector Tabs
+    for (int i = 0; i < Characters::COUNT; ++i) {
+        const CharacterProfile& p = Characters::getByIndex(i);
+        bool isSel = (i == (int)selectedChar);
+        bool isHov = UIButtons::BTN_ROSTER_TABS[i].contains(mouseX, mouseY);
+        drawButton(UIButtons::BTN_ROSTER_TABS[i], isHov, isSel, p.name);
+    }
+
+    // =========================================================================
+    // LEFT CARD: CHARACTER NAME & COMPREHENSIVE DETAILS
+    // =========================================================================
+    float cardX = 38.0f;
+    float cardY = 70.0f;
+    float cardW = 424.0f;
+    float cardH = 412.0f;
+
+    // Drop shadow & plate
+    renderer.drawRectAlpha(cardX + 4.0f, cardY - 4.0f, cardW, cardH, 0.0f, 0.0f, 0.0f, 0.55f);
+    renderer.drawRectAlpha(cardX, cardY, cardW, cardH, 0.08f, 0.08f, 0.12f, 0.95f);
+    renderer.drawRectOutline(cardX, cardY, cardW, cardH, prof.accentR, prof.accentG, prof.accentB);
+    renderer.drawRect(cardX + 2.0f, cardY + 2.0f, 5.0f, cardH - 4.0f,
+                      prof.accentR, prof.accentG, prof.accentB);
+
+    // Header: Large Name + Title
+    char nameHeader[64];
+    std::snprintf(nameHeader, sizeof(nameHeader), "%s", prof.name);
+    renderer.drawTextLarge(cardX + 18.0f, cardY + cardH - 30.0f, nameHeader,
+                           prof.accentR, prof.accentG, prof.accentB);
+
+    char titleBuf[64];
+    std::snprintf(titleBuf, sizeof(titleBuf), "- %s -", prof.title);
+    renderer.drawText(cardX + 160.0f, cardY + cardH - 28.0f, titleBuf, 1.0f, 0.88f, 0.35f);
+
+    // Archetype / Gender / Physique
+    const char* buildDesc = "Male Striker  |  Athletic Muscular Build  |  Unarmed Combat";
+    if (selectedChar == CharacterId::CHAIN_WARRIOR) {
+        buildDesc = "Male Reaver  |  Muscular Ninja Frame  |  Chains & Spikes";
+    } else if (selectedChar == CharacterId::ARCHER) {
+        buildDesc = "Female Huntress  |  Agile Athletic Figure  |  High Mobility Archery";
+    } else if (selectedChar == CharacterId::FAN_DANCER) {
+        buildDesc = "Female War Dancer  |  Graceful Sinuous Figure  |  Twin Bladed Fans";
+    } else if (selectedChar == CharacterId::SPEAR_WARRIOR) {
+        buildDesc = "Male Imperial Colossus  |  Heavy Samurai Musculature & Armor  |  Pure Spear";
+    }
+    renderer.drawTextSmall(cardX + 18.0f, cardY + cardH - 48.0f, buildDesc, 0.75f, 0.85f, 0.95f);
+
+    renderer.drawLine(cardX + 16.0f, cardY + cardH - 58.0f, cardX + cardW - 16.0f, cardY + cardH - 58.0f,
+                      prof.accentR * 0.8f, prof.accentG * 0.8f, prof.accentB * 0.8f, 0.70f, 1.2f);
+
+    float textY = cardY + cardH - 78.0f;
+
+    // 1. WEAPON & COMBAT STYLE
+    renderer.drawTextSmall(cardX + 18.0f, textY, "WEAPON & COMBAT STYLE:", 1.0f, 0.85f, 0.30f);
+    textY -= 17.0f;
+    char line[128];
+    std::snprintf(line, sizeof(line), "Weapon: %s", prof.weaponName);
+    renderer.drawTextSmall(cardX + 22.0f, textY, line, 0.96f, 0.96f, 0.98f);
+    textY -= 16.0f;
+    std::snprintf(line, sizeof(line), "Style:  %s", prof.styleName);
+    renderer.drawTextSmall(cardX + 22.0f, textY, line, 0.82f, 0.88f, 1.0f);
+    textY -= 22.0f;
+
+    // 2. COMBAT SKILLS & PASSIVES
+    renderer.drawTextSmall(cardX + 18.0f, textY, "COMBAT ABILITIES & COMBOS:", 1.0f, 0.85f, 0.30f);
+    textY -= 17.0f;
+    if (selectedChar == CharacterId::BRAWLER) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Flying Jump-Kick: Leap into air (W) + Kick (K) for high airborne damage", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Roll Dodge (U): Ducking roll slips under high punches & chain attacks", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Fist Flurry: Rapid 3-hit unarmed martial combo (J -> J -> J)", 0.82f, 0.88f, 1.0f);
+    } else if (selectedChar == CharacterId::CHAIN_WARRIOR) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Chain Grab (LB / O): Hurls spiked chain across the screen to snag opponent", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* 2.0s Shock Stun: Drags snagged opponent close and stuns them for 2 seconds!", 1.0f, 0.85f, 0.35f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Whip Lash: Wide sweeping chain arcs control mid and long range spacing", 0.82f, 0.88f, 1.0f);
+    } else if (selectedChar == CharacterId::ARCHER) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Tactical Back-Roll: Evades backward to establish lethal sniping range", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Aerial Jump-Kick: Agile flying kick with high aerial repositioning", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Kyudo Bow-Fu: Combines bow strikes, arrow slashes and point-blank shots", 0.82f, 0.88f, 1.0f);
+    } else if (selectedChar == CharacterId::FAN_DANCER) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Dual Fan Flurry: Rapid slicing arcs with high attack frequency", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Acrobatic Roll (U): Sinuous ground roll ducking incoming high attacks", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Dashing Velocity: Exceptional movement speed and evasive agility", 0.82f, 0.88f, 1.0f);
+    } else { // SPEAR_WARRIOR
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Pure Spear Discipline: All primary attacks use polearm (zero hand strikes)", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Colossal Reach: Thrusts, sweeps & cleaves out-range all enemy melee weapons", 0.92f, 0.92f, 0.96f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "* Heavy Poise: Highest health (125 HP) and crushing guard pressure", 0.82f, 0.88f, 1.0f);
+    }
+    textY -= 22.0f;
+
+    // 3. SIGNATURE CRITICAL HIT
+    char critHeader[80];
+    std::snprintf(critHeader, sizeof(critHeader), "SIGNATURE CRITICAL (RT+X / L) : %s", prof.specialName);
+    renderer.drawTextSmall(cardX + 18.0f, textY, critHeader, 1.0f, 0.45f, 0.30f);
+    textY -= 17.0f;
+    if (selectedChar == CharacterId::BRAWLER) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "Focuses raw shadow chi into fist and unleashes an explosive high-power strike", 1.0f, 0.90f, 0.85f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "that penetrates block defense and launches the enemy across the arena.", 0.85f, 0.85f, 0.90f);
+    } else if (selectedChar == CharacterId::CHAIN_WARRIOR) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "Infuses the spiked chain with crackling lightning, ensnares the opponent", 1.0f, 0.90f, 0.85f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "and shocks them with high-voltage electricity for massive damage.", 0.85f, 0.85f, 0.90f);
+    } else if (selectedChar == CharacterId::ARCHER) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "Executes a backward roll to open distance, draws bow to maximum tension", 1.0f, 0.90f, 0.85f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "and fires a giant high-velocity piercing war arrow across the screen.", 0.85f, 0.85f, 0.90f);
+    } else if (selectedChar == CharacterId::FAN_DANCER) {
+        renderer.drawTextSmall(cardX + 22.0f, textY, "Hurls twin folding fans sequentially; on contact, dashes in at top speed,", 1.0f, 0.90f, 0.85f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "leaps, grabs enemy's head with both hands, and slams a lethal knee to their face!", 0.85f, 0.85f, 0.90f);
+    } else { // SPEAR_WARRIOR
+        renderer.drawTextSmall(cardX + 22.0f, textY, "Raises spear skyward summoning 10 iron spears crashing from the heavens,", 1.0f, 0.90f, 0.85f);
+        textY -= 15.0f;
+        renderer.drawTextSmall(cardX + 22.0f, textY, "then hurls his main war spear with furious penetrating momentum!", 0.85f, 0.85f, 0.90f);
+    }
+    textY -= 22.0f;
+
+    // 4. STAT ATTRIBUTES (Health, Damage, Agility, Special Cost)
+    renderer.drawTextSmall(cardX + 18.0f, textY, "FIGHTER ATTRIBUTES:", 1.0f, 0.85f, 0.30f);
+    textY -= 18.0f;
+    char statLine[128];
+    std::snprintf(statLine, sizeof(statLine), "Health: %d HP   |   Speed: %.0f px/s   |   Special Cost: %.0f Energy",
+                  prof.maxHealth, prof.moveSpeed, prof.specialAttack.energyCost);
+    renderer.drawTextSmall(cardX + 22.0f, textY, statLine, 0.45f, 0.92f, 0.65f);
+    textY -= 18.0f;
+    renderer.drawTextSmall(cardX + 22.0f, textY, prof.statsSummary, 0.75f, 0.78f, 0.88f);
+
+
+    // =========================================================================
+    // RIGHT CARD: BIG CHARACTER AVATAR SHOWCASE
+    // =========================================================================
+    float rightX = 478.0f;
+    float rightY = 70.0f;
+    float rightW = 284.0f;
+    float rightH = 412.0f;
+
+    renderer.drawRectAlpha(rightX + 4.0f, rightY - 4.0f, rightW, rightH, 0.0f, 0.0f, 0.0f, 0.55f);
+    renderer.drawRectAlpha(rightX, rightY, rightW, rightH, 0.08f, 0.08f, 0.12f, 0.95f);
+    renderer.drawRectOutline(rightX, rightY, rightW, rightH, prof.accentR, prof.accentG, prof.accentB);
+
+    // Top Card Label
+    renderer.drawText(rightX + 18.0f, rightY + rightH - 26.0f, "HERO AVATAR SHOWCASE",
+                      prof.accentR, prof.accentG, prof.accentB);
+    renderer.drawTextSmall(rightX + rightW - 95.0f, rightY + rightH - 26.0f, "SCALE 1.75X", 0.65f, 0.70f, 0.78f);
+    renderer.drawLine(rightX + 16.0f, rightY + rightH - 35.0f, rightX + rightW - 16.0f, rightY + rightH - 35.0f,
+                      prof.accentR * 0.7f, prof.accentG * 0.7f, prof.accentB * 0.7f, 0.65f, 1.2f);
+
+    float avatarCenterX = rightX + rightW * 0.5f;
+    float avatarGroundY = rightY + 54.0f;
+
+    // Atmospheric Halo behind upper body
+    renderer.drawCircle(avatarCenterX, avatarGroundY + 165.0f, 105.0f,
+                        prof.accentR * 0.16f, prof.accentG * 0.16f, prof.accentB * 0.16f, 0.35f, 32);
+    renderer.drawCircleOutline(avatarCenterX, avatarGroundY + 165.0f, 100.0f,
+                               prof.accentR, prof.accentG, prof.accentB, 0.28f, 1.5f, 36);
+    renderer.drawCircleOutline(avatarCenterX, avatarGroundY + 165.0f, 70.0f,
+                               prof.accentR, prof.accentG, prof.accentB, 0.18f, 1.2f, 32);
+
+    // Subtle rising flame/ember sparks
+    for (int p = 0; p < 5; ++p) {
+        float sparkT = std::fmod(animTimer * 0.8f + p * 0.42f, 1.8f);
+        float sparkY = avatarGroundY + sparkT * 120.0f;
+        float sparkX = avatarCenterX + std::sin(animTimer * 3.0f + p * 1.5f) * (35.0f + p * 12.0f);
+        float sparkA = (1.0f - sparkT / 1.8f) * 0.65f;
+        renderer.drawCircle(sparkX, sparkY, 2.2f, prof.accentR, prof.accentG, prof.accentB, sparkA, 8);
+    }
+
+    // Pedestal Floor Dais
+    renderer.drawRectAlpha(avatarCenterX - 110.0f, avatarGroundY - 8.0f, 220.0f, 10.0f,
+                           0.05f, 0.05f, 0.08f, 0.90f);
+    renderer.drawLine(avatarCenterX - 105.0f, avatarGroundY + 2.0f, avatarCenterX + 105.0f, avatarGroundY + 2.0f,
+                      prof.accentR, prof.accentG, prof.accentB, 0.85f, 2.0f);
+    renderer.drawCircleOutline(avatarCenterX, avatarGroundY - 3.0f, 85.0f,
+                               prof.accentR, prof.accentG, prof.accentB, 0.35f, 1.5f, 28);
+
+    // =========================================================================
+    // RENDER BIG HERO AVATAR SILHOUETTE
+    // =========================================================================
+    Fighter avatar(0.0f, 0.0f, prof.bodyWidth, prof.bodyHeight);
+    avatar.setCharacter(selectedChar);
+    avatar.setFacingRight(false); // Face toward the left details card!
+    if (combatPose) {
+        avatar.setShowcasePose(FighterState::PUNCH, 0.10f); // Combat ready strike pose
+    } else {
+        avatar.setShowcasePose(FighterState::IDLE, animTimer); // Breathing idle stance
+    }
+
+    float avatarScale = 1.75f;
+    renderer.pushMatrix();
+    renderer.translate(avatarCenterX - (prof.bodyWidth * 0.5f) * avatarScale, avatarGroundY);
+    renderer.scale(avatarScale, avatarScale);
+    avatar.draw(renderer);
+    renderer.popMatrix();
+
+    // Pedestal badge under avatar feet
+    float badgeY = rightY + 14.0f;
+    char badgeText[64];
+    std::snprintf(badgeText, sizeof(badgeText), "%s  *  %s", prof.name, prof.weaponName);
+    renderer.drawTextSmallCentered(avatarCenterX, badgeY, badgeText, 1.0f, 0.88f, 0.35f);
+
+    // =========================================================================
+    // BOTTOM CONTROLS & NAVIGATION BUTTONS
+    // =========================================================================
+    bool hPrev = UIButtons::BTN_ROSTER_PREV.contains(mouseX, mouseY);
+    bool hBack = UIButtons::BTN_ROSTER_BACK.contains(mouseX, mouseY);
+    bool hNext = UIButtons::BTN_ROSTER_NEXT.contains(mouseX, mouseY);
+    bool hPose = UIButtons::BTN_ROSTER_POSE.contains(mouseX, mouseY);
+
+    drawButton(UIButtons::BTN_ROSTER_PREV, hPrev);
+    drawButton(UIButtons::BTN_ROSTER_BACK, hBack);
+    drawButton(UIButtons::BTN_ROSTER_NEXT, hNext);
+
+    const char* poseLabel = combatPose ? "STANCE: COMBAT" : "STANCE: IDLE";
+    drawButton(UIButtons::BTN_ROSTER_POSE, hPose, combatPose, poseLabel);
 }
 
 void UI::drawStatsScreen(float mouseX, float mouseY, const CareerStats& career,

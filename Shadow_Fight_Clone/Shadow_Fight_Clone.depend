@@ -136,7 +136,7 @@
 1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\animation.h
 	"Fighter.h"
 
-1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\fighter.h
+1794512463 d:\games\shadow_fight_clone\shadow_fight_clone\fighter.h
 	"Collision.h"
 	"AttackData.h"
 	"CharacterData.h"
@@ -156,7 +156,7 @@
 
 1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\background.h
 
-1794501430 d:\games\shadow_fight_clone\shadow_fight_clone\renderer.h
+1794512324 d:\games\shadow_fight_clone\shadow_fight_clone\renderer.h
 
 1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\config.h
 
@@ -196,7 +196,7 @@
 	"Fighter.h"
 	"Config.h"
 
-1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1794510534 source:d:\games\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
@@ -205,7 +205,7 @@
 	<cmath>
 	<algorithm>
 
-1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\game.cpp
+1794513633 source:d:\games\shadow_fight_clone\shadow_fight_clone\game.cpp
 	"Game.h"
 	"CombatSystem.h"
 	"Config.h"
@@ -215,7 +215,7 @@
 	<cmath>
 	<algorithm>
 
-1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\game.h
+1794512765 d:\games\shadow_fight_clone\shadow_fight_clone\game.h
 	"InputManager.h"
 	"Renderer.h"
 	"UI.h"
@@ -228,7 +228,7 @@
 
 1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\inputmanager.h
 
-1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\ui.h
+1794512659 d:\games\shadow_fight_clone\shadow_fight_clone\ui.h
 	"Renderer.h"
 	"Config.h"
 	"CharacterData.h"
@@ -262,13 +262,13 @@
 	"Player.h"
 	"InputManager.h"
 
-1794501439 source:d:\games\shadow_fight_clone\shadow_fight_clone\renderer.cpp
+1794512324 source:d:\games\shadow_fight_clone\shadow_fight_clone\renderer.cpp
 	"Renderer.h"
 	<windows.h>
 	<GL/glut.h>
 	<cmath>
 
-1794501446 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
+1794513812 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
 	"UI.h"
 	"Fighter.h"
 	"Enemy.h"

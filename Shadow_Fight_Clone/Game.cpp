@@ -38,6 +38,9 @@ Game::Game()
       selectedDifficulty(GameMode::NORMAL),
       playerCharacter(CharacterId::BRAWLER),
       enemyCharacter(CharacterId::CHAIN_WARRIOR),
+      showcaseCharacter(CharacterId::BRAWLER),
+      showcaseTimer(0.0f),
+      showcasePoseCombat(false),
       roundResult(RoundResult::NONE),
       roundNumber(1),
       playerWins(0),
@@ -183,6 +186,7 @@ void Game::update(float deltaTime) {
     input.pollGamepad();
     handleGamepadNavigation();
 
+    showcaseTimer += deltaTime;
     background.update(deltaTime);
     effects.update(deltaTime);
 
@@ -261,17 +265,18 @@ void Game::handleGamepadNavigation() {
 
     if (state == GameState::MENU) {
         if (menuScreen == MenuScreen::MAIN) {
-            if (selectedButtonIndex < 0 || selectedButtonIndex > 3) {
+            if (selectedButtonIndex < 0 || selectedButtonIndex > 4) {
                 if (navUp || navDown) selectedButtonIndex = 0;
             } else {
-                if (navUp)   selectedButtonIndex = (selectedButtonIndex + 3) % 4;
-                if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % 4;
+                if (navUp)   selectedButtonIndex = (selectedButtonIndex + 4) % 5;
+                if (navDown) selectedButtonIndex = (selectedButtonIndex + 1) % 5;
             }
             if (navOk || navStart) {
-                int idx = (selectedButtonIndex >= 0 && selectedButtonIndex <= 3) ? selectedButtonIndex : 0;
-                const RectButton* btns[4] = {
-                    &UIButtons::BTN_MAIN_START, &UIButtons::BTN_MAIN_STATS,
-                    &UIButtons::BTN_MAIN_OPTIONS, &UIButtons::BTN_MAIN_EXIT
+                int idx = (selectedButtonIndex >= 0 && selectedButtonIndex <= 4) ? selectedButtonIndex : 0;
+                const RectButton* btns[5] = {
+                    &UIButtons::BTN_MAIN_START, &UIButtons::BTN_MAIN_CHARACTERS,
+                    &UIButtons::BTN_MAIN_STATS, &UIButtons::BTN_MAIN_OPTIONS,
+                    &UIButtons::BTN_MAIN_EXIT
                 };
                 clickBtn(*btns[idx], false);
                 selectedButtonIndex = 0;
@@ -279,6 +284,23 @@ void Game::handleGamepadNavigation() {
             } else if (navBack) {
                 SoundManager::play(SoundEffect::UI_BACK);
                 quitRequested = true;
+            }
+        } else if (menuScreen == MenuScreen::CHARACTERS) {
+            if (navLeft || navLB) {
+                int idx = ((int)showcaseCharacter + Characters::COUNT - 1) % Characters::COUNT;
+                showcaseCharacter = (CharacterId)idx;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            } else if (navRight || navRB) {
+                int idx = ((int)showcaseCharacter + 1) % Characters::COUNT;
+                showcaseCharacter = (CharacterId)idx;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            }
+            if (navY) {
+                showcasePoseCombat = !showcasePoseCombat;
+                SoundManager::play(SoundEffect::UI_CLICK);
+            } else if (navOk || navBack) {
+                clickBtn(UIButtons::BTN_ROSTER_BACK, false);
+                selectedButtonIndex = 1;
             }
         } else if (menuScreen == MenuScreen::CHARACTER_SELECT) {
             if (navLeft || navRight || navLB || navRB) {
@@ -774,6 +796,8 @@ void Game::draw() {
         case GameState::MENU:
             if (menuScreen == MenuScreen::MAIN) {
                 ui.drawMainMenu(mouseX, mouseY, selectedButtonIndex, &stats.getCareer(), gpConn, gpName);
+            } else if (menuScreen == MenuScreen::CHARACTERS) {
+                ui.drawCharactersPage(mouseX, mouseY, showcaseCharacter, showcaseTimer, showcasePoseCombat, gpConn);
             } else if (menuScreen == MenuScreen::CHARACTER_SELECT) {
                 ui.drawCharacterSelect(mouseX, mouseY, playerCharacter, enemyCharacter, gpConn, charSelectColumn);
             } else if (menuScreen == MenuScreen::STATS) {
@@ -856,6 +880,10 @@ void Game::handleMenuClick(float mx, float my) {
                 int nextIdx = ((int)playerCharacter + 1) % Characters::COUNT;
                 enemyCharacter = Characters::getByIndex(nextIdx).id;
             }
+        } else if (UIButtons::BTN_MAIN_CHARACTERS.contains(mx, my)) {
+            SoundManager::play(SoundEffect::UI_CLICK);
+            menuScreen = MenuScreen::CHARACTERS;
+            selectedButtonIndex = 0;
         } else if (UIButtons::BTN_MAIN_STATS.contains(mx, my)) {
             SoundManager::play(SoundEffect::UI_CLICK);
             confirmStatsReset = false;
@@ -867,6 +895,8 @@ void Game::handleMenuClick(float mx, float my) {
             SoundManager::play(SoundEffect::UI_BACK);
             quitRequested = true;
         }
+    } else if (menuScreen == MenuScreen::CHARACTERS) {
+        handleCharactersClick(mx, my);
     } else if (menuScreen == MenuScreen::STATS) {
         if (confirmStatsReset) {
             if (UIButtons::BTN_CONFIRM_YES.contains(mx, my)) {
@@ -959,6 +989,39 @@ void Game::handleMenuClick(float mx, float my) {
                 menuScreen = MenuScreen::OPTIONS;
             }
         }
+    }
+}
+
+void Game::handleCharactersClick(float mx, float my) {
+    for (int i = 0; i < Characters::COUNT; ++i) {
+        if (UIButtons::BTN_ROSTER_TABS[i].contains(mx, my)) {
+            showcaseCharacter = (CharacterId)i;
+            SoundManager::play(SoundEffect::UI_CLICK);
+            return;
+        }
+    }
+    if (UIButtons::BTN_ROSTER_PREV.contains(mx, my)) {
+        int idx = ((int)showcaseCharacter + Characters::COUNT - 1) % Characters::COUNT;
+        showcaseCharacter = (CharacterId)idx;
+        SoundManager::play(SoundEffect::UI_CLICK);
+        return;
+    }
+    if (UIButtons::BTN_ROSTER_NEXT.contains(mx, my)) {
+        int idx = ((int)showcaseCharacter + 1) % Characters::COUNT;
+        showcaseCharacter = (CharacterId)idx;
+        SoundManager::play(SoundEffect::UI_CLICK);
+        return;
+    }
+    if (UIButtons::BTN_ROSTER_POSE.contains(mx, my)) {
+        showcasePoseCombat = !showcasePoseCombat;
+        SoundManager::play(SoundEffect::UI_CLICK);
+        return;
+    }
+    if (UIButtons::BTN_ROSTER_BACK.contains(mx, my)) {
+        SoundManager::play(SoundEffect::UI_BACK);
+        menuScreen = MenuScreen::MAIN;
+        selectedButtonIndex = 1;
+        return;
     }
 }
 
@@ -1118,6 +1181,25 @@ void Game::onKeyDown(unsigned char key) {
                 }
                 break;
             }
+            if (menuScreen == MenuScreen::CHARACTERS) {
+                if (key == KEY_ESCAPE || key == KEY_ENTER) {
+                    SoundManager::play(SoundEffect::UI_BACK);
+                    menuScreen = MenuScreen::MAIN;
+                    selectedButtonIndex = 1;
+                } else if (key == 'a' || key == 'A' || key == 'q' || key == 'Q') {
+                    int idx = ((int)showcaseCharacter + Characters::COUNT - 1) % Characters::COUNT;
+                    showcaseCharacter = (CharacterId)idx;
+                    SoundManager::play(SoundEffect::UI_CLICK);
+                } else if (key == 'd' || key == 'D' || key == 'e' || key == 'E') {
+                    int idx = ((int)showcaseCharacter + 1) % Characters::COUNT;
+                    showcaseCharacter = (CharacterId)idx;
+                    SoundManager::play(SoundEffect::UI_CLICK);
+                } else if (key == ' ' || key == 'p' || key == 'P' || key == 't' || key == 'T') {
+                    showcasePoseCombat = !showcasePoseCombat;
+                    SoundManager::play(SoundEffect::UI_CLICK);
+                }
+                break;
+            }
             if (key == KEY_ENTER) {
                 if (menuScreen == MenuScreen::MAIN) {
                     SoundManager::play(SoundEffect::UI_CLICK);
@@ -1267,6 +1349,19 @@ void Game::onSpecialKey(int key, bool released) {
     if (released) {
         input.specialKeyUp(key);
     } else {
+        if (state == GameState::MENU && menuScreen == MenuScreen::CHARACTERS) {
+            if (key == 100 || key == KeyCodes::ARROW_LEFT) {
+                int idx = ((int)showcaseCharacter + Characters::COUNT - 1) % Characters::COUNT;
+                showcaseCharacter = (CharacterId)idx;
+                SoundManager::play(SoundEffect::UI_CLICK);
+                return;
+            } else if (key == 102 || key == KeyCodes::ARROW_RIGHT) {
+                int idx = ((int)showcaseCharacter + 1) % Characters::COUNT;
+                showcaseCharacter = (CharacterId)idx;
+                SoundManager::play(SoundEffect::UI_CLICK);
+                return;
+            }
+        }
         bool wasRebinding = input.isRebinding() && !input.isRebindingGamepad();
         input.specialKeyDown(key);
         if (wasRebinding && !input.isRebinding()) {

@@ -20,8 +20,9 @@ enum class GameState {
 };
 
 enum class MenuScreen {
-    MAIN,             // [Start Game] [Stats & Records] [Options] [Exit]
+    MAIN,             // [Start Game] [Characters] [Stats & Records] [Options] [Exit]
     CHARACTER_SELECT, // Choose Your Fighter (left) + Opponent (right)
+    CHARACTERS,       // Character showcase page with big avatar & details
     STATS,            // Career stats & high scores + fighter mastery
     OPTIONS,          // [Game Controls] [Game Mode] [Back]
     CONTROLS,         // All controls display + [Back]
@@ -89,6 +90,7 @@ private:
     void drawScene();
 
     void handleMenuClick(float mx, float my);
+    void handleCharactersClick(float mx, float my);
     void handlePauseClick(float mx, float my);
     void handleControlsClick(float mx, float my, bool fromPause);
     bool shouldShowGamepadControls() const;
@@ -115,6 +117,9 @@ private:
     GameMode     selectedDifficulty;
     CharacterId  playerCharacter;
     CharacterId  enemyCharacter;
+    CharacterId  showcaseCharacter;
+    float        showcaseTimer;
+    bool         showcasePoseCombat;
     RoundResult  roundResult;
 
     int          roundNumber;

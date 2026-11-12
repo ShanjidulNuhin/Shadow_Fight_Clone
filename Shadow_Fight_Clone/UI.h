@@ -23,11 +23,12 @@ struct RectButton {
 };
 
 namespace UIButtons {
-    // Main menu buttons
-    const RectButton BTN_MAIN_START    = { 260.0f, 340.0f, 280.0f, 46.0f, "START GAME" };
-    const RectButton BTN_MAIN_STATS    = { 260.0f, 282.0f, 280.0f, 46.0f, "STATS & RECORDS" };
-    const RectButton BTN_MAIN_OPTIONS  = { 260.0f, 224.0f, 280.0f, 46.0f, "OPTIONS" };
-    const RectButton BTN_MAIN_EXIT     = { 260.0f, 166.0f, 280.0f, 46.0f, "EXIT" };
+    // Main menu buttons (5 buttons)
+    const RectButton BTN_MAIN_START       = { 260.0f, 356.0f, 280.0f, 44.0f, "START GAME" };
+    const RectButton BTN_MAIN_CHARACTERS  = { 260.0f, 304.0f, 280.0f, 44.0f, "CHARACTERS" };
+    const RectButton BTN_MAIN_STATS       = { 260.0f, 252.0f, 280.0f, 44.0f, "STATS & RECORDS" };
+    const RectButton BTN_MAIN_OPTIONS     = { 260.0f, 200.0f, 280.0f, 44.0f, "OPTIONS" };
+    const RectButton BTN_MAIN_EXIT        = { 260.0f, 148.0f, 280.0f, 44.0f, "EXIT" };
 
     // Stats screen buttons
     const RectButton BTN_STATS_BACK    = { 190.0f, 34.0f,  190.0f, 44.0f, "BACK" };
@@ -74,6 +75,19 @@ namespace UIButtons {
     const RectButton BTN_CHAR_BACK = { 190.0f, 24.0f, 190.0f, 44.0f, "BACK" };
     const RectButton BTN_CHAR_NEXT = { 420.0f, 24.0f, 190.0f, 44.0f, "CONTINUE" };
 
+    // Character showcase page buttons
+    const RectButton BTN_ROSTER_TABS[5] = {
+        { 38.0f,  492.0f, 138.0f, 32.0f, "1. KAI" },
+        { 184.0f, 492.0f, 138.0f, 32.0f, "2. KURO" },
+        { 330.0f, 492.0f, 138.0f, 32.0f, "3. AKARI" },
+        { 476.0f, 492.0f, 138.0f, 32.0f, "4. MEI-LING" },
+        { 622.0f, 492.0f, 138.0f, 32.0f, "5. TAKEDA" }
+    };
+    const RectButton BTN_ROSTER_PREV = { 38.0f,  18.0f, 150.0f, 42.0f, "< PREV" };
+    const RectButton BTN_ROSTER_BACK = { 200.0f, 18.0f, 210.0f, 42.0f, "BACK TO MENU" };
+    const RectButton BTN_ROSTER_NEXT = { 422.0f, 18.0f, 150.0f, 42.0f, "NEXT >" };
+    const RectButton BTN_ROSTER_POSE = { 584.0f, 18.0f, 178.0f, 42.0f, "STANCE: IDLE" };
+
     // Alert dialog OK button
     const RectButton BTN_ALERT_OK      = { 335.0f, 215.0f, 130.0f, 42.0f, "OK" };
     const RectButton BTN_CONFIRM_YES   = { 245.0f, 215.0f, 140.0f, 42.0f, "YES" };
@@ -110,6 +124,9 @@ public:
     void drawMainMenu(float mouseX, float mouseY, int selectedIndex = -1,
                       const CareerStats* career = nullptr,
                       bool gamepadConnected = false, const char* gamepadName = nullptr) const;
+    void drawCharactersPage(float mouseX, float mouseY, CharacterId selectedChar,
+                            float animTimer, bool combatPose = false,
+                            bool gamepadMode = false) const;
     void drawStatsScreen(float mouseX, float mouseY, const CareerStats& career,
                          bool confirmReset = false) const;
     void drawCharacterSelect(float mouseX, float mouseY,

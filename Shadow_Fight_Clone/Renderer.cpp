@@ -361,3 +361,33 @@ void Renderer::drawTextSmall(float x, float y, const char* text,
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
     }
 }
+
+void Renderer::drawTextLarge(float x, float y, const char* text,
+                             float r, float g, float b) const {
+    if (text == nullptr) return;
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
+    }
+}
+
+void Renderer::pushMatrix() const {
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+}
+
+void Renderer::popMatrix() const {
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+void Renderer::translate(float x, float y) const {
+    glMatrixMode(GL_MODELVIEW);
+    glTranslatef(x, y, 0.0f);
+}
+
+void Renderer::scale(float sx, float sy) const {
+    glMatrixMode(GL_MODELVIEW);
+    glScalef(sx, sy, 1.0f);
+}

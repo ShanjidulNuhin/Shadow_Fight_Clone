@@ -135,6 +135,10 @@ public:
     AttackPhase  getAttackPhase() const;
     FighterState getState() const;
     const char*  getStateName() const;
+    void setShowcasePose(FighterState s, float time) {
+        state = s;
+        stateTime = time;
+    }
     void draw(const Renderer& renderer) const;
 
 private:

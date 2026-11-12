@@ -52,6 +52,17 @@ struct CharacterProfile {
     AttackData  jumpKickAttack;   // Mid-air flying kick (W + K, higher damage for Ch 1, 3, 4)
     AttackData  grabAttack;       // Spiked chain pull attack (O, Ch 2)
     AttackData  specialAttack;    // Signature Critical / Special Attack (L)
+
+    // Realistic Human Skin Tone (face, neck, bare arms, hands, torso)
+    float       skinR, skinG, skinB;
+    float       skinShadowR, skinShadowG, skinShadowB;
+
+    // Realistic Clothing & Attire Colors
+    float       clothMainR, clothMainG, clothMainB;   // Primary garment (gi pants, ninja tunic, silk bodice, samurai armor)
+    float       clothSecR, clothSecG, clothSecB;     // Secondary cloth (sash, trim, leather, ribbons)
+    float       armorR, armorG, armorB;              // Armor plates / metallic cuirass / bracers
+    float       hairR, hairG, hairB;                 // Realistic hair color
+    float       bootsR, bootsG, bootsB;              // Footwear
 };
 
 namespace Characters {
