@@ -9,6 +9,8 @@ enum class SparkStyle {
     PUNCH,
     KICK,
     SPECIAL,
+    ELECTRIC,
+    DODGE,
     BLOCK,
     KO
 };

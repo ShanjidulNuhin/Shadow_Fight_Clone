@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 #include "Config.h"
+#include "CharacterData.h"
 
 class Fighter;
 class Enemy;
@@ -40,6 +41,24 @@ namespace UIButtons {
     const RectButton BTN_DIFF_BACK     = { 190.0f, 80.0f,  190.0f, 46.0f, "BACK" };
     const RectButton BTN_DIFF_OK       = { 420.0f, 80.0f,  190.0f, 46.0f, "OK" };
 
+    // Character select screen buttons (5 player left, 5 opponent right, back/continue bottom)
+    const RectButton BTN_CHAR_PLAYER[5] = {
+        { 45.0f, 442.0f, 330.0f, 32.0f, "KAI" },
+        { 45.0f, 406.0f, 330.0f, 32.0f, "KURO" },
+        { 45.0f, 370.0f, 330.0f, 32.0f, "AKARI" },
+        { 45.0f, 334.0f, 330.0f, 32.0f, "MEI-LING" },
+        { 45.0f, 298.0f, 330.0f, 32.0f, "TAKEDA" }
+    };
+    const RectButton BTN_CHAR_OPPONENT[5] = {
+        { 425.0f, 442.0f, 330.0f, 32.0f, "KAI" },
+        { 425.0f, 406.0f, 330.0f, 32.0f, "KURO" },
+        { 425.0f, 370.0f, 330.0f, 32.0f, "AKARI" },
+        { 425.0f, 334.0f, 330.0f, 32.0f, "MEI-LING" },
+        { 425.0f, 298.0f, 330.0f, 32.0f, "TAKEDA" }
+    };
+    const RectButton BTN_CHAR_BACK = { 190.0f, 24.0f, 190.0f, 44.0f, "BACK" };
+    const RectButton BTN_CHAR_NEXT = { 420.0f, 24.0f, 190.0f, 44.0f, "CONTINUE" };
+
     // Alert dialog OK button
     const RectButton BTN_ALERT_OK      = { 335.0f, 215.0f, 130.0f, 42.0f, "OK" };
     const RectButton BTN_CONFIRM_YES   = { 245.0f, 215.0f, 140.0f, 42.0f, "YES" };
@@ -67,11 +86,14 @@ public:
                  int roundNumber, int playerWins, int enemyWins,
                  float mouseX = -1.0f, float mouseY = -1.0f) const;
 
-    void drawButton(const RectButton& btn, bool hovered, bool active = false, const char* customLabel = nullptr) const;
+    void drawButton(const RectButton& btn, bool hovered, bool active = false,
+                    const char* customLabel = nullptr, bool disabled = false) const;
     void drawSettingsIcon(bool hovered) const;
 
     // Menu Screens
     void drawMainMenu(float mouseX, float mouseY, int selectedIndex = -1) const;
+    void drawCharacterSelect(float mouseX, float mouseY,
+                             CharacterId playerChar, CharacterId enemyChar) const;
     void drawOptionsMenu(float mouseX, float mouseY, int selectedIndex, GameMode currentMode) const;
     void drawControlsScreen(float mouseX, float mouseY, int selectedIndex = -1) const;
     void drawGameModeScreen(float mouseX, float mouseY, int selectedIndex, GameMode displayedMode, bool isStartGame = false) const;
@@ -94,6 +116,8 @@ private:
     void drawEnergyBar(float x, float y, float width, float height,
                        const Fighter& fighter) const;
     void drawRoundPips(float x, float y, int wins) const;
+    void drawCharacterDetailsCard(float x, float y, float width, float height,
+                                  const CharacterProfile& profile, const char* roleTag) const;
 
     const Renderer& renderer;
 };

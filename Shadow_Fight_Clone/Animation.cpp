@@ -79,26 +79,41 @@ Pose getPose(FighterState state, float stateTime,
             break;
         }
 
-        case FighterState::PUNCH: {
+        case FighterState::ROLL: {
+            // Fast low athletic tumble spin across the floor
+            float t = std::min(1.0f, stateTime / 0.36f);
+            pose.actionProgress = t;
+            pose.scaleX = 1.15f;
+            pose.scaleY = 0.65f;
+            pose.offsetY = std::sin(t * 3.14159265f) * 6.0f;
+            break;
+        }
+
+        case FighterState::PUNCH:
+        case FighterState::COMBO2:
+        case FighterState::COMBO3:
+        case FighterState::CHAIN_GRAB: {
             if (attack != nullptr) {
+                float leanScale = (state == FighterState::COMBO3) ? 1.45f : 1.0f;
                 if (stateTime < attack->startup) {
                     float t = stateTime / attack->startup;
                     pose.actionProgress = t;
-                    pose.torsoLeanX = -2.5f * t; // coil back
+                    pose.torsoLeanX = -3.0f * t * leanScale;
                 } else if (stateTime < attack->startup + attack->active) {
                     float t = (stateTime - attack->startup) / attack->active;
                     pose.actionProgress = t;
-                    pose.torsoLeanX = 5.5f * std::sin(t * 1.570796f); // explosive drive
+                    pose.torsoLeanX = 6.0f * leanScale * std::sin(t * 1.570796f);
                 } else {
                     float t = (stateTime - attack->startup - attack->active) / attack->recovery;
                     pose.actionProgress = std::min(1.0f, t);
-                    pose.torsoLeanX = 5.5f * (1.0f - pose.actionProgress);
+                    pose.torsoLeanX = 6.0f * leanScale * (1.0f - pose.actionProgress);
                 }
             }
             break;
         }
 
-        case FighterState::KICK: {
+        case FighterState::KICK:
+        case FighterState::JUMP_KICK: {
             if (attack != nullptr) {
                 if (stateTime < attack->startup) {
                     float t = stateTime / attack->startup;

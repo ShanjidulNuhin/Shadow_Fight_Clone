@@ -19,10 +19,11 @@ enum class GameState {
 };
 
 enum class MenuScreen {
-    MAIN,         // [Start Game] [Options] [Exit]
-    OPTIONS,      // [Game Controls] [Game Mode] [Back]
-    CONTROLS,     // All controls display + [Back]
-    DIFFICULTY    // [Easy] [Normal] [Hard] + [Back] & [OK]
+    MAIN,             // [Start Game] [Options] [Exit]
+    CHARACTER_SELECT, // Choose Your Fighter (left) + Opponent (right)
+    OPTIONS,          // [Game Controls] [Game Mode] [Back]
+    CONTROLS,         // All controls display + [Back]
+    DIFFICULTY        // [Easy] [Normal] [Hard] + [Back] & [OK]
 };
 
 enum class PauseScreen {
@@ -43,6 +44,20 @@ enum class RoundResult {
     PLAYER_WON,
     ENEMY_WON,
     DRAW
+};
+
+struct Projectile {
+    ProjectileKind kind;
+    bool  fromPlayer;
+    float x, y;
+    float vx, vy;
+    float width, height;
+    int   damage;
+    float knockback;
+    float hitStun;
+    float r, g, b;
+    float spinAngle;
+    bool  alive;
 };
 
 class Game {
@@ -73,6 +88,10 @@ private:
 
     void handleMenuClick(float mx, float my);
     void handlePauseClick(float mx, float my);
+    void spawnProjectilesFrom(Fighter& owner, bool fromPlayer);
+    void updateFanSpecialDriver(Fighter& attacker, Fighter& defender, float deltaTime);
+    void updateProjectiles(float deltaTime);
+    void drawProjectiles() const;
 
     InputManager input;
     InputManager noInput;
@@ -88,6 +107,8 @@ private:
     PauseScreen  pauseScreen;
     GameMode     gameMode;
     GameMode     selectedDifficulty;
+    CharacterId  playerCharacter;
+    CharacterId  enemyCharacter;
     RoundResult  roundResult;
 
     int          roundNumber;
@@ -107,6 +128,7 @@ private:
     PopupType    popupType;
     bool         showDebugBoxes;
     bool         quitRequested;
+    std::vector<Projectile> projectiles;
 };
 
 #endif

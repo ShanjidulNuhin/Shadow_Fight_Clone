@@ -205,6 +205,68 @@ void Effects::triggerHit(float x, float y, float pushDirection, SparkStyle style
             break;
         }
 
+        case SparkStyle::ELECTRIC: {
+            // Crackling high-voltage cyan/white lightning burst
+            for (int i = 0; i < 42; ++i) {
+                Particle p;
+                p.x = x + randomFloat(-12.0f, 12.0f);
+                p.y = y + randomFloat(-25.0f, 25.0f);
+                p.prevX = p.x;
+                p.prevY = p.y;
+                float angle = randomFloat(0.0f, 6.283185f);
+                float speed = randomFloat(260.0f, 760.0f);
+                p.vx = std::cos(angle) * speed;
+                p.vy = std::sin(angle) * speed;
+                p.size = randomFloat(2.4f, 4.2f);
+                bool whiteCore = (i % 3 == 0);
+                p.r = whiteCore ? 0.95f : 0.25f;
+                p.g = whiteCore ? 1.0f  : 0.85f;
+                p.b = 1.0f;
+                p.alpha = 1.0f;
+                p.maxLife = randomFloat(0.20f, 0.38f);
+                p.currentLife = p.maxLife;
+                p.type = 0;
+                particles.push_back(p);
+            }
+            Particle sw;
+            sw.x = x; sw.y = y; sw.prevX = x; sw.prevY = y;
+            sw.vx = 320.0f; sw.vy = 0.0f;
+            sw.size = 12.0f;
+            sw.r = 0.45f; sw.g = 0.92f; sw.b = 1.0f; sw.alpha = 0.95f;
+            sw.maxLife = 0.25f; sw.currentLife = sw.maxLife;
+            sw.type = 2;
+            particles.push_back(sw);
+            triggerShake(11.0f, 0.25f);
+            break;
+        }
+
+        case SparkStyle::DODGE: {
+            // Subtle wind evasion ring when rolling cleanly under an attack
+            for (int i = 0; i < 10; ++i) {
+                Particle p;
+                p.x = x + randomFloat(-8.0f, 8.0f);
+                p.y = y + randomFloat(-6.0f, 10.0f);
+                p.prevX = p.x;
+                p.prevY = p.y;
+                p.vx = pushDirection * randomFloat(60.0f, 180.0f);
+                p.vy = randomFloat(20.0f, 90.0f);
+                p.size = randomFloat(2.0f, 3.0f);
+                p.r = 0.70f; p.g = 0.92f; p.b = 1.0f; p.alpha = 0.75f;
+                p.maxLife = 0.20f; p.currentLife = p.maxLife;
+                p.type = 0;
+                particles.push_back(p);
+            }
+            Particle sw;
+            sw.x = x; sw.y = y; sw.prevX = x; sw.prevY = y;
+            sw.vx = 180.0f; sw.vy = 0.0f;
+            sw.size = 6.0f;
+            sw.r = 0.75f; sw.g = 0.95f; sw.b = 1.0f; sw.alpha = 0.70f;
+            sw.maxLife = 0.16f; sw.currentLife = sw.maxLife;
+            sw.type = 2;
+            particles.push_back(sw);
+            break;
+        }
+
         case SparkStyle::KO: {
             // Massive fireworks-style K.O. burst
             for (int i = 0; i < 65; ++i) {

@@ -17,7 +17,7 @@ enum class AIState {
 
 class Enemy : public Fighter {
 public:
-    Enemy(float startX, float startY);
+    Enemy(float startX, float startY, CharacterId charId = CharacterId::CHAIN_WARRIOR);
 
     void update(const Fighter& target, float deltaTime);
 
@@ -28,12 +28,12 @@ public:
     const char* getAIStateName() const;
 
 private:
-    enum class AttackChoice { NONE, PUNCH, KICK, SPECIAL };
+    enum class AttackChoice { NONE, PUNCH, KICK, CHAIN_GRAB, SPECIAL };
 
     AttackChoice chooseAttack(const Fighter& target, float gap) const;
     float        randomCooldown() const;
     void         pickNewSpacing();
-    void         watchForAttacks(const Fighter& target, float gap, float deltaTime);
+    void         watchForAttacks(const Fighter& target, float gap, float directionToTarget, float deltaTime);
 
     GameMode     difficulty;
 
@@ -41,10 +41,12 @@ private:
     float        attackCooldown;
     float        preferredGap;
     AttackChoice lastAttack;
+    int          pendingComboHits;
 
-    // jumping
+    // jumping / dodge
     bool  dodgePending;
     float dodgeTimer;
+    bool  rollPending;
     float airDrift;
     // defending
     bool  targetWasAttacking;

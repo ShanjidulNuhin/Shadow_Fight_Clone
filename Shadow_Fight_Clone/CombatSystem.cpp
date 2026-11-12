@@ -11,6 +11,7 @@ namespace CombatSystem {
 bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
     if (defender.isDead()) return false;
     if (defender.isInvulnerable()) return false;
+
     Rect hitbox;
     if (!attacker.getHitbox(hitbox)) return false;
 
@@ -25,29 +26,77 @@ bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
     float defenderCenter = defenderBody.x + defenderBody.width / 2.0f;
     float pushDirection = (defenderCenter > attackerCenter) ? 1.0f : -1.0f;
 
-    // Calculate exact impact coordinate
     float hitX = (hitbox.x + hitbox.width * 0.5f + defenderBody.x + defenderBody.width * 0.5f) * 0.5f;
     float overlapYMin = std::max(hitbox.y, defenderBody.y);
     float overlapYMax = std::min(hitbox.y + hitbox.height, defenderBody.y + defenderBody.height);
     float hitY = (overlapYMin + overlapYMax) * 0.5f;
 
-    bool wasBlocking = (defender.getState() == FighterState::BLOCK) && attack->blockable;
+    FighterState atkState = attacker.getState();
+
+    // Rolling fighters completely dodge punches, combos, and spiked chain grabs!
+    bool dodgeableStrike = (atkState == FighterState::PUNCH ||
+                            atkState == FighterState::COMBO2 ||
+                            atkState == FighterState::COMBO3 ||
+                            atkState == FighterState::CHAIN_GRAB);
+    if (defender.isRolling() && dodgeableStrike) {
+        attacker.onAttackConnected();
+        if (effects != nullptr) {
+            effects->triggerHit(hitX, hitY, pushDirection, SparkStyle::DODGE);
+        }
+        SoundManager::play(SoundEffect::PUNCH_WHOOSH);
+        return false;
+    }
+
+    bool defenderRolling = defender.isRolling();
+    bool wasBlocking = (!defenderRolling) && (defender.getState() == FighterState::BLOCK) && attack->blockable;
 
     float mult = attacker.getDamageMultiplier();
     int damageToApply = std::max(1, (int)std::round(attack->damage * mult));
 
-    defender.receiveHit(*attack, pushDirection, damageToApply);
+    // Rolling against an opponent's Critical/Special attack still damages, but significantly less!
+    float customStun = -1.0f;
+    float knockScale = 1.0f;
+    if (defenderRolling && atkState == FighterState::SPECIAL) {
+        damageToApply = std::max(1, (int)std::round(damageToApply * 0.35f));
+        customStun = 0.20f;
+        knockScale = 0.40f;
+    }
 
-    // Determine visual spark style
+    bool isChainGrabHit = (atkState == FighterState::CHAIN_GRAB) && !wasBlocking && !defenderRolling;
+    bool isElectroShock = (atkState == FighterState::SPECIAL) &&
+                          (attacker.getCharacterId() == CharacterId::CHAIN_WARRIOR) &&
+                          !wasBlocking && !defenderRolling;
+
+    if (isChainGrabHit) {
+        // Pull the victim close in front of Kuro and stun for 2.0 seconds
+        float pullTargetCenter = attackerCenter + attacker.getDirection() * (attackerBody.width * 0.5f + defenderBody.width * 0.5f + 14.0f);
+        defender.pushHorizontally(pullTargetCenter - defenderCenter);
+        customStun = 2.00f;
+        knockScale = 0.05f;
+    } else if (isElectroShock) {
+        // Snare into mid-close range and jolt with electric shock
+        float snareTargetCenter = attackerCenter + attacker.getDirection() * (attackerBody.width * 0.5f + defenderBody.width * 0.5f + 42.0f);
+        if (std::fabs(defenderCenter - attackerCenter) > std::fabs(snareTargetCenter - attackerCenter)) {
+            defender.pushHorizontally(snareTargetCenter - defenderCenter);
+        }
+        defender.applyElectrocution(0.75f);
+        customStun = 1.15f;
+        knockScale = 0.35f;
+    }
+
+    defender.receiveHit(*attack, pushDirection, damageToApply, customStun, knockScale);
+
     if (effects != nullptr) {
         SparkStyle style = SparkStyle::PUNCH;
         if (defender.isDead()) {
             style = SparkStyle::KO;
         } else if (wasBlocking) {
             style = SparkStyle::BLOCK;
-        } else if (attack == &Attacks::KICK) {
+        } else if (isElectroShock) {
+            style = SparkStyle::ELECTRIC;
+        } else if (atkState == FighterState::KICK || atkState == FighterState::JUMP_KICK) {
             style = SparkStyle::KICK;
-        } else if (attack == &Attacks::SPECIAL) {
+        } else if (atkState == FighterState::SPECIAL || atkState == FighterState::COMBO3) {
             style = SparkStyle::SPECIAL;
         }
 
@@ -58,9 +107,9 @@ bool resolveAttack(Fighter& attacker, Fighter& defender, Effects* effects) {
         SoundManager::play(SoundEffect::KO);
     } else if (defender.getState() == FighterState::BLOCK) {
         SoundManager::play(SoundEffect::HIT_BLOCK);
-    } else if (attack == &Attacks::KICK) {
+    } else if (atkState == FighterState::KICK || atkState == FighterState::JUMP_KICK) {
         SoundManager::play(SoundEffect::HIT_KICK);
-    } else if (attack == &Attacks::SPECIAL) {
+    } else if (atkState == FighterState::SPECIAL || atkState == FighterState::COMBO3 || isChainGrabHit) {
         SoundManager::play(SoundEffect::HIT_SPECIAL);
     } else {
         SoundManager::play(SoundEffect::HIT_PUNCH);

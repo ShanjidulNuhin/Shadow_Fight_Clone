@@ -9,9 +9,12 @@ public:
     void keyDown(unsigned char key);   // call when a key is pressed
     void keyUp(unsigned char key);     // call when a key is released
     bool isKeyDown(unsigned char key) const;
+    bool wasKeyPressed(unsigned char key) const;
+    void clearJustPressed();
 
 private:
     bool keys[256];
+    bool justPressed[256];
 };
 
 #endif

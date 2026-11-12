@@ -76,6 +76,10 @@ public:
     void drawText(float x, float y, const char* text,
                   float r, float g, float b) const;
 
+    // Smaller text for detailed UI panels and stats.
+    void drawTextSmall(float x, float y, const char* text,
+                       float r, float g, float b) const;
+
     // Text centred horizontally on centerX. large = a bigger font for titles.
     void drawTextCentered(float centerX, float y, const char* text,
                           float r, float g, float b, bool large) const;

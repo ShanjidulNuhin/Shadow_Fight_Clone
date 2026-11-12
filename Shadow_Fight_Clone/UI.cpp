@@ -21,7 +21,8 @@ void UI::drawDebugBoxes(const Fighter& fighter) const {
     }
 }
 
-void UI::drawButton(const RectButton& btn, bool hovered, bool active, const char* customLabel) const {
+void UI::drawButton(const RectButton& btn, bool hovered, bool active,
+                    const char* customLabel, bool disabled) const {
     const char* textToDraw = (customLabel != nullptr) ? customLabel : btn.label;
 
     // Drop shadow
@@ -29,7 +30,12 @@ void UI::drawButton(const RectButton& btn, bool hovered, bool active, const char
                            0.0f, 0.0f, 0.0f, 0.45f);
 
     // Plate background
-    if (active) {
+    if (disabled) {
+        renderer.drawRectAlpha(btn.x, btn.y, btn.width, btn.height,
+                               0.05f, 0.05f, 0.07f, 0.72f);
+        renderer.drawRectOutline(btn.x, btn.y, btn.width, btn.height,
+                                 0.24f, 0.24f, 0.28f);
+    } else if (active) {
         // Selected / Active state: rich warm gold/bronze
         renderer.drawRectAlpha(btn.x, btn.y, btn.width, btn.height,
                                0.28f, 0.22f, 0.08f, 0.95f);
@@ -55,7 +61,9 @@ void UI::drawButton(const RectButton& btn, bool hovered, bool active, const char
     float textY = btn.y + btn.height * 0.5f - 6.0f;
     float centerX = btn.x + btn.width * 0.5f;
 
-    if (active) {
+    if (disabled) {
+        renderer.drawTextCentered(centerX, textY, textToDraw, 0.42f, 0.42f, 0.48f, false);
+    } else if (active) {
         char formatted[64];
         std::snprintf(formatted, sizeof(formatted), "[ %s ]", textToDraw);
         renderer.drawTextCentered(centerX, textY, formatted, 1.0f, 0.90f, 0.35f, false);
@@ -117,7 +125,7 @@ void UI::drawHealthBar(float x, float y, float width, float height,
 void UI::drawEnergyBar(float x, float y, float width, float height,
                        const Fighter& fighter) const {
     float fraction = fighter.getEnergy() / fighter.getMaxEnergy();
-    bool specialReady = fighter.getEnergy() >= Attacks::SPECIAL.energyCost;
+    bool specialReady = fighter.getEnergy() >= fighter.getSpecialEnergyCost();
 
     renderer.drawRect(x, y, width, height, 0.05f, 0.10f, 0.25f);
     if (specialReady) {
@@ -148,8 +156,13 @@ void UI::drawHUD(const Fighter& player, const Enemy& enemy,
     const float worldW = (float)Config::WORLD_WIDTH;
     const float worldH = (float)Config::WORLD_HEIGHT;
 
-    drawHealthBar(15.0f, worldH - 55.0f, 300.0f, 20.0f, player, "SHADOW (YOU)");
-    drawHealthBar(worldW - 315.0f, worldH - 55.0f, 300.0f, 20.0f, enemy, "WARRIOR (ENEMY)");
+    char playerLabel[48];
+    char enemyLabel[48];
+    std::snprintf(playerLabel, sizeof(playerLabel), "%s (YOU)", player.getProfile().name);
+    std::snprintf(enemyLabel, sizeof(enemyLabel), "%s (ENEMY)", enemy.getProfile().name);
+
+    drawHealthBar(15.0f, worldH - 55.0f, 300.0f, 20.0f, player, playerLabel);
+    drawHealthBar(worldW - 315.0f, worldH - 55.0f, 300.0f, 20.0f, enemy, enemyLabel);
 
     drawEnergyBar(15.0f, worldH - 72.0f, 300.0f, 10.0f, player);
     drawEnergyBar(worldW - 315.0f, worldH - 72.0f, 300.0f, 10.0f, enemy);
@@ -163,6 +176,91 @@ void UI::drawHUD(const Fighter& player, const Enemy& enemy,
 
     bool iconHovered = UIButtons::BTN_SETTINGS_ICON.contains(mouseX, mouseY);
     drawSettingsIcon(iconHovered);
+}
+
+void UI::drawCharacterDetailsCard(float x, float y, float width, float height,
+                                  const CharacterProfile& profile, const char* roleTag) const {
+    renderer.drawRectAlpha(x + 3.0f, y - 3.0f, width, height, 0.0f, 0.0f, 0.0f, 0.50f);
+    renderer.drawRectAlpha(x, y, width, height, 0.08f, 0.08f, 0.12f, 0.94f);
+    renderer.drawRectOutline(x, y, width, height, 0.55f, 0.50f, 0.35f);
+
+    // Character accent stripe along the left border of the details card
+    renderer.drawRect(x + 2.0f, y + 2.0f, 5.0f, height - 4.0f,
+                      profile.accentR, profile.accentG, profile.accentB);
+
+    char header[64];
+    std::snprintf(header, sizeof(header), "%s  -  %s", profile.name, profile.title);
+    renderer.drawText(x + 14.0f, y + height - 24.0f, header,
+                      profile.accentR, profile.accentG, profile.accentB);
+    renderer.drawTextSmall(x + 14.0f, y + height - 42.0f, roleTag, 0.72f, 0.72f, 0.78f);
+
+    renderer.drawLine(x + 14.0f, y + height - 50.0f, x + width - 12.0f, y + height - 50.0f,
+                      0.55f, 0.45f, 0.25f, 0.65f, 1.0f);
+
+    char lineBuf[128];
+    std::snprintf(lineBuf, sizeof(lineBuf), "Weapon: %s", profile.weaponName);
+    renderer.drawTextSmall(x + 14.0f, y + height - 66.0f, lineBuf, 0.95f, 0.95f, 0.98f);
+
+    std::snprintf(lineBuf, sizeof(lineBuf), "Style: %s", profile.styleName);
+    renderer.drawTextSmall(x + 14.0f, y + height - 84.0f, lineBuf, 0.85f, 0.90f, 1.0f);
+
+    renderer.drawTextSmall(x + 14.0f, y + height - 102.0f, profile.skillDesc, 0.55f, 0.90f, 1.0f);
+
+    std::snprintf(lineBuf, sizeof(lineBuf), "Critical (L): %s", profile.specialName);
+    renderer.drawTextSmall(x + 14.0f, y + height - 122.0f, lineBuf, 1.0f, 0.85f, 0.30f);
+
+    renderer.drawTextSmall(x + 14.0f, y + height - 139.0f, profile.specialDesc, 0.82f, 0.82f, 0.88f);
+
+    renderer.drawLine(x + 14.0f, y + 32.0f, x + width - 12.0f, y + 32.0f,
+                      0.35f, 0.35f, 0.42f, 0.55f, 1.0f);
+    renderer.drawTextSmall(x + 14.0f, y + 13.0f, profile.statsSummary, 0.55f, 0.92f, 0.65f);
+}
+
+void UI::drawCharacterSelect(float mouseX, float mouseY,
+                             CharacterId playerChar, CharacterId enemyChar) const {
+    const float centerX = Config::WORLD_WIDTH / 2.0f;
+
+    renderer.drawOverlay(0.0f, 0.0f, 0.0f, 0.80f);
+
+    renderer.drawTextCentered(centerX, 556.0f, "CHOOSE YOUR FIGHTERS", 1.0f, 1.0f, 1.0f, true);
+    renderer.drawTextCentered(centerX, 530.0f,
+                              "Pick your fighter on the left, then select a different opponent on the right",
+                              1.0f, 0.85f, 0.35f, false);
+    renderer.drawLine(45.0f, 514.0f, 755.0f, 514.0f, 0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
+
+    // Center divider between Your Fighter (left) and Opponent (right)
+    renderer.drawLine(centerX, 86.0f, centerX, 504.0f, 0.55f, 0.48f, 0.28f, 0.55f, 1.5f);
+
+    renderer.drawTextCentered(210.0f, 486.0f, "YOUR FIGHTER", 0.35f, 0.90f, 1.0f, false);
+    renderer.drawTextCentered(590.0f, 486.0f, "OPPONENT", 1.0f, 0.48f, 0.30f, false);
+
+    for (int i = 0; i < Characters::COUNT; i++) {
+        const CharacterProfile& prof = Characters::getByIndex(i);
+        char label[64];
+        std::snprintf(label, sizeof(label), "%s  -  %s", prof.name, prof.title);
+
+        bool pSelected = (i == (int)playerChar);
+        bool pHovered  = UIButtons::BTN_CHAR_PLAYER[i].contains(mouseX, mouseY);
+        drawButton(UIButtons::BTN_CHAR_PLAYER[i], pHovered, pSelected, label, false);
+
+        bool eDisabled = (i == (int)playerChar);
+        bool eSelected = (i == (int)enemyChar) && !eDisabled;
+        bool eHovered  = !eDisabled && UIButtons::BTN_CHAR_OPPONENT[i].contains(mouseX, mouseY);
+        if (eDisabled) {
+            std::snprintf(label, sizeof(label), "%s  (YOUR FIGHTER)", prof.name);
+        }
+        drawButton(UIButtons::BTN_CHAR_OPPONENT[i], eHovered, eSelected, label, eDisabled);
+    }
+
+    drawCharacterDetailsCard(45.0f,  92.0f, 330.0f, 194.0f,
+                             Characters::get(playerChar), "SELECTED AS YOUR FIGHTER");
+    drawCharacterDetailsCard(425.0f, 92.0f, 330.0f, 194.0f,
+                             Characters::get(enemyChar), "SELECTED AS OPPONENT");
+
+    bool hBack = UIButtons::BTN_CHAR_BACK.contains(mouseX, mouseY);
+    bool hNext = UIButtons::BTN_CHAR_NEXT.contains(mouseX, mouseY);
+    drawButton(UIButtons::BTN_CHAR_BACK, hBack);
+    drawButton(UIButtons::BTN_CHAR_NEXT, hNext);
 }
 
 void UI::drawMainMenu(float mouseX, float mouseY, int selectedIndex) const {
@@ -220,32 +318,34 @@ void UI::drawControlsScreen(float mouseX, float mouseY, int selectedIndex) const
     renderer.drawLine(centerX - 160.0f, 480.0f, centerX + 160.0f, 480.0f,
                       0.80f, 0.65f, 0.25f, 0.70f, 1.5f);
 
-    float cardX = 100.0f;
+    float cardX = 80.0f;
     float cardY = 135.0f;
-    float cardW = 600.0f;
-    float cardH = 325.0f;
+    float cardW = 640.0f;
+    float cardH = 335.0f;
 
     renderer.drawRectAlpha(cardX + 4.0f, cardY - 4.0f, cardW, cardH, 0.0f, 0.0f, 0.0f, 0.45f);
     renderer.drawRectAlpha(cardX, cardY, cardW, cardH, 0.08f, 0.08f, 0.12f, 0.90f);
     renderer.drawRectOutline(cardX, cardY, cardW, cardH, 0.45f, 0.45f, 0.52f);
 
-    float startY = 425.0f;
-    float stepY  = 35.0f;
+    float startY = 438.0f;
+    float stepY  = 29.0f;
 
     auto drawRow = [&](int row, const char* key, const char* desc, float kr, float kg, float kb) {
         float ry = startY - row * stepY;
-        renderer.drawText(cardX + 35.0f, ry, key, kr, kg, kb);
-        renderer.drawText(cardX + 220.0f, ry, desc, 0.92f, 0.92f, 0.95f);
+        renderer.drawText(cardX + 30.0f, ry, key, kr, kg, kb);
+        renderer.drawText(cardX + 210.0f, ry, desc, 0.92f, 0.92f, 0.95f);
     };
 
     drawRow(0, "A  /  D", "Move Left and Right", 1.0f, 0.85f, 0.35f);
     drawRow(1, "W  or  SPACE", "Jump (Leap into air / cross over)", 1.0f, 0.85f, 0.35f);
     drawRow(2, "S", "Crouch (Duck under high attacks)", 1.0f, 0.85f, 0.35f);
-    drawRow(3, "J", "Punch / Martial Strike (Fast speed)", 0.35f, 0.85f, 1.0f);
-    drawRow(4, "K", "Kick (Unblockable strike! Jump to evade)", 1.0f, 0.55f, 0.25f);
-    drawRow(5, "L", "Special Dragon Strike (Costs 50 Energy)", 1.0f, 0.85f, 0.20f);
-    drawRow(6, "I", "Block Guard (Hold to absorb incoming damage)", 0.50f, 0.80f, 1.0f);
-    drawRow(7, "P  or  ESC", "Pause Game / In-Fight Settings Menu", 0.80f, 0.80f, 0.80f);
+    drawRow(3, "J  (Tap x3)", "Attack / 3-Hit Martial Combo", 0.35f, 0.85f, 1.0f);
+    drawRow(4, "K / W+K", "Kick (Unblockable) / Air Flying Kick", 1.0f, 0.55f, 0.25f);
+    drawRow(5, "U", "Dodge Roll (Ch 1,3,4 evade Punch/Chain)", 0.45f, 0.95f, 0.70f);
+    drawRow(6, "O", "Long Chain Grab + 2s Stun (Ch 2 Kuro)", 0.35f, 0.82f, 1.0f);
+    drawRow(7, "L", "Character Critical / Special Attack", 1.0f, 0.85f, 0.20f);
+    drawRow(8, "I", "Block Guard (Hold to absorb attacks)", 0.50f, 0.80f, 1.0f);
+    drawRow(9, "P  or  ESC", "Pause Game / In-Fight Settings Menu", 0.80f, 0.80f, 0.80f);
 
     bool hBack = UIButtons::BTN_CTRL_BACK.contains(mouseX, mouseY) || (selectedIndex == 0);
     drawButton(UIButtons::BTN_CTRL_BACK, hBack);

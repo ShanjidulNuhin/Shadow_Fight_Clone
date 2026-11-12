@@ -9,18 +9,15 @@ namespace {
     const float MAX_SPACING   = 110.0f;
     const float SPACING_BAND  = 8.0f;
 
-    // Timing
     const float FIRST_ATTACK_DELAY = 1.5f;
     const float ARRIVAL_PAUSE      = 0.3f;
 
-    // Defending defaults
     const float GUARD_URGE_PER_SECOND = 0.15f;
     const float GUARD_URGE_RANGE      = 125.0f;
     const float MIN_GUARD_TIME   = 0.4f;
     const float MAX_GUARD_TIME   = 1.0f;
     const float NOTICE_MARGIN    = 25.0f;
 
-    // Jumping defaults
     const float APPROACH_JUMP_PER_SECOND = 0.30f;
     const float APPROACH_JUMP_MIN_GAP    = 110.0f;
     const float AIR_DRIFT = 0.8f;
@@ -35,16 +32,14 @@ namespace {
     }
 }
 
-Enemy::Enemy(float startX, float startY)
+Enemy::Enemy(float startX, float startY, CharacterId charId)
     : Fighter(startX, startY, 86.0f, 185.0f),
       difficulty(GameMode::NORMAL),
       aiState(AIState::IDLE), attackCooldown(FIRST_ATTACK_DELAY),
-      preferredGap(85.0f), lastAttack(AttackChoice::NONE),
-      dodgePending(false), dodgeTimer(0.0f), airDrift(0.0f),
+      preferredGap(85.0f), lastAttack(AttackChoice::NONE), pendingComboHits(0),
+      dodgePending(false), dodgeTimer(0.0f), rollPending(false), airDrift(0.0f),
       targetWasAttacking(false), guardPending(false), reactionTimer(0.0f), guardTimer(0.0f) {
-    setRole(FighterRole::ARMORED_SPEARMAN);
-    setColor(0.13f, 0.08f, 0.08f);
-    setAccentColor(0.95f, 0.45f, 0.15f);
+    setCharacter(charId);
     setFacingRight(false);
     setDifficulty(GameMode::NORMAL);
 }
@@ -84,7 +79,7 @@ float Enemy::randomCooldown() const {
     return 1.8f + randomFraction() * 0.8f;
 }
 
-void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
+void Enemy::watchForAttacks(const Fighter& target, float gap, float directionToTarget, float deltaTime) {
     const AttackData* theirAttack = target.getCurrentAttack();
     bool targetIsAttacking = (theirAttack != nullptr);
 
@@ -112,10 +107,20 @@ void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
     if (targetIsAttacking && !targetWasAttacking &&
         gap < theirAttack->reach + NOTICE_MARGIN && canAct()) {
 
-        if (!theirAttack->blockable) {
+        FighterState ts = target.getState();
+        bool isDodgeableRoll = getProfile().hasAcrobaticKit &&
+                               (ts == FighterState::PUNCH || ts == FighterState::COMBO2 ||
+                                ts == FighterState::COMBO3 || ts == FighterState::CHAIN_GRAB);
+
+        if (isDodgeableRoll && !dodgePending && (std::rand() % 100 < dodgeChance)) {
+            dodgePending = true;
+            rollPending  = true;
+            dodgeTimer   = minReact + randomFraction() * (maxReact - minReact);
+        } else if (!theirAttack->blockable) {
             if (!dodgePending && std::rand() % 100 < dodgeChance) {
                 dodgePending = true;
-                dodgeTimer = minDodge + randomFraction() * (maxDodge - minDodge);
+                rollPending  = false;
+                dodgeTimer   = minDodge + randomFraction() * (maxDodge - minDodge);
             }
         } else if (!guardPending && guardTimer <= 0.0f) {
             if (std::rand() % 100 < defendChance) {
@@ -132,8 +137,13 @@ void Enemy::watchForAttacks(const Fighter& target, float gap, float deltaTime) {
             dodgePending = false;
             guardPending = false;
             guardTimer   = 0.0f;
-            airDrift     = 0.0f;
-            jump();
+            if (rollPending) {
+                rollPending = false;
+                startRoll(directionToTarget);
+            } else {
+                airDrift = 0.0f;
+                jump();
+            }
         }
     }
 
@@ -159,25 +169,43 @@ Enemy::AttackChoice Enemy::chooseAttack(const Fighter& target, float gap) const 
     if (isInTheAir(target)) return AttackChoice::NONE;
     int punchWeight   = 0;
     int kickWeight    = 0;
+    int grabWeight    = 0;
     int specialWeight = 0;
-    if (gap < Attacks::PUNCH.reach - REACH_MARGIN) punchWeight = 50;
-    if (gap < Attacks::KICK.reach  - REACH_MARGIN) kickWeight  = 35;
-    if (gap < Attacks::SPECIAL.reach - REACH_MARGIN &&
-        getEnergy() >= Attacks::SPECIAL.energyCost) specialWeight = 15;
+
+    const CharacterProfile& profile = getProfile();
+    if (gap < profile.comboAttacks[0].reach - REACH_MARGIN) punchWeight = 50;
+    if (gap < profile.kickAttack.reach  - REACH_MARGIN) kickWeight  = 35;
+
+    if (canChainGrab() && gap > 95.0f && gap < profile.grabAttack.reach - REACH_MARGIN) {
+        grabWeight = 28;
+    }
+
+    float effectiveSpecialRange = profile.specialAttack.reach - REACH_MARGIN;
+    CharacterId cid = getCharacterId();
+    if (cid == CharacterId::ARCHER || cid == CharacterId::FAN_DANCER || cid == CharacterId::SPEAR_WARRIOR) {
+        effectiveSpecialRange = 460.0f;
+    }
+    if (gap < effectiveSpecialRange && getEnergy() >= profile.specialAttack.energyCost) {
+        specialWeight = 18;
+    }
+
     if (target.getState() == FighterState::CROUCH) {
         punchWeight = 0;
         kickWeight *= 2;
     }
-    if (lastAttack == AttackChoice::PUNCH)   punchWeight   = punchWeight   * 4 / 10;
-    if (lastAttack == AttackChoice::KICK)    kickWeight    = kickWeight    * 4 / 10;
-    if (lastAttack == AttackChoice::SPECIAL) specialWeight = specialWeight * 4 / 10;
+    if (lastAttack == AttackChoice::PUNCH)      punchWeight   = punchWeight   * 4 / 10;
+    if (lastAttack == AttackChoice::KICK)       kickWeight    = kickWeight    * 4 / 10;
+    if (lastAttack == AttackChoice::CHAIN_GRAB) grabWeight    = grabWeight    * 3 / 10;
+    if (lastAttack == AttackChoice::SPECIAL)    specialWeight = specialWeight * 4 / 10;
 
-    int total = punchWeight + kickWeight + specialWeight;
+    int total = punchWeight + kickWeight + grabWeight + specialWeight;
     if (total <= 0) return AttackChoice::NONE;
     int roll = std::rand() % total;
     if (roll < punchWeight) return AttackChoice::PUNCH;
     roll -= punchWeight;
     if (roll < kickWeight)  return AttackChoice::KICK;
+    roll -= kickWeight;
+    if (roll < grabWeight)  return AttackChoice::CHAIN_GRAB;
     return AttackChoice::SPECIAL;
 }
 
@@ -193,7 +221,7 @@ void Enemy::update(const Fighter& target, float deltaTime) {
 
     if (attackCooldown > 0.0f) attackCooldown -= deltaTime;
 
-    watchForAttacks(target, gap, deltaTime);
+    watchForAttacks(target, gap, directionToTarget, deltaTime);
 
     float walkDirection = 0.0f;
 
@@ -203,11 +231,26 @@ void Enemy::update(const Fighter& target, float deltaTime) {
         aiState = AIState::IDLE;
     } else if (getState() == FighterState::HIT) {
         aiState = AIState::HIT;
+        pendingComboHits = 0;
+    } else if (getState() == FighterState::ROLL) {
+        aiState = AIState::IDLE;
     } else if (isAttacking()) {
         aiState = AIState::ATTACK;
+        // Follow through queued 2-hit / 3-hit combos automatically
+        if (pendingComboHits > 0 &&
+            (getState() == FighterState::PUNCH || getState() == FighterState::COMBO2) &&
+            getAttackPhase() == AttackPhase::ACTIVE &&
+            gap < getProfile().comboAttacks[1].reach + 20.0f) {
+            startPunch();
+            pendingComboHits--;
+        }
     } else if (isInTheAir(*this)) {
         aiState = AIState::JUMP;
         walkDirection = airDrift;
+        if (getProfile().hasAcrobaticKit && gap < 115.0f &&
+            me.y > Config::GROUND_HEIGHT + 40.0f && (std::rand() % 100 < 45)) {
+            startKick();
+        }
     } else if (guardTimer > 0.0f) {
         aiState = AIState::DEFEND;
     } else {
@@ -225,9 +268,16 @@ void Enemy::update(const Fighter& target, float deltaTime) {
             } else if (std::rand() % 100 < hesitationChance) {
                 attackCooldown = 0.2f + randomFraction() * 0.4f;
             } else {
-                if (choice == AttackChoice::PUNCH)   startPunch();
-                if (choice == AttackChoice::KICK)    startKick();
-                if (choice == AttackChoice::SPECIAL) startSpecial();
+                if (choice == AttackChoice::PUNCH) {
+                    startPunch();
+                    int comboChance = (difficulty == GameMode::HARD) ? 75 : (difficulty == GameMode::NORMAL ? 55 : 25);
+                    if (std::rand() % 100 < comboChance) {
+                        pendingComboHits = 1 + (std::rand() % 2);
+                    }
+                }
+                if (choice == AttackChoice::KICK)       startKick();
+                if (choice == AttackChoice::CHAIN_GRAB) startChainGrab();
+                if (choice == AttackChoice::SPECIAL)    startSpecial();
 
                 if (isAttacking()) {
                     aiState = AIState::ATTACK;
