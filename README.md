@@ -1,5 +1,3 @@
-<img width="1920" height="1080" alt="Screenshot 2026-11-13 031511" src="https://github.com/user-attachments/assets/85d1d979-1c4a-425d-afba-f7b390d0dad5" /><div align="center">
-
 # 🥷 Shadow Fight: The Shadow Clone
 
 ### A 2D silhouette fighting game built from scratch with **C++** and **OpenGL (freeglut)**
