@@ -223,7 +223,7 @@ Shadow_Fight_Clone/
 - [x] 3 difficulty modes
 - [x] Multiple arenas and lighting themes
 - [x] Menus, pause and best-of-3 rounds
-- [x] 🔊 Sound effects and background music
+- [x] 🔊 Sound effects
 - [ ] 👥 Local 2-player mode
 - [ ] 🥋 Combo system
 - [ ] 🧙 More characters and weapons
