@@ -227,7 +227,7 @@ Shadow_Fight_Clone/
 - [x] 🥋 Combo system
 - [x] 🧙 More characters and weapons
 - [x] 🏆 High-score and stats tracking
-- [ ] 🎮 Gamepad support
+- [x] 🎮 Gamepad support
 - [ ] 👥 Local 2-player mode
 
 ---
