@@ -224,11 +224,11 @@ Shadow_Fight_Clone/
 - [x] Multiple arenas and lighting themes
 - [x] Menus, pause and best-of-3 rounds
 - [x] 🔊 Sound effects
-- [ ] 👥 Local 2-player mode
 - [x] 🥋 Combo system
 - [x] 🧙 More characters and weapons
-- [ ] 🏆 High-score and stats tracking
-- [ ] 🎮 Gamepad support
+- [x] 🏆 High-score and stats tracking
+- [x] 🎮 Gamepad support
+- [ ] 👥 Local 2-player mode
 
 ---
 
