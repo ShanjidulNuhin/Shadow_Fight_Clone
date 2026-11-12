@@ -1,4 +1,4 @@
-<div align="center">
+<img width="1920" height="1080" alt="Screenshot 2026-11-13 031511" src="https://github.com/user-attachments/assets/85d1d979-1c4a-425d-afba-f7b390d0dad5" /><div align="center">
 
 # 🥷 Shadow Fight: The Shadow Clone
 
@@ -42,7 +42,7 @@ This project was built to learn and practice:
 <table>
   <tr>
     <td align="center" width="50%"><b>Round Start</b><br><br>
-      <img src="screenshots/04-round-start.png" alt="Round Start" width="100%">
+      <img src="screenshots/04-round-start.png" alt="Screenshot 2026-11-13 001944">
     </td>
     <td align="center" width="50%"><b>Combat</b><br><br>
       <img src="screenshots/05-gameplay-combat.png" alt="Combat" width="100%">
@@ -63,10 +63,10 @@ This project was built to learn and practice:
 <table>
   <tr>
     <td align="center" width="50%"><b>Kai: Shadow Brawler</b><br><br>
-      <img src="screenshots/02-character-kai.png" alt="Kai" width="100%">
+      <img src="screenshots/02-character-kai.png" alt="Screenshot 2026-11-13 031518" width="100%">
     </td>
     <td align="center" width="50%"><b>Akari: Shadow Archer</b><br><br>
-      <img src="screenshots/03-character-akari.png" alt="Akari" width="100%">
+      <img src="screenshots/03-character-akari.png" alt="Screenshot 2026-11-13 031511" width="100%">
     </td>
   </tr>
 </table>
