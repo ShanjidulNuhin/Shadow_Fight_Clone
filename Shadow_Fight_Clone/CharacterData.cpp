@@ -32,16 +32,7 @@ namespace {
             // Grab (unused)
             { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0.0f, false, 0.0f },
             // Special Critical: Meteor Iron Fist (High-Power Punch)
-            { 0.24f, 0.14f, 0.30f, 140.0f, 85.0f, 80.0f, 35, 820.0f, 0.65f, 50.0f, true, 0.35f },
-            // Skin Tone: Warm sun-kissed golden-tan Asian skin tone
-            0.85f, 0.64f, 0.48f,
-            0.68f, 0.48f, 0.35f,
-            // Clothing: Dark navy martial trousers, bright crimson sash, white hand wraps, black hair, martial slippers
-            0.15f, 0.18f, 0.28f,
-            0.85f, 0.16f, 0.20f,
-            0.94f, 0.92f, 0.88f,
-            0.10f, 0.08f, 0.08f,
-            0.22f, 0.20f, 0.22f
+            { 0.24f, 0.14f, 0.30f, 140.0f, 85.0f, 80.0f, 35, 820.0f, 0.65f, 50.0f, true, 0.35f }
         },
 
         // 1: KURO — Spiked Chain Warrior
@@ -74,16 +65,7 @@ namespace {
             // Long-Distance Chain Grab & Pull + 2.0s Stun (O)
             { 0.14f, 0.18f, 0.26f, 330.0f, 54.0f, 100.0f, 8, 60.0f, 2.00f, 0.0f, true, 0.0f },
             // Special Critical: Electro-Chain Shock
-            { 0.26f, 0.22f, 0.34f, 245.0f, 80.0f, 85.0f, 34, 480.0f, 1.15f, 50.0f, true, 0.35f },
-            // Skin Tone: Athletic ninja olive-tan skin
-            0.80f, 0.62f, 0.50f,
-            0.64f, 0.48f, 0.38f,
-            // Clothing: Stealth shadow charcoal tunic, electric cyan runes, steel chest/pauldrons, dark cowl, combat boots
-            0.14f, 0.16f, 0.20f,
-            0.25f, 0.82f, 0.95f,
-            0.45f, 0.48f, 0.54f,
-            0.08f, 0.08f, 0.10f,
-            0.18f, 0.16f, 0.16f
+            { 0.26f, 0.22f, 0.34f, 245.0f, 80.0f, 85.0f, 34, 480.0f, 1.15f, 50.0f, true, 0.35f }
         },
 
         // 2: AKARI — Female Shadow Archer
@@ -116,16 +98,7 @@ namespace {
             // Grab (unused)
             { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0.0f, false, 0.0f },
             // Special Critical: Back-Roll + Giant Power Arrow
-            { 0.56f, 0.16f, 0.28f, 110.0f, 60.0f, 95.0f, 34, 760.0f, 0.62f, 50.0f, true, 0.30f },
-            // Skin Tone: Smooth, warm fair feminine peach skin tone
-            0.92f, 0.74f, 0.64f,
-            0.78f, 0.58f, 0.48f,
-            // Clothing: Forest hunter green tunic, saddle-brown leather corset, leather bracers, silky raven hair, huntress boots
-            0.18f, 0.38f, 0.24f,
-            0.55f, 0.32f, 0.18f,
-            0.48f, 0.28f, 0.16f,
-            0.12f, 0.09f, 0.10f,
-            0.25f, 0.16f, 0.12f
+            { 0.56f, 0.16f, 0.28f, 110.0f, 60.0f, 95.0f, 34, 760.0f, 0.62f, 50.0f, true, 0.30f }
         },
 
         // 3: MEI-LING — Female Twin Fan Dancer
@@ -158,16 +131,7 @@ namespace {
             // Grab (unused)
             { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0.0f, false, 0.0f },
             // Special Critical: Twin Fan Throw -> Run, Jump, Head-Grab Knee!
-            { 0.12f, 0.85f, 0.25f, 95.0f, 85.0f, 90.0f, 26, 760.0f, 0.65f, 50.0f, true, 0.30f },
-            // Skin Tone: Radiant, delicate porcelain-peach feminine skin tone
-            0.94f, 0.78f, 0.68f,
-            0.82f, 0.62f, 0.52f,
-            // Clothing: Royal silk crimson bodice, lotus pink ribbons, golden hairpins/filigree, jet black buns, silk slippers
-            0.78f, 0.14f, 0.28f,
-            0.95f, 0.42f, 0.60f,
-            0.95f, 0.82f, 0.30f,
-            0.10f, 0.08f, 0.09f,
-            0.72f, 0.14f, 0.25f
+            { 0.12f, 0.85f, 0.25f, 95.0f, 85.0f, 90.0f, 26, 760.0f, 0.65f, 50.0f, true, 0.30f }
         },
 
         // 4: TAKEDA — Pure Spear Warrior
@@ -200,16 +164,7 @@ namespace {
             // Grab (unused)
             { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0.0f, false, 0.0f },
             // Special Critical: Spear Raise + 10 Sky Spears + Main Spear Throw
-            { 0.42f, 1.38f, 0.30f, 130.0f, 65.0f, 90.0f, 16, 860.0f, 0.65f, 50.0f, true, 0.35f },
-            // Skin Tone: Weathered battle-tested warrior bronze skin tone
-            0.76f, 0.58f, 0.44f,
-            0.62f, 0.44f, 0.32f,
-            // Clothing: Lacquered black samurai dou, imperial crimson lacing, gilded gold crest/pauldrons, black helmet, steel greaves
-            0.18f, 0.18f, 0.22f,
-            0.75f, 0.16f, 0.18f,
-            0.92f, 0.78f, 0.24f,
-            0.12f, 0.12f, 0.14f,
-            0.20f, 0.20f, 0.22f
+            { 0.42f, 1.38f, 0.30f, 130.0f, 65.0f, 90.0f, 16, 860.0f, 0.65f, 50.0f, true, 0.35f }
         }
     };
 }
