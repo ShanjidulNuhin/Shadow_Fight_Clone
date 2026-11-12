@@ -1,6 +1,4 @@
-<div align="center">
-
-# 🥷 Shadow Fight Clone
+# 🥷 Shadow Fight: The Shadow Clone
 
 ### A 2D silhouette fighting game built from scratch with **C++** and **OpenGL (freeglut)**
 
@@ -8,45 +6,22 @@
 ![OpenGL](https://img.shields.io/badge/OpenGL-freeglut-5586A4?style=for-the-badge&logo=opengl&logoColor=white)
 ![Code::Blocks](https://img.shields.io/badge/IDE-Code::Blocks-3A8F3A?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Gamepad](https://img.shields.io/badge/Gamepad-XInput-107C10?style=for-the-badge&logo=xbox&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Playable-success?style=for-the-badge)
+
+<br>
+
+<img src="screenshots/01-main-menu.png" alt="Main Menu" width="85%">
 
 </div>
 
 ---
 
-## 📸 Screenshots
-
-<table>
-  <tr>
-    <td align="center" width="50%"><b>Main Menu</b><br><br>
-      <img src="https://github.com/user-attachments/assets/50f6a044-45ef-4265-b788-af96e012d1bf" alt="Main Menu" width="100%">
-    </td>
-    <td align="center" width="50%"><b>Gameplay</b><br><br>
-      <img src="https://github.com/user-attachments/assets/7c84b09f-cad5-493d-9f0b-8458323fec0e" alt="Gameplay" width="100%">
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%"><b>Special Attack</b><br><br>
-      <img src="https://github.com/user-attachments/assets/d49c1a2d-1eb2-4315-b2f7-9106ab1fa541" alt="Special Attack" width="100%">
-    </td>
-    <td align="center" width="50%"><b>End Game</b><br><br>
-      <img src="https://github.com/user-attachments/assets/d1ed80b2-38d2-4d42-9041-ae2d12ec2c4f" alt="End Game" width="100%">
-    </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2"><b>Match Result</b><br><br>
-      <img src="https://github.com/user-attachments/assets/45279dae-e211-4970-865e-f717ef37f59f" alt="Match Result" width="50%">
-    </td>
-  </tr>
-</table>
-
----
-
 ## 📖 About The Project
 
-**Shadow Fight Clone** is a 2D fighting game inspired by the silhouette art style of *Shadow Fight*. You play as a **shadow ninja** and fight against an **armored spearman** controlled by an AI opponent, in a best-of-three match set in Japanese-style arenas.
+**Shadow Fight: The Shadow Clone** is a 2D fighting game inspired by the silhouette art style of *Shadow Fight*. Pick one of **five fighters**, each with their own weapon, combos and signature critical attack, and fight an AI opponent in a best-of-three match across moody, animated Japanese-style arenas.
 
-The whole game, including the characters, the animated backgrounds, the hit sparks and the UI, is drawn using only **OpenGL primitives**. No sprites or textures are used.
+The whole game, including the fighters, the backgrounds, the hit sparks and the UI, is drawn using only **OpenGL primitives**. No sprites or textures are used.
 
 This project was built to learn and practice:
 
@@ -58,14 +33,93 @@ This project was built to learn and practice:
 
 ---
 
+## 📸 Screenshots
+
+### Fighting
+
+<table>
+  <tr>
+    <td align="center" width="50%"><b>Round Start</b><br><br>
+      <img src="screenshots/04-round-start.png" alt="Screenshot 2026-11-13 001944">
+    </td>
+    <td align="center" width="50%"><b>Combat</b><br><br>
+      <img src="screenshots/05-gameplay-combat.png" alt="Combat" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><b>Special Attack</b><br><br>
+      <img src="screenshots/06-special-attack.png" alt="Special Attack" width="100%">
+    </td>
+    <td align="center" width="50%"><b>K.O. Screen</b><br><br>
+      <img src="screenshots/07-ko-screen.png" alt="K.O. Screen" width="100%">
+    </td>
+  </tr>
+</table>
+
+### Characters
+
+<table>
+  <tr>
+    <td align="center" width="50%"><b>Kai: Shadow Brawler</b><br><br>
+      <img src="screenshots/02-character-kai.png" alt="Screenshot 2026-11-13 031518" width="100%">
+    </td>
+    <td align="center" width="50%"><b>Akari: Shadow Archer</b><br><br>
+      <img src="screenshots/03-character-akari.png" alt="Screenshot 2026-11-13 031511" width="100%">
+    </td>
+  </tr>
+</table>
+
+### Menus & Settings
+
+<table>
+  <tr>
+    <td align="center" width="50%"><b>Options</b><br><br>
+      <img src="screenshots/08-options.png" alt="Options" width="100%">
+    </td>
+    <td align="center" width="50%"><b>Game Mode Difficulty</b><br><br>
+      <img src="screenshots/09-game-mode.png" alt="Game Mode" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><b>Keyboard Controls</b><br><br>
+      <img src="screenshots/10-keyboard-controls.png" alt="Keyboard Controls" width="100%">
+    </td>
+    <td align="center" width="50%"><b>Gamepad Controls</b><br><br>
+      <img src="screenshots/11-gamepad-controls.png" alt="Gamepad Controls" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><b>Career Stats & High Scores</b><br><br>
+      <img src="screenshots/12-stats.png" alt="Career Stats" width="70%">
+    </td>
+  </tr>
+</table>
+
+---
+
 ## ✨ Features
 
 ### ⚔️ Combat System
-- **Three attacks**: fast Punch, unblockable Kick and the energy-based **Special Dragon Strike**
 - **Frame-data combat**: every attack has *startup → active → recovery* phases
 - **Hitboxes & hurtboxes** with knockback and hit-stun
+- **3-hit combos** on the punch button
+- **Unblockable kicks**, plus **air kicks** after a jump
+- **Dodge roll** to slip under punches and chain attacks
 - **Blocking and crouching** to defend against attacks
-- **Energy bar** that regenerates over time and is spent on special moves
+- **Energy bar** that regenerates over time and is spent on each fighter's **signature Critical attack** (50 energy)
+- **Run** by holding the sprint key while moving
+
+### 🥷 Playable Fighters
+
+| Fighter | Title | Weapon / Style | HP |
+|:---:|---|---|:---:|
+| **Kai** | Shadow Brawler | Bare fists and feet, 3-hit kung fu combo | 100 |
+| **Kuro** | Chain Reaver | Chains, with a long spiked **Chain Grab** that pulls and stuns | n/a |
+| **Akari** | Shadow Archer | Shadow war bow and arrows, back-roll and aerial kick | 95 |
+| **Mei-Ling** | Fan Dancer | War fans | n/a |
+| **Takeda** | Sky Spearman | Spear | 125 |
+
+Each fighter has a signature Critical attack, for example Kai's **Meteor Iron Fist** (breaks through block) and Akari's **Evade War-Arrow** (back-roll into a giant piercing arrow). The **Characters** screen shows every fighter's abilities, stats and a live avatar with switchable stance.
 
 ### 🤖 Enemy AI
 - AI states: `IDLE`, `APPROACH`, `RETREAT`, `DEFEND`, `JUMP`, `ATTACK`, `HIT`, `DEAD`
@@ -80,45 +134,62 @@ This project was built to learn and practice:
 | 🔴 **Hard** | Fast, aggressive, rarely hesitates | ×1.50 |
 
 ### 🎨 Visuals
-- Hand-drawn **silhouette fighters**: a ninja with a glowing cyan headband vs. an armored spearman
-- **4 lighting themes**: Sunset, Night, Dawn, Twilight
-- **4 arenas**: Temple Peaks, Bamboo Shrine, Castle Roof, Blossom Valley
-- A random theme and arena is picked for each fight
-- **Hit sparks**, dust puffs, shockwave rings and **screen shake**
-- Screen vignette and animated backgrounds
+- Hand-drawn **silhouette fighters** with unique weapons
+- Multiple **lighting themes** (moonlit night, purple dusk and more) and **arenas** (temple, mountain peaks and more), picked per fight
+- **Hit sparks**, dust puffs, shockwave rings, falling petals and **screen shake**
+- Glowing special-attack effects and animated backgrounds
 
-### 🕹️ Game Flow
-- Full menu system: **Main Menu → Options → Controls / Game Mode**
+### 🕹️ Game Flow & Extras
+- Full menu system: **Start Game, Characters, Stats & Records, Options, Exit**
 - **Best of 3 rounds** with round-intro and K.O. screens
-- Pause menu with in-fight settings
-- Mouse and keyboard menu navigation
+- In-fight **HUD**: health, energy, round wins, live score and best score
+- Pause menu with in-fight settings (settings icon in the HUD)
+- **Rebindable controls** for both keyboard and gamepad (click a row to rebind, or reset to defaults)
+- **XInput gamepad support** with auto-detection and full menu navigation
+- 🔊 **Sound effects**
+- 🏆 **Career stats & high scores**: best match score, win/loss record, win streak, rounds record, K.O.s, fastest round win, hits landed, damage dealt and taken, plus per-fighter mastery and win rate
 - Debug hitbox view for development
 
 ---
 
 ## 🎮 Controls
 
+Every binding below can be changed from **Options → Game Controls**.
+
+### ⌨️ Keyboard
+
 | Key | Action | Notes |
 |:---:|---|---|
 | `A` / `D` | Move left / right | |
-| `W` or `Space` | Jump | Also dodges unblockable kicks |
+| `W` or `Space` | Jump | Leap into air / crossover |
 | `S` | Crouch | Duck under high attacks |
-| `J` | Punch | Fast, blockable |
-| `K` | Kick | Slower, stronger, **unblockable** |
-| `L` | Special Dragon Strike | Costs **50 energy**, heavy damage |
+| `Shift` + `A`/`D` | Run | Hold to sprint |
+| `J` | Punch / Combo | Tap ×3 for a 3-hit combo |
+| `K` | Kick / Air Kick | Unblockable, also works as a jump kick |
+| `U` | Dodge Roll | Roll under punches and chain attacks |
+| `O` | Chain Grab | Kuro only: long spiked pull and 2s stun |
 | `I` | Block | Hold to guard |
+| `L` | Critical / Special | Fighter's signature attack, costs 50 energy |
 | `P` / `Esc` | Pause | Opens the in-fight menu |
 | `R` | Restart | After a match ends |
 | `H` | Toggle hitbox debug view | Developer tool |
 | `T` | Restore health and energy | Developer / test tool |
 
-### Attack Stats
+### 🎮 Gamepad (XInput)
 
-| Attack | Damage | Reach | Startup | Hit-stun | Energy | Blockable |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 👊 Punch | 10 | 85 | 0.08s | 0.30s | 0 | ✅ |
-| 🦵 Kick | 15 | 115 | 0.30s | 0.40s | 0 | ❌ |
-| 🐉 Special | 30 | 145 | 0.25s | 0.60s | 50 | ✅ |
+| Input | Action |
+|:---:|---|
+| Left Stick ← / → | Move left / right |
+| Left Stick ↑ | Jump |
+| `A` | Crouch |
+| `LT` + Stick | Run |
+| `X` | Punch / Combo |
+| `Y` | Kick / Air Kick |
+| `B` | Dodge Roll |
+| `LB` | Chain Grab (Kuro) |
+| `RB` | Block |
+| `RT` + `X` | Critical / Special |
+| `Start` | Pause |
 
 ---
 
@@ -165,9 +236,9 @@ Shadow_Fight_Clone/
 ├── Config.h              # World size, physics constants, round rules
 │
 ├── Fighter.h / .cpp      # Base fighter: physics, states, drawing
-├── Player.h / .cpp       # Keyboard-controlled ninja
-├── Enemy.h / .cpp        # AI-controlled armored spearman
-├── AttackData.h          # Frame data for Punch / Kick / Special
+├── Player.h / .cpp       # Player-controlled fighter
+├── Enemy.h / .cpp        # AI-controlled opponent
+├── AttackData.h          # Frame data for attacks
 ├── CombatSystem.h / .cpp # Hit detection and damage resolution
 ├── Collision.h / .cpp    # Rectangle collision helpers
 ├── Animation.h / .cpp    # Animation helpers
@@ -176,8 +247,9 @@ Shadow_Fight_Clone/
 ├── Background.h / .cpp   # Arenas and lighting themes
 ├── Effects.h / .cpp      # Sparks, dust, shockwaves, screen shake
 ├── UI.h / .cpp           # HUD, menus, dialogs
-├── InputManager.h / .cpp # Keyboard state tracking
+├── InputManager.h / .cpp # Keyboard and gamepad state tracking
 │
+├── screenshots/          # Images used in this README
 └── Shadow_Fight_Clone.cbp  # Code::Blocks project file
 ```
 
@@ -213,6 +285,7 @@ Shadow_Fight_Clone/
 | **C++** | Core game logic (OOP) |
 | **OpenGL** | All 2D rendering |
 | **freeglut** | Window, input and main loop |
+| **XInput** | Gamepad support |
 | **Code::Blocks + MinGW** | IDE and compiler |
 
 ---
@@ -225,9 +298,9 @@ Shadow_Fight_Clone/
 - [x] Menus, pause and best-of-3 rounds
 - [x] 🔊 Sound effects
 - [x] 🥋 Combo system
-- [x] 🧙 More characters and weapons
+- [x] 🧙 5 playable characters with unique weapons
 - [x] 🏆 High-score and stats tracking
-- [x] 🎮 Gamepad support
+- [x] 🎮 Gamepad support and rebindable controls
 - [ ] 👥 Local 2-player mode
 
 ---
@@ -257,7 +330,7 @@ CSE Student, American International University-Bangladesh (AIUB)
 
 - Inspired by the art style of the *Shadow Fight* series (this is a fan-made educational project, not affiliated with Nekki)
 - [freeglut](https://freeglut.sourceforge.net/) for the windowing toolkit
-- Built as a learning project at AIUB (edit this line to name your course, if you like)
+- Built as a learning project at AIUB
 
 ---
 
