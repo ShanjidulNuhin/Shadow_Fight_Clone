@@ -1,3 +1,5 @@
+<div align="center">
+
 # 🥷 Shadow Fight: The Shadow Clone
 
 ### A 2D silhouette fighting game built from scratch with **C++** and **OpenGL (freeglut)**
@@ -40,18 +42,18 @@ This project was built to learn and practice:
 <table>
   <tr>
     <td align="center" width="50%"><b>Round Start</b><br><br>
-      <img src="screenshots/04-round-start.png" alt="Screenshot 2026-11-13 001944">
+      <img src="screenshots/07-round-start.png" alt="Round Start" width="100%">
     </td>
     <td align="center" width="50%"><b>Combat</b><br><br>
-      <img src="screenshots/05-gameplay-combat.png" alt="Combat" width="100%">
+      <img src="screenshots/08-gameplay-combat.png" alt="Combat" width="100%">
     </td>
   </tr>
   <tr>
     <td align="center" width="50%"><b>Special Attack</b><br><br>
-      <img src="screenshots/06-special-attack.png" alt="Special Attack" width="100%">
+      <img src="screenshots/09-special-attack.png" alt="Special Attack" width="100%">
     </td>
     <td align="center" width="50%"><b>K.O. Screen</b><br><br>
-      <img src="screenshots/07-ko-screen.png" alt="K.O. Screen" width="100%">
+      <img src="screenshots/10-ko-screen.png" alt="K.O. Screen" width="100%">
     </td>
   </tr>
 </table>
@@ -61,10 +63,23 @@ This project was built to learn and practice:
 <table>
   <tr>
     <td align="center" width="50%"><b>Kai: Shadow Brawler</b><br><br>
-      <img src="screenshots/02-character-kai.png" alt="Screenshot 2026-11-13 031518" width="100%">
+      <img src="screenshots/02-character-kai.png" alt="Kai" width="100%">
     </td>
+    <td align="center" width="50%"><b>Kuro: Chain Reaver</b><br><br>
+      <img src="screenshots/03-character-kuro.png" alt="Kuro" width="100%">
+    </td>
+  </tr>
+  <tr>
     <td align="center" width="50%"><b>Akari: Shadow Archer</b><br><br>
-      <img src="screenshots/03-character-akari.png" alt="Screenshot 2026-11-13 031511" width="100%">
+      <img src="screenshots/04-character-akari.png" alt="Akari" width="100%">
+    </td>
+    <td align="center" width="50%"><b>Mei-Ling: Fan Dancer</b><br><br>
+      <img src="screenshots/05-character-mei-ling.png" alt="Mei-Ling" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><b>Takeda: Sky Spearman</b><br><br>
+      <img src="screenshots/06-character-takeda.png" alt="Takeda" width="50%">
     </td>
   </tr>
 </table>
@@ -74,23 +89,23 @@ This project was built to learn and practice:
 <table>
   <tr>
     <td align="center" width="50%"><b>Options</b><br><br>
-      <img src="screenshots/08-options.png" alt="Options" width="100%">
+      <img src="screenshots/11-options.png" alt="Options" width="100%">
     </td>
     <td align="center" width="50%"><b>Game Mode Difficulty</b><br><br>
-      <img src="screenshots/09-game-mode.png" alt="Game Mode" width="100%">
+      <img src="screenshots/12-game-mode.png" alt="Game Mode" width="100%">
     </td>
   </tr>
   <tr>
     <td align="center" width="50%"><b>Keyboard Controls</b><br><br>
-      <img src="screenshots/10-keyboard-controls.png" alt="Keyboard Controls" width="100%">
+      <img src="screenshots/13-keyboard-controls.png" alt="Keyboard Controls" width="100%">
     </td>
     <td align="center" width="50%"><b>Gamepad Controls</b><br><br>
-      <img src="screenshots/11-gamepad-controls.png" alt="Gamepad Controls" width="100%">
+      <img src="screenshots/14-gamepad-controls.png" alt="Gamepad Controls" width="100%">
     </td>
   </tr>
   <tr>
     <td align="center" colspan="2"><b>Career Stats & High Scores</b><br><br>
-      <img src="screenshots/12-stats.png" alt="Career Stats" width="70%">
+      <img src="screenshots/15-stats.png" alt="Career Stats" width="70%">
     </td>
   </tr>
 </table>
@@ -111,15 +126,23 @@ This project was built to learn and practice:
 
 ### 🥷 Playable Fighters
 
-| Fighter | Title | Weapon / Style | HP |
-|:---:|---|---|:---:|
-| **Kai** | Shadow Brawler | Bare fists and feet, 3-hit kung fu combo | 100 |
-| **Kuro** | Chain Reaver | Chains, with a long spiked **Chain Grab** that pulls and stuns | n/a |
-| **Akari** | Shadow Archer | Shadow war bow and arrows, back-roll and aerial kick | 95 |
-| **Mei-Ling** | Fan Dancer | War fans | n/a |
-| **Takeda** | Sky Spearman | Spear | 125 |
+| Fighter | Title | Weapon | HP | Speed | Signature Critical |
+|:---:|---|---|:---:|:---:|---|
+| **Kai** | Shadow Brawler | Bare fists and feet | 100 | 295 px/s | Meteor Iron Fist |
+| **Kuro** | Chain Reaver | Spiked iron chain | 110 | 260 px/s | Electro-Chain Shock |
+| **Akari** | Shadow Archer | Shadow war bow and arrows | 95 | 355 px/s | Evade War-Arrow |
+| **Mei-Ling** | Fan Dancer | Twin Chinese war fans | 95 | 370 px/s | Fan Rush Knee |
+| **Takeda** | Sky Spearman | Imperial war spear | 125 | 232 px/s | 10-Spear Sky Storm |
 
-Each fighter has a signature Critical attack, for example Kai's **Meteor Iron Fist** (breaks through block) and Akari's **Evade War-Arrow** (back-roll into a giant piercing arrow). The **Characters** screen shows every fighter's abilities, stats and a live avatar with switchable stance.
+Every Critical costs **50 energy**. A few highlights:
+
+- **Kai**: 3-hit unarmed kung fu combo, flying jump-kick, and a Meteor Iron Fist that breaks through block.
+- **Kuro**: Chain Grab hurls a spiked chain across the screen, drags the opponent in and stuns them for 2 seconds. His Electro-Chain Shock ensnares and shocks for massive damage.
+- **Akari**: Tactical back-roll to open sniping range, aerial jump-kick, and a giant piercing war arrow.
+- **Mei-Ling**: Fastest fighter, with a rapid dual-fan flurry and an acrobatic roll. Her Fan Rush Knee hurls fans, dashes in, grabs the enemy's head and slams a knee to the face.
+- **Takeda**: Heaviest and highest-health fighter, using spear attacks only. His 10-Spear Sky Storm calls down 10 iron spears before he throws his main war spear.
+
+The **Characters** screen shows every fighter's abilities and stats with a live avatar and switchable stance.
 
 ### 🤖 Enemy AI
 - AI states: `IDLE`, `APPROACH`, `RETREAT`, `DEFEND`, `JUMP`, `ATTACK`, `HIT`, `DEAD`
