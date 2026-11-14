@@ -488,54 +488,239 @@ void UI::drawCharactersPage(float mouseX, float mouseY, CharacterId selectedChar
 
 
     // =========================================================================
-    // RIGHT CARD: BIG CHARACTER AVATAR SHOWCASE
+    // RIGHT CARD: BRIGHT COMBAT-STYLE SCENIC ARENA BACKDROP & BIG HERO AVATAR
     // =========================================================================
     float rightX = 478.0f;
     float rightY = 70.0f;
     float rightW = 284.0f;
     float rightH = 412.0f;
 
+    // Card Drop Shadow
     renderer.drawRectAlpha(rightX + 4.0f, rightY - 4.0f, rightW, rightH, 0.0f, 0.0f, 0.0f, 0.55f);
-    renderer.drawRectAlpha(rightX, rightY, rightW, rightH, 0.08f, 0.08f, 0.12f, 0.95f);
+
+    float innerX = rightX + 2.0f;
+    float innerY = rightY + 2.0f;
+    float innerW = rightW - 4.0f;
+    float innerH = rightH - 4.0f;
+    float avatarCenterX = rightX + rightW * 0.5f;
+    float avatarGroundY = rightY + 54.0f;
+
+    if (selectedChar == CharacterId::BRAWLER) {
+        // ---------------------------------------------------------------------
+        // 1. KAI: MOUNTAIN DOJO SUNRISE (Bright Golden Sky, Pagoda, Cedar Deck)
+        // ---------------------------------------------------------------------
+        // Bright golden sunrise sky
+        renderer.drawGradientRect(innerX, innerY, innerW, innerH,
+                                  0.96f, 0.56f, 0.22f, 1.0f,   // Warm sunrise horizon
+                                  1.0f,  0.92f, 0.62f, 1.0f);  // Bright golden zenith
+
+        // Rising golden morning sun
+        float sunY = avatarGroundY + 175.0f;
+        renderer.drawCircle(avatarCenterX, sunY, 70.0f, 1.0f, 0.95f, 0.65f, 0.35f, 32);
+        renderer.drawCircle(avatarCenterX, sunY, 52.0f, 1.0f, 0.98f, 0.85f, 0.85f, 28);
+        renderer.drawCircle(avatarCenterX, sunY, 35.0f, 1.0f, 1.0f,  0.95f, 1.0f,  24);
+
+        // Distant mountain peaks
+        renderer.drawTriangle(innerX, avatarGroundY + 80.0f,
+                              innerX + 90.0f, avatarGroundY + 155.0f,
+                              innerX + 170.0f, avatarGroundY + 80.0f,
+                              0.78f, 0.45f, 0.35f, 0.85f);
+        renderer.drawTriangle(innerX + 110.0f, avatarGroundY + 80.0f,
+                              innerX + 195.0f, avatarGroundY + 170.0f,
+                              innerX + innerW, avatarGroundY + 80.0f,
+                              0.72f, 0.40f, 0.32f, 0.85f);
+
+        // Dojo pagoda roof silhouette
+        renderer.drawQuad(innerX + 15.0f, avatarGroundY + 120.0f, innerX + 75.0f, avatarGroundY + 120.0f,
+                          innerX + 68.0f, avatarGroundY + 134.0f, innerX + 22.0f, avatarGroundY + 134.0f,
+                          0.55f, 0.30f, 0.24f);
+        renderer.drawTriangle(innerX + 25.0f, avatarGroundY + 134.0f,
+                              innerX + 65.0f, avatarGroundY + 134.0f,
+                              innerX + 45.0f, avatarGroundY + 152.0f,
+                              0.55f, 0.30f, 0.24f);
+
+        // Warm timber dojo floor dais
+        renderer.drawRect(innerX, innerY, innerW, avatarGroundY - innerY + 4.0f,
+                          0.58f, 0.38f, 0.22f);
+        for (float px = innerX; px < innerX + innerW; px += 28.0f) {
+            renderer.drawLine(px, innerY, px, avatarGroundY + 4.0f, 0.45f, 0.28f, 0.16f, 0.8f, 1.2f);
+        }
+        renderer.drawRect(innerX, avatarGroundY + 2.0f, innerW, 4.0f, 0.96f, 0.80f, 0.25f);
+
+        // Golden chi / sun motes
+        for (int p = 0; p < 6; ++p) {
+            float spT = std::fmod(animTimer * 0.7f + p * 0.35f, 1.6f);
+            float spY = avatarGroundY + spT * 150.0f;
+            float spX = avatarCenterX + std::sin(animTimer * 2.5f + p * 1.8f) * (45.0f + p * 10.0f);
+            renderer.drawCircle(spX, spY, 2.5f, 1.0f, 0.90f, 0.40f, (1.0f - spT / 1.6f) * 0.75f, 8);
+        }
+
+    } else if (selectedChar == CharacterId::CHAIN_WARRIOR) {
+        // ---------------------------------------------------------------------
+        // 2. KURO: AZURE FORTRESS & BRILLIANT FULL MOON (High Contrast Moonlit Night)
+        // ---------------------------------------------------------------------
+        // Luminous azure moonlit night sky
+        renderer.drawGradientRect(innerX, innerY, innerW, innerH,
+                                  0.60f, 0.80f, 1.0f,  1.0f,   // Glowing cyan-silver horizon
+                                  0.18f, 0.36f, 0.64f, 1.0f);  // Royal sapphire zenith
+
+        // Giant brilliant full pearl moon behind Kuro's upper body for maximum silhouette & detail contrast
+        float moonY = avatarGroundY + 165.0f;
+        renderer.drawCircle(avatarCenterX, moonY, 82.0f, 0.65f, 0.85f, 1.0f,  0.40f, 32);
+        renderer.drawCircle(avatarCenterX, moonY, 68.0f, 0.85f, 0.95f, 1.0f,  0.75f, 28);
+        renderer.drawCircle(avatarCenterX, moonY, 56.0f, 0.98f, 0.99f, 1.0f,  1.0f,  24);
+
+        // Castle curved ceramic roof tile silhouette
+        renderer.drawQuad(innerX, avatarGroundY + 70.0f, innerX + innerW, avatarGroundY + 70.0f,
+                          innerX + innerW - 15.0f, avatarGroundY + 105.0f, innerX + 15.0f, avatarGroundY + 105.0f,
+                          0.22f, 0.28f, 0.40f);
+        renderer.drawLine(innerX + 15.0f, avatarGroundY + 105.0f, innerX + innerW - 15.0f, avatarGroundY + 105.0f,
+                          0.80f, 0.92f, 1.0f, 0.95f, 2.0f);
+
+        // Blue-slate fortress stone dais
+        renderer.drawRect(innerX, innerY, innerW, avatarGroundY - innerY + 4.0f,
+                          0.25f, 0.30f, 0.42f);
+        for (float sx = innerX; sx < innerX + innerW; sx += 32.0f) {
+            renderer.drawLine(sx, innerY, sx, avatarGroundY + 4.0f, 0.16f, 0.20f, 0.28f, 0.8f, 1.2f);
+        }
+        renderer.drawRect(innerX, avatarGroundY + 2.0f, innerW, 4.0f, 0.82f, 0.90f, 1.0f);
+
+        // Electric cyan energy sparks
+        for (int p = 0; p < 6; ++p) {
+            float spT = std::fmod(animTimer * 0.9f + p * 0.32f, 1.5f);
+            float spY = avatarGroundY + spT * 140.0f;
+            float spX = avatarCenterX + std::cos(animTimer * 3.2f + p * 1.4f) * (42.0f + p * 8.0f);
+            renderer.drawCircle(spX, spY, 2.2f, 0.40f, 0.92f, 1.0f, (1.0f - spT / 1.5f) * 0.85f, 8);
+        }
+
+    } else if (selectedChar == CharacterId::ARCHER) {
+        // ---------------------------------------------------------------------
+        // 3. AKARI: SUNLIT SACRED BAMBOO GLADE (Champagne & Emerald Sunbeams)
+        // ---------------------------------------------------------------------
+        // Sun-drenched bamboo canopy sky
+        renderer.drawGradientRect(innerX, innerY, innerW, innerH,
+                                  0.52f, 0.86f, 0.38f, 1.0f,   // Sunlit spring green horizon
+                                  0.94f, 0.99f, 0.86f, 1.0f);  // Bright champagne daylight zenith
+
+        // Streaming diagonal sunbeams
+        for (int b = 0; b < 3; ++b) {
+            float bx = innerX + 45.0f + b * 75.0f;
+            renderer.drawLine(bx, innerY + innerH, bx + 55.0f, innerY, 1.0f, 1.0f, 0.85f, 0.32f, 22.0f);
+        }
+
+        // Tall slender bamboo stalks framing the glade
+        const float bambooX[] = { innerX + 16.0f, innerX + 34.0f, innerX + innerW - 34.0f, innerX + innerW - 16.0f };
+        for (int i = 0; i < 4; ++i) {
+            float x = bambooX[i];
+            renderer.drawRect(x - 3.5f, innerY, 7.0f, innerH, 0.42f, 0.72f, 0.32f);
+            for (float ny = innerY + 35.0f; ny < innerY + innerH; ny += 55.0f) {
+                renderer.drawLine(x - 5.5f, ny, x + 5.5f, ny, 0.88f, 0.88f, 0.45f, 0.95f, 2.0f);
+            }
+        }
+
+        // Weathered mossy river stone dais
+        renderer.drawRect(innerX, innerY, innerW, avatarGroundY - innerY + 4.0f,
+                          0.34f, 0.48f, 0.32f);
+        renderer.drawRect(innerX, avatarGroundY + 2.0f, innerW, 4.0f, 0.55f, 0.92f, 0.48f);
+
+        // Fluttering golden-green leaf motes
+        for (int p = 0; p < 6; ++p) {
+            float spT = std::fmod(animTimer * 0.75f + p * 0.4f, 1.8f);
+            float spY = avatarGroundY + spT * 135.0f;
+            float spX = avatarCenterX + std::sin(animTimer * 2.2f + p * 1.9f) * (40.0f + p * 12.0f);
+            renderer.drawCircle(spX, spY, 2.4f, 0.85f, 0.95f, 0.45f, (1.0f - spT / 1.8f) * 0.75f, 8);
+        }
+
+    } else if (selectedChar == CharacterId::FAN_DANCER) {
+        // ---------------------------------------------------------------------
+        // 4. MEI-LING: IMPERIAL LOTUS PALACE COURTYARD (Rose-Coral Sunset & Sakura)
+        // ---------------------------------------------------------------------
+        // Radiant sunset palace sky
+        renderer.drawGradientRect(innerX, innerY, innerW, innerH,
+                                  1.0f, 0.45f, 0.58f, 1.0f,   // Sunset coral horizon
+                                  1.0f, 0.83f, 0.91f, 1.0f);  // Pastel cherry rose zenith
+
+        // Soft sunset sun halo
+        float haloY = avatarGroundY + 160.0f;
+        renderer.drawCircle(avatarCenterX, haloY, 78.0f, 1.0f, 0.92f, 0.80f, 0.35f, 32);
+        renderer.drawCircle(avatarCenterX, haloY, 52.0f, 1.0f, 0.96f, 0.90f, 0.65f, 28);
+
+        // Palace gate curved roof eave
+        renderer.drawQuad(innerX + 20.0f, avatarGroundY + 125.0f, innerX + innerW - 20.0f, avatarGroundY + 125.0f,
+                          innerX + innerW - 35.0f, avatarGroundY + 145.0f, innerX + 35.0f, avatarGroundY + 145.0f,
+                          0.65f, 0.20f, 0.28f);
+        // Hanging imperial lanterns
+        renderer.drawCircle(innerX + 42.0f, avatarGroundY + 115.0f, 7.5f, 1.0f, 0.25f, 0.35f, 0.95f, 12);
+        renderer.drawCircle(innerX + 42.0f, avatarGroundY + 115.0f, 3.5f, 1.0f, 0.90f, 0.40f, 1.0f, 8);
+        renderer.drawCircle(innerX + innerW - 42.0f, avatarGroundY + 115.0f, 7.5f, 1.0f, 0.25f, 0.35f, 0.95f, 12);
+        renderer.drawCircle(innerX + innerW - 42.0f, avatarGroundY + 115.0f, 3.5f, 1.0f, 0.90f, 0.40f, 1.0f, 8);
+
+        // Vermilion lacquered terrace dais with gold trim
+        renderer.drawRect(innerX, innerY, innerW, avatarGroundY - innerY + 4.0f,
+                          0.60f, 0.16f, 0.24f);
+        renderer.drawRect(innerX, avatarGroundY + 2.0f, innerW, 4.0f, 0.98f, 0.84f, 0.28f);
+
+        // Drifting pink sakura blossom petals
+        for (int p = 0; p < 7; ++p) {
+            float spT = std::fmod(animTimer * 0.65f + p * 0.38f, 1.7f);
+            float spY = avatarGroundY + (1.7f - spT) * 120.0f;
+            float spX = avatarCenterX + std::cos(animTimer * 2.8f + p * 1.5f) * (45.0f + p * 10.0f);
+            renderer.drawCircle(spX, spY, 2.6f, 1.0f, 0.72f, 0.82f, (1.0f - spT / 1.7f) * 0.85f, 8);
+        }
+
+    } else {
+        // ---------------------------------------------------------------------
+        // 5. TAKEDA: BLAZING DAWN CITADEL (Amber Sunrise, Battlements & War Banners)
+        // ---------------------------------------------------------------------
+        // Blazing dawn citadel sky
+        renderer.drawGradientRect(innerX, innerY, innerW, innerH,
+                                  0.94f, 0.49f, 0.06f, 1.0f,   // Blazing vermilion horizon
+                                  1.0f,  0.96f, 0.80f, 1.0f);  // Golden dawn zenith
+
+        // Blazing rising sun
+        float sunY = avatarGroundY + 170.0f;
+        renderer.drawCircle(avatarCenterX, sunY, 74.0f, 1.0f, 0.85f, 0.40f, 0.40f, 32);
+        renderer.drawCircle(avatarCenterX, sunY, 54.0f, 1.0f, 0.95f, 0.70f, 0.80f, 28);
+        renderer.drawCircle(avatarCenterX, sunY, 36.0f, 1.0f, 1.0f,  0.92f, 1.0f,  24);
+
+        // Citadel stone battlements crenellations
+        renderer.drawRect(innerX, avatarGroundY + 80.0f, innerW, 26.0f, 0.45f, 0.35f, 0.30f);
+        for (float cx = innerX + 10.0f; cx < innerX + innerW; cx += 38.0f) {
+            renderer.drawRect(cx, avatarGroundY + 106.0f, 22.0f, 16.0f, 0.45f, 0.35f, 0.30f);
+        }
+
+        // Tall samurai war banners (Sashimono) on both flanks
+        renderer.drawLine(innerX + 22.0f, avatarGroundY + 50.0f, innerX + 22.0f, avatarGroundY + 175.0f, 0.28f, 0.20f, 0.16f, 1.0f, 2.5f);
+        renderer.drawRect(innerX + 24.0f, avatarGroundY + 115.0f, 18.0f, 55.0f, 0.65f, 0.16f, 0.16f);
+        renderer.drawLine(innerX + innerW - 22.0f, avatarGroundY + 50.0f, innerX + innerW - 22.0f, avatarGroundY + 175.0f, 0.28f, 0.20f, 0.16f, 1.0f, 2.5f);
+        renderer.drawRect(innerX + innerW - 42.0f, avatarGroundY + 115.0f, 18.0f, 55.0f, 0.65f, 0.16f, 0.16f);
+
+        // Heavy carved granite fortress dais with forged bronze trim
+        renderer.drawRect(innerX, innerY, innerW, avatarGroundY - innerY + 4.0f,
+                          0.38f, 0.32f, 0.28f);
+        renderer.drawRect(innerX, avatarGroundY + 2.0f, innerW, 4.0f, 0.92f, 0.70f, 0.25f);
+
+        // Blazing dawn embers rising
+        for (int p = 0; p < 6; ++p) {
+            float spT = std::fmod(animTimer * 0.85f + p * 0.35f, 1.6f);
+            float spY = avatarGroundY + spT * 145.0f;
+            float spX = avatarCenterX + std::sin(animTimer * 2.8f + p * 1.6f) * (42.0f + p * 10.0f);
+            renderer.drawCircle(spX, spY, 2.4f, 1.0f, 0.75f, 0.25f, (1.0f - spT / 1.6f) * 0.85f, 8);
+        }
+    }
+
+    // Outer card border
     renderer.drawRectOutline(rightX, rightY, rightW, rightH, prof.accentR, prof.accentG, prof.accentB);
 
     // Top Card Label
     renderer.drawText(rightX + 18.0f, rightY + rightH - 26.0f, "HERO AVATAR SHOWCASE",
-                      prof.accentR, prof.accentG, prof.accentB);
-    renderer.drawTextSmall(rightX + rightW - 95.0f, rightY + rightH - 26.0f, "SCALE 1.75X", 0.65f, 0.70f, 0.78f);
+                      1.0f, 1.0f, 1.0f);
+    renderer.drawTextSmall(rightX + rightW - 95.0f, rightY + rightH - 26.0f, "SCALE 1.75X", 0.92f, 0.92f, 0.96f);
     renderer.drawLine(rightX + 16.0f, rightY + rightH - 35.0f, rightX + rightW - 16.0f, rightY + rightH - 35.0f,
-                      prof.accentR * 0.7f, prof.accentG * 0.7f, prof.accentB * 0.7f, 0.65f, 1.2f);
-
-    float avatarCenterX = rightX + rightW * 0.5f;
-    float avatarGroundY = rightY + 54.0f;
-
-    // Atmospheric Halo behind upper body
-    renderer.drawCircle(avatarCenterX, avatarGroundY + 165.0f, 105.0f,
-                        prof.accentR * 0.16f, prof.accentG * 0.16f, prof.accentB * 0.16f, 0.35f, 32);
-    renderer.drawCircleOutline(avatarCenterX, avatarGroundY + 165.0f, 100.0f,
-                               prof.accentR, prof.accentG, prof.accentB, 0.28f, 1.5f, 36);
-    renderer.drawCircleOutline(avatarCenterX, avatarGroundY + 165.0f, 70.0f,
-                               prof.accentR, prof.accentG, prof.accentB, 0.18f, 1.2f, 32);
-
-    // Subtle rising flame/ember sparks
-    for (int p = 0; p < 5; ++p) {
-        float sparkT = std::fmod(animTimer * 0.8f + p * 0.42f, 1.8f);
-        float sparkY = avatarGroundY + sparkT * 120.0f;
-        float sparkX = avatarCenterX + std::sin(animTimer * 3.0f + p * 1.5f) * (35.0f + p * 12.0f);
-        float sparkA = (1.0f - sparkT / 1.8f) * 0.65f;
-        renderer.drawCircle(sparkX, sparkY, 2.2f, prof.accentR, prof.accentG, prof.accentB, sparkA, 8);
-    }
-
-    // Pedestal Floor Dais
-    renderer.drawRectAlpha(avatarCenterX - 110.0f, avatarGroundY - 8.0f, 220.0f, 10.0f,
-                           0.05f, 0.05f, 0.08f, 0.90f);
-    renderer.drawLine(avatarCenterX - 105.0f, avatarGroundY + 2.0f, avatarCenterX + 105.0f, avatarGroundY + 2.0f,
-                      prof.accentR, prof.accentG, prof.accentB, 0.85f, 2.0f);
-    renderer.drawCircleOutline(avatarCenterX, avatarGroundY - 3.0f, 85.0f,
-                               prof.accentR, prof.accentG, prof.accentB, 0.35f, 1.5f, 28);
+                      prof.accentR, prof.accentG, prof.accentB, 0.85f, 1.5f);
 
     // =========================================================================
-    // RENDER BIG HERO AVATAR SILHOUETTE
+    // RENDER BIG HERO AVATAR IN AUTHENTIC HUMAN ATTIRE
     // =========================================================================
     Fighter avatar(0.0f, 0.0f, prof.bodyWidth, prof.bodyHeight);
     avatar.setCharacter(selectedChar);

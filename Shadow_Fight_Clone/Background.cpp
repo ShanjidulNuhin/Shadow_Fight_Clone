@@ -485,6 +485,11 @@ void Background::drawMist(const Renderer& renderer) const {
     renderer.drawGradientRect(drift2 - 160.0f + worldW + 200.0f, groundY + 6.0f + yWobble2, 320.0f, 22.0f,
                               c.mistR, c.mistG, c.mistB, 0.12f,
                               c.mistR * 0.5f, c.mistG * 0.5f, c.mistB * 0.5f, 0.00f);
+
+    // Ambient stage upward illumination gradient so fighters in combat stand out brightly
+    renderer.drawGradientRect(0.0f, groundY, worldW, 150.0f,
+                              c.floorRimR, c.floorRimG, c.floorRimB, 0.22f,
+                              c.floorRimR * 0.4f, c.floorRimG * 0.4f, c.floorRimB * 0.4f, 0.00f);
 }
 
 void Background::drawFloor(const Renderer& renderer) const {

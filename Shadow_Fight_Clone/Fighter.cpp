@@ -72,16 +72,20 @@ namespace {
             float y0 = hand.y + std::sin(a0) * radius;
             float x1 = hand.x + std::cos(a1) * radius;
             float y1 = hand.y + std::sin(a1) * radius;
-            float shade = (i % 2 == 0) ? 0.92f : 0.72f;
-            renderer.drawTriangle(hand.x, hand.y, x0, y0, x1, y1,
-                                  bodyR * shade * 1.4f, bodyG * shade * 1.4f, bodyB * shade * 1.4f);
-            renderer.drawLine(hand.x, hand.y, x0, y0, 0.16f, 0.16f, 0.18f, 0.95f, 1.5f);
+            // Authentic vibrant scarlet silk fan leaf with alternating fold depth
+            float sR = (i % 2 == 0) ? 0.90f : 0.74f;
+            float sG = (i % 2 == 0) ? 0.18f : 0.12f;
+            float sB = (i % 2 == 0) ? 0.30f : 0.20f;
+            renderer.drawTriangle(hand.x, hand.y, x0, y0, x1, y1, sR, sG, sB);
+            // Polished gold-lacquered bamboo rib
+            renderer.drawLine(hand.x, hand.y, x0, y0, 0.96f, 0.80f, 0.25f, 0.95f, 1.8f);
         }
         float aEnd = baseAngle + 0.5f * spreadRad;
         renderer.drawLine(hand.x, hand.y,
                           hand.x + std::cos(aEnd) * radius,
                           hand.y + std::sin(aEnd) * radius,
-                          0.22f, 0.20f, 0.20f, 0.95f, 1.8f);
+                          0.96f, 0.80f, 0.25f, 0.95f, 2.0f);
+        (void)bodyR; (void)bodyG; (void)bodyB; (void)accR; (void)accG; (void)accB;
     }
 
     void drawWeapon(const Renderer& renderer, const Fighter& fighter, WeaponType weapon,
@@ -91,9 +95,10 @@ namespace {
                     float bodyR, float bodyG, float bodyB,
                     float accR, float accG, float accB,
                     bool hideFan1, bool hideFan2, bool hideMainSpear) {
-        float steelR = std::min(1.0f, bodyR + 0.13f);
-        float steelG = std::min(1.0f, bodyG + 0.13f);
-        float steelB = std::min(1.0f, bodyB + 0.15f);
+        float steelR = 0.90f;
+        float steelG = 0.94f;
+        float steelB = 1.0f;
+        (void)bodyR; (void)bodyG; (void)bodyB;
 
         bool isComboStrike = (state == FighterState::PUNCH || state == FighterState::COMBO2 || state == FighterState::COMBO3);
         bool activeSwing = (isComboStrike || state == FighterState::SPECIAL) && (phase == AttackPhase::ACTIVE);
@@ -114,12 +119,12 @@ namespace {
             case WeaponType::NONE_UNARMED: {
                 if (activeSwing) {
                     renderer.drawLine(elbowF.x, elbowF.y, handF.x + ux * 22.0f, handF.y + uy * 22.0f,
-                                      accR, accG, accB, 0.65f, 3.2f);
+                                      accR, accG, accB, 0.75f, 3.5f);
                 }
                 if (state == FighterState::SPECIAL) {
                     float pulse = 18.0f + std::sin(stateTime * 35.0f) * 5.0f;
-                    renderer.drawCircle(handF.x, handF.y, pulse, 1.0f, 0.55f, 0.15f, 0.45f, 16);
-                    renderer.drawCircle(handF.x, handF.y, pulse * 0.55f, 1.0f, 0.92f, 0.45f, 0.85f, 12);
+                    renderer.drawCircle(handF.x, handF.y, pulse, 1.0f, 0.65f, 0.20f, 0.55f, 16);
+                    renderer.drawCircle(handF.x, handF.y, pulse * 0.55f, 1.0f, 0.95f, 0.55f, 0.90f, 12);
                 }
                 break;
             }
@@ -135,19 +140,19 @@ namespace {
                         float t = (float)i / (float)links;
                         float lx = handF.x + (tipX - handF.x) * t;
                         float ly = handF.y + (tipY - handF.y) * t + std::sin(t * 9.0f + stateTime * 20.0f) * 4.0f;
-                        renderer.drawLine(px, py, lx, ly, bodyR, bodyG, bodyB, 0.98f, 3.6f);
-                        if (i % 2 == 0) renderer.drawCircle(lx, ly, 2.8f, steelR, steelG, steelB, 0.90f, 6);
+                        renderer.drawLine(px, py, lx, ly, 0.82f, 0.86f, 0.92f, 0.98f, 3.6f);
+                        if (i % 2 == 0) renderer.drawCircle(lx, ly, 3.0f, steelR, steelG, steelB, 0.95f, 6);
                         px = lx; py = ly;
                     }
-                    renderer.drawCircle(tipX, tipY, 8.5f, bodyR, bodyG, bodyB, 1.0f, 12);
-                    renderer.drawTriangle(tipX, tipY + 6.0f, tipX, tipY - 6.0f, tipX + dir * 16.0f, tipY, steelR, steelG, steelB);
-                    renderer.drawTriangle(tipX - 4.0f, tipY + 5.0f, tipX + 4.0f, tipY + 5.0f, tipX, tipY + 15.0f, bodyR, bodyG, bodyB);
-                    renderer.drawTriangle(tipX - 4.0f, tipY - 5.0f, tipX + 4.0f, tipY - 5.0f, tipX, tipY - 15.0f, bodyR, bodyG, bodyB);
+                    renderer.drawCircle(tipX, tipY, 8.5f, 0.85f, 0.88f, 0.95f, 1.0f, 12);
+                    renderer.drawTriangle(tipX, tipY + 6.0f, tipX, tipY - 6.0f, tipX + dir * 18.0f, tipY, steelR, steelG, steelB);
+                    renderer.drawTriangle(tipX - 4.0f, tipY + 5.0f, tipX + 4.0f, tipY + 5.0f, tipX, tipY + 16.0f, 0.70f, 0.75f, 0.85f);
+                    renderer.drawTriangle(tipX - 4.0f, tipY - 5.0f, tipX + 4.0f, tipY - 5.0f, tipX, tipY - 16.0f, 0.70f, 0.75f, 0.85f);
                 } else if (state == FighterState::SPECIAL) {
                     float ext = (phase == AttackPhase::STARTUP) ? 45.0f : (phase == AttackPhase::ACTIVE ? 215.0f : 70.0f);
                     float tipX = handF.x + dir * ext;
                     float tipY = handF.y + 4.0f;
-                    renderer.drawLine(handF.x, handF.y, tipX, tipY, bodyR, bodyG, bodyB, 1.0f, 3.8f);
+                    renderer.drawLine(handF.x, handF.y, tipX, tipY, 0.82f, 0.86f, 0.92f, 1.0f, 3.8f);
                     drawLightningBolt(renderer, handF.x, handF.y, tipX, tipY, stateTime, 12.0f, 0.35f, 0.92f, 1.0f, 2.8f);
                     drawLightningBolt(renderer, handF.x, handF.y, tipX, tipY, stateTime + 1.7f, 8.0f, 0.95f, 1.0f, 1.0f, 1.6f);
                     renderer.drawCircle(tipX, tipY, 9.5f, 0.35f, 0.90f, 1.0f, 0.95f, 12);
@@ -159,7 +164,7 @@ namespace {
                     }
                     float tipX = handF.x + ux * chainLen;
                     float tipY = handF.y + uy * chainLen;
-                    // Serrated/spiked curved chain blade silhouette like reference weapon
+                    // Forged steel chain links with razor spikes
                     for (int i = 0; i < 7; ++i) {
                         float t0 = (float)i / 7.0f;
                         float t1 = (float)(i + 1) / 7.0f;
@@ -167,32 +172,36 @@ namespace {
                         float ay = handF.y + uy * chainLen * t0;
                         float bx = handF.x + ux * chainLen * t1;
                         float by = handF.y + uy * chainLen * t1;
-                        renderer.drawLine(ax, ay, bx, by, bodyR, bodyG, bodyB, 1.0f, (i % 2 == 0) ? 4.2f : 2.8f);
+                        renderer.drawLine(ax, ay, bx, by, 0.80f, 0.84f, 0.90f, 1.0f, (i % 2 == 0) ? 4.2f : 2.8f);
                         if (i >= 2) {
                             float spX = bx - uy * 6.5f * dir;
                             float spY = by + ux * 6.5f * dir;
-                            renderer.drawTriangle(ax, ay, bx, by, spX, spY, bodyR, bodyG, bodyB);
+                            renderer.drawTriangle(ax, ay, bx, by, spX, spY, steelR, steelG, steelB);
                         }
                     }
-                    renderer.drawCircle(tipX, tipY, 6.8f, bodyR, bodyG, bodyB, 1.0f, 10);
+                    renderer.drawCircle(tipX, tipY, 7.2f, steelR, steelG, steelB, 1.0f, 10);
                     renderer.drawTriangle(tipX - 3.0f, tipY + 4.0f, tipX + 3.0f, tipY + 4.0f,
-                                          tipX + ux * 12.0f, tipY + uy * 12.0f, bodyR, bodyG, bodyB);
+                                          tipX + ux * 13.0f, tipY + uy * 13.0f, steelR, steelG, steelB);
                     if (activeSwing) {
-                        renderer.drawLine(handF.x, handF.y, tipX + ux * 20.0f, tipY + uy * 20.0f, accR, accG, accB, 0.65f, 3.0f);
+                        renderer.drawLine(handF.x, handF.y, tipX + ux * 20.0f, tipY + uy * 20.0f, accR, accG, accB, 0.70f, 3.2f);
                     }
                 }
                 break;
             }
 
             case WeaponType::WAR_BOW: {
-                // Quiver on back in deep shadow silhouette
+                // Quiver on back in rich brown leather
                 renderer.drawQuad(chest.x - dir * 10.0f, chest.y + 10.0f,
                                   chest.x - dir * 4.0f,  chest.y + 8.0f,
                                   chest.x - dir * 12.0f, chest.y - 16.0f,
                                   chest.x - dir * 18.0f, chest.y - 14.0f,
-                                  bodyR, bodyG, bodyB);
-                renderer.drawLine(chest.x - dir * 9.0f, chest.y + 10.0f, chest.x - dir * 13.0f, chest.y + 21.0f, bodyR, bodyG, bodyB, 1.0f, 2.2f);
-                renderer.drawLine(chest.x - dir * 6.0f, chest.y + 9.0f,  chest.x - dir * 8.0f,  chest.y + 20.0f, steelR, steelG, steelB, 1.0f, 2.0f);
+                                  0.42f, 0.26f, 0.16f);
+                // Quiver strap
+                renderer.drawLine(chest.x - dir * 10.0f, chest.y + 10.0f, chest.x + dir * 6.0f, chest.y - 10.0f,
+                                  0.32f, 0.18f, 0.12f, 0.95f, 2.0f);
+                // Arrows visible in quiver with white feather fletchings
+                renderer.drawLine(chest.x - dir * 9.0f, chest.y + 10.0f, chest.x - dir * 13.0f, chest.y + 22.0f, 0.95f, 0.95f, 0.98f, 1.0f, 2.4f);
+                renderer.drawLine(chest.x - dir * 6.0f, chest.y + 9.0f,  chest.x - dir * 8.0f,  chest.y + 21.0f, 0.95f, 0.95f, 0.98f, 1.0f, 2.2f);
 
                 float bowX = handF.x + dir * 3.0f;
                 float bowY = handF.y;
@@ -201,23 +210,29 @@ namespace {
                 float midBotX = bowX + dir * 7.0f, midBotY = bowY - 16.0f;
                 float botX = bowX - dir * 10.0f, botY = bowY - 32.0f;
 
-                renderer.drawLine(topX, topY, midTopX, midTopY, bodyR, bodyG, bodyB, 1.0f, 3.4f);
-                renderer.drawLine(midTopX, midTopY, midBotX, midBotY, steelR, steelG, steelB, 1.0f, 3.8f);
-                renderer.drawLine(midBotX, midBotY, botX, botY, bodyR, bodyG, bodyB, 1.0f, 3.4f);
+                // Seasoned yew wood recurve bow limbs with brass tips
+                renderer.drawLine(topX, topY, midTopX, midTopY, 0.58f, 0.35f, 0.18f, 1.0f, 3.6f);
+                renderer.drawLine(midTopX, midTopY, midBotX, midBotY, 0.48f, 0.28f, 0.14f, 1.0f, 4.0f);
+                renderer.drawLine(midBotX, midBotY, botX, botY, 0.58f, 0.35f, 0.18f, 1.0f, 3.6f);
+                // Brass nocks
+                renderer.drawCircle(topX, topY, 2.5f, 0.92f, 0.78f, 0.25f, 1.0f, 6);
+                renderer.drawCircle(botX, botY, 2.5f, 0.92f, 0.78f, 0.25f, 1.0f, 6);
 
                 bool drawingBow = (state == FighterState::COMBO3) || (state == FighterState::SPECIAL && stateTime >= 0.34f && stateTime < 0.60f);
                 float stringPullX = drawingBow ? (handB.x) : (topX);
                 float stringPullY = bowY;
-                renderer.drawLine(topX, topY, stringPullX, stringPullY, 0.35f, 0.35f, 0.38f, 0.85f, 1.2f);
-                renderer.drawLine(stringPullX, stringPullY, botX, botY, 0.35f, 0.35f, 0.38f, 0.85f, 1.2f);
+                // Silver tension bowstring
+                renderer.drawLine(topX, topY, stringPullX, stringPullY, 0.90f, 0.92f, 0.96f, 0.90f, 1.4f);
+                renderer.drawLine(stringPullX, stringPullY, botX, botY, 0.90f, 0.92f, 0.96f, 0.90f, 1.4f);
                 if (drawingBow) {
-                    renderer.drawLine(stringPullX, stringPullY, bowX + dir * 32.0f, bowY, accR, accG, accB, 1.0f, 2.6f);
+                    // War arrow nocked & drawn
+                    renderer.drawLine(stringPullX, stringPullY, bowX + dir * 32.0f, bowY, 0.65f, 0.45f, 0.25f, 1.0f, 2.6f);
                     renderer.drawTriangle(bowX + dir * 28.0f, bowY + 4.0f,
                                           bowX + dir * 28.0f, bowY - 4.0f,
-                                          bowX + dir * 39.0f, bowY, 1.0f, 0.95f, 0.65f);
+                                          bowX + dir * 40.0f, bowY, steelR, steelG, steelB);
                 }
                 if (activeSwing && state != FighterState::SPECIAL) {
-                    renderer.drawLine(handF.x, handF.y, handF.x + ux * 28.0f, handF.y + uy * 28.0f, accR, accG, accB, 0.65f, 2.8f);
+                    renderer.drawLine(handF.x, handF.y, handF.x + ux * 28.0f, handF.y + uy * 28.0f, accR, accG, accB, 0.70f, 3.0f);
                 }
                 break;
             }
@@ -226,15 +241,15 @@ namespace {
                 if (!hideFan1) {
                     float fRadius = (activeSwing || state == FighterState::IDLE) ? 24.0f : 19.0f;
                     float fSpread = activeSwing ? 1.50f : 1.15f;
-                    drawOpenFan(renderer, handF, ux, uy, fRadius, fSpread, bodyR, bodyG, bodyB, accR, accG, accB);
+                    drawOpenFan(renderer, handF, ux, uy, fRadius, fSpread, 0.9f, 0.2f, 0.3f, accR, accG, accB);
                     if (activeSwing) {
-                        renderer.drawLine(handF.x, handF.y, handF.x + ux * 28.0f, handF.y + uy * 28.0f, accR, accG, accB, 0.70f, 2.8f);
+                        renderer.drawLine(handF.x, handF.y, handF.x + ux * 28.0f, handF.y + uy * 28.0f, accR, accG, accB, 0.75f, 3.0f);
                     }
                 }
                 if (!hideFan2) {
                     float bx = -dir * 0.45f;
                     float by = -0.88f;
-                    drawOpenFan(renderer, handB, bx, by, 19.0f, 1.05f, bodyR, bodyG, bodyB, accR * 0.8f, accG * 0.8f, accB * 0.8f);
+                    drawOpenFan(renderer, handB, bx, by, 19.0f, 1.05f, 0.9f, 0.2f, 0.3f, accR * 0.8f, accG * 0.8f, accB * 0.8f);
                 }
                 break;
             }
@@ -263,7 +278,7 @@ namespace {
                     uy = 0.04f;
                 } else if (state == FighterState::IDLE || state == FighterState::WALK) {
                     ux = dir * 0.88f;
-                    uy = -0.47f; // Natural downward-forward warrior spear angle like reference image
+                    uy = -0.47f; // Downward-forward warrior spear angle
                 }
                 nx = -uy; ny = ux;
 
@@ -278,11 +293,20 @@ namespace {
                 float tipX = anchorX + ux * 84.0f;
                 float tipY = anchorY + uy * 84.0f;
 
-                renderer.drawLine(tailX, tailY, headBaseX, headBaseY, bodyR, bodyG, bodyB, 1.0f, 4.5f);
-                renderer.drawTriangle(headBaseX + nx * 5.5f, headBaseY + ny * 5.5f,
-                                      headBaseX - nx * 5.5f, headBaseY - ny * 5.5f,
-                                      tipX, tipY, bodyR, bodyG, bodyB);
-                renderer.drawLine(headBaseX, headBaseY, tipX, tipY, steelR, steelG, steelB, 0.95f, 1.6f);
+                // Dark polished hardwood spear shaft
+                renderer.drawLine(tailX, tailY, headBaseX, headBaseY, 0.48f, 0.28f, 0.15f, 1.0f, 4.6f);
+                // Brass collar at spearhead base
+                renderer.drawCircle(headBaseX, headBaseY, 4.2f, 0.92f, 0.78f, 0.25f, 1.0f, 8);
+                // Crimson silk horsehair tassel
+                renderer.drawTriangle(headBaseX, headBaseY,
+                                      headBaseX - nx * 4.5f - ux * 8.0f, headBaseY - ny * 4.5f - uy * 8.0f,
+                                      headBaseX + nx * 4.5f - ux * 8.0f, headBaseY + ny * 4.5f - uy * 8.0f,
+                                      0.92f, 0.18f, 0.22f);
+                // Forged mirror steel blade
+                renderer.drawTriangle(headBaseX + nx * 5.8f, headBaseY + ny * 5.8f,
+                                      headBaseX - nx * 5.8f, headBaseY - ny * 5.8f,
+                                      tipX, tipY, steelR, steelG, steelB);
+                renderer.drawLine(headBaseX, headBaseY, tipX, tipY, 1.0f, 1.0f, 1.0f, 0.95f, 1.8f);
 
                 if (state == FighterState::SPECIAL && stateTime < 1.38f) {
                     float glow = 16.0f + std::sin(stateTime * 30.0f) * 5.0f;
@@ -392,8 +416,276 @@ namespace {
         };
     }
 
+    // =========================================================================
+    // REAL HUMAN CHARACTER APPEARANCE, CLOTHING, FACIAL FEATURES & SKIN TONES
+    // =========================================================================
+    struct CharacterAppearance {
+        // Human Skin Tone
+        float skinR, skinG, skinB;
+        float skinShadowR, skinShadowG, skinShadowB;
+        bool  isFemale;
+        bool  isHeavyWarrior;
+
+        // Eyes & Facial Features
+        float eyeWhiteR, eyeWhiteG, eyeWhiteB;
+        float irisR, irisG, irisB;
+        float pupilR, pupilG, pupilB;
+        float browR, browG, browB;
+        bool  hasLips;
+        float lipR, lipG, lipB;
+        bool  hasNinjaMask;
+        float maskR, maskG, maskB;
+        bool  hasKabuto;
+        float helmR, helmG, helmB;
+        float crestR, crestG, crestB;
+
+        // Hair & Headbands / Accessories
+        float hairR, hairG, hairB;
+        float ribbonR, ribbonG, ribbonB;
+        float pinR, pinG, pinB;
+
+        // Torso / Clothing
+        bool  bareChest;
+        float chestR, chestG, chestB;
+        float chestShadowR, chestShadowG, chestShadowB;
+        float chestTrimR, chestTrimG, chestTrimB;
+        float sashR, sashG, sashB;
+        float sashTrimR, sashTrimG, sashTrimB;
+
+        // Arms & Hands
+        bool  bareUpperArm;
+        float sleeveR, sleeveG, sleeveB;
+        bool  hasBracer;
+        float bracerR, bracerG, bracerB;
+        bool  hasHandWraps;
+        float wrapR, wrapG, wrapB;
+        float gloveR, gloveG, gloveB;
+        bool  hasGauntlet;
+        float gauntletR, gauntletG, gauntletB;
+
+        // Legs & Footwear
+        float pantsR, pantsG, pantsB;
+        float pantsShadowR, pantsShadowG, pantsShadowB;
+        bool  hasGreaves;
+        float greaveR, greaveG, greaveB;
+        float bootR, bootG, bootB;
+        float bootSoleR, bootSoleG, bootSoleB;
+        float bootTrimR, bootTrimG, bootTrimB;
+    };
+
+    CharacterAppearance getCharacterAppearance(CharacterId charId) {
+        CharacterAppearance a = {};
+        a.eyeWhiteR = 0.98f; a.eyeWhiteG = 0.98f; a.eyeWhiteB = 1.0f;
+        a.pupilR = 0.04f; a.pupilG = 0.04f; a.pupilB = 0.05f;
+
+        switch (charId) {
+            case CharacterId::BRAWLER: { // Kai - Agile Martial Monk / Street Brawler
+                a.isFemale = false; a.isHeavyWarrior = false;
+                a.skinR = 0.88f; a.skinG = 0.69f; a.skinB = 0.53f;
+                a.skinShadowR = 0.74f; a.skinShadowG = 0.55f; a.skinShadowB = 0.40f;
+                a.irisR = 0.28f; a.irisG = 0.17f; a.irisB = 0.10f;
+                a.browR = 0.14f; a.browG = 0.12f; a.browB = 0.10f;
+                a.hasLips = false; a.lipR = 0.78f; a.lipG = 0.52f; a.lipB = 0.44f;
+                a.hasNinjaMask = false; a.hasKabuto = false;
+
+                a.hairR = 0.12f; a.hairG = 0.12f; a.hairB = 0.14f;
+                a.ribbonR = 0.18f; a.ribbonG = 0.20f; a.ribbonB = 0.25f;
+
+                a.bareChest = true; // Bare muscular chest and six-pack abs!
+                a.chestR = a.skinR; a.chestG = a.skinG; a.chestB = a.skinB;
+                a.chestShadowR = a.skinShadowR; a.chestShadowG = a.skinShadowG; a.chestShadowB = a.skinShadowB;
+                a.chestTrimR = 0.20f; a.chestTrimG = 0.85f; a.chestTrimB = 0.95f;
+
+                a.sashR = 0.15f; a.sashG = 0.82f; a.sashB = 0.95f;
+                a.sashTrimR = 0.40f; a.sashTrimG = 0.92f; a.sashTrimB = 1.0f;
+
+                a.bareUpperArm = true;
+                a.sleeveR = a.skinR; a.sleeveG = a.skinG; a.sleeveB = a.skinB;
+                a.hasBracer = false;
+                a.hasHandWraps = true;
+                a.wrapR = 0.94f; a.wrapG = 0.94f; a.wrapB = 0.96f;
+                a.gloveR = a.wrapR; a.gloveG = a.wrapG; a.gloveB = a.wrapB;
+                a.hasGauntlet = false;
+
+                a.pantsR = 0.20f; a.pantsG = 0.22f; a.pantsB = 0.28f;
+                a.pantsShadowR = 0.14f; a.pantsShadowG = 0.15f; a.pantsShadowB = 0.20f;
+                a.hasGreaves = false;
+
+                a.bootR = 0.12f; a.bootG = 0.12f; a.bootB = 0.14f;
+                a.bootSoleR = 0.88f; a.bootSoleG = 0.88f; a.bootSoleB = 0.90f;
+                a.bootTrimR = a.wrapR; a.bootTrimG = a.wrapG; a.bootTrimB = a.wrapB;
+                break;
+            }
+
+            case CharacterId::CHAIN_WARRIOR: { // Kuro - Spiked Chain Ninja
+                a.isFemale = false; a.isHeavyWarrior = false;
+                a.skinR = 0.84f; a.skinG = 0.69f; a.skinB = 0.59f;
+                a.skinShadowR = 0.68f; a.skinShadowG = 0.53f; a.skinShadowB = 0.43f;
+                a.irisR = 0.45f; a.irisG = 0.85f; a.irisB = 1.0f; // Piercing cyan ninja eyes
+                a.browR = 0.10f; a.browG = 0.10f; a.browB = 0.12f;
+                a.hasLips = false; a.hasNinjaMask = true;
+                a.maskR = 0.16f; a.maskG = 0.17f; a.maskB = 0.22f;
+                a.hasKabuto = false;
+
+                a.hairR = 0.14f; a.hairG = 0.15f; a.hairB = 0.19f;
+                a.ribbonR = 0.52f; a.ribbonG = 0.58f; a.ribbonB = 0.68f;
+
+                a.bareChest = false;
+                a.chestR = 0.18f; a.chestG = 0.20f; a.chestB = 0.26f;
+                a.chestShadowR = 0.12f; a.chestShadowG = 0.13f; a.chestShadowB = 0.18f;
+                a.chestTrimR = 0.48f; a.chestTrimG = 0.54f; a.chestTrimB = 0.64f; // Steel chest plate
+
+                a.sashR = 0.22f; a.sashG = 0.22f; a.sashB = 0.26f;
+                a.sashTrimR = 0.80f; a.sashTrimG = 0.84f; a.sashTrimB = 0.90f;
+
+                a.bareUpperArm = false;
+                a.sleeveR = 0.18f; a.sleeveG = 0.20f; a.sleeveB = 0.26f;
+                a.hasBracer = false; a.hasHandWraps = false;
+                a.gloveR = 0.16f; a.gloveG = 0.17f; a.gloveB = 0.20f;
+                a.hasGauntlet = true;
+                a.gauntletR = 0.50f; a.gauntletG = 0.56f; a.gauntletB = 0.66f;
+
+                a.pantsR = 0.16f; a.pantsG = 0.17f; a.pantsB = 0.22f;
+                a.pantsShadowR = 0.11f; a.pantsShadowG = 0.12f; a.pantsShadowB = 0.16f;
+                a.hasGreaves = false;
+
+                a.bootR = 0.14f; a.bootG = 0.14f; a.bootB = 0.18f;
+                a.bootSoleR = 0.28f; a.bootSoleG = 0.28f; a.bootSoleB = 0.32f;
+                a.bootTrimR = 0.32f; a.bootTrimG = 0.34f; a.bootTrimB = 0.40f;
+                break;
+            }
+
+            case CharacterId::ARCHER: { // Akari - Female Kyudo Archer
+                a.isFemale = true; a.isHeavyWarrior = false;
+                a.skinR = 0.93f; a.skinG = 0.79f; a.skinB = 0.69f;
+                a.skinShadowR = 0.80f; a.skinShadowG = 0.65f; a.skinShadowB = 0.55f;
+                a.irisR = 0.28f; a.irisG = 0.58f; a.irisB = 0.36f; // Hazel-emerald eyes
+                a.browR = 0.22f; a.browG = 0.15f; a.browB = 0.10f;
+                a.hasLips = true;
+                a.lipR = 0.90f; a.lipG = 0.40f; a.lipB = 0.46f; // Soft rosy feminine lips
+                a.hasNinjaMask = false; a.hasKabuto = false;
+
+                a.hairR = 0.24f; a.hairG = 0.14f; a.hairB = 0.08f; // Dark chestnut brunette
+                a.ribbonR = 0.92f; a.ribbonG = 0.22f; a.ribbonB = 0.22f; // Crimson ribbon
+
+                a.bareChest = false;
+                a.chestR = 0.22f; a.chestG = 0.44f; a.chestB = 0.28f; // Forest green leather tunic
+                a.chestShadowR = 0.16f; a.chestShadowG = 0.30f; a.chestShadowB = 0.18f;
+                a.chestTrimR = 0.90f; a.chestTrimG = 0.72f; a.chestTrimB = 0.25f; // Golden-amber trim
+
+                a.sashR = 0.85f; a.sashG = 0.65f; a.sashB = 0.20f;
+                a.sashTrimR = 0.95f; a.sashTrimG = 0.85f; a.sashTrimB = 0.30f;
+
+                a.bareUpperArm = true; // Slender fair feminine arms
+                a.sleeveR = a.skinR; a.sleeveG = a.skinG; a.sleeveB = a.skinB;
+                a.hasBracer = true; // Brown leather archer's armguard
+                a.bracerR = 0.42f; a.bracerG = 0.26f; a.bracerB = 0.16f;
+                a.hasHandWraps = false;
+                a.gloveR = a.skinR; a.gloveG = a.skinG; a.gloveB = a.skinB;
+                a.hasGauntlet = false;
+
+                a.pantsR = 0.18f; a.pantsG = 0.17f; a.pantsB = 0.21f; // Fitted dark hunting leggings
+                a.pantsShadowR = 0.12f; a.pantsShadowG = 0.12f; a.pantsShadowB = 0.15f;
+                a.hasGreaves = false;
+
+                a.bootR = 0.38f; a.bootG = 0.24f; a.bootB = 0.16f; // Tall leather ranger boots
+                a.bootSoleR = 0.18f; a.bootSoleG = 0.14f; a.bootSoleB = 0.10f;
+                a.bootTrimR = 0.88f; a.bootTrimG = 0.72f; a.bootTrimB = 0.30f;
+                break;
+            }
+
+            case CharacterId::FAN_DANCER: { // Mei-Ling - Female Fan Dancer
+                a.isFemale = true; a.isHeavyWarrior = false;
+                a.skinR = 0.96f; a.skinG = 0.82f; a.skinB = 0.75f;
+                a.skinShadowR = 0.85f; a.skinShadowG = 0.70f; a.skinShadowB = 0.62f;
+                a.irisR = 0.22f; a.irisG = 0.16f; a.irisB = 0.16f; // Almond dark eyes
+                a.browR = 0.14f; a.browG = 0.12f; a.browB = 0.14f;
+                a.hasLips = true;
+                a.lipR = 0.94f; a.lipG = 0.22f; a.lipB = 0.36f; // Vibrant rose-crimson lips
+                a.hasNinjaMask = false; a.hasKabuto = false;
+
+                a.hairR = 0.10f; a.hairG = 0.10f; a.hairB = 0.12f; // Jet black twin odango buns
+                a.pinR = 0.98f; a.pinG = 0.82f; a.pinB = 0.25f; // Gold floral hairpins
+                a.ribbonR = 0.85f; a.ribbonG = 0.22f; a.ribbonB = 0.35f;
+
+                a.bareChest = false;
+                a.chestR = 0.84f; a.chestG = 0.18f; a.chestB = 0.32f; // Imperial rose cheongsam
+                a.chestShadowR = 0.65f; a.chestShadowG = 0.12f; a.chestShadowB = 0.22f;
+                a.chestTrimR = 0.98f; a.chestTrimG = 0.84f; a.chestTrimB = 0.28f; // Gold lotus embroidery trim
+
+                a.sashR = 0.95f; a.sashG = 0.78f; a.sashB = 0.22f;
+                a.sashTrimR = 0.98f; a.sashTrimG = 0.88f; a.sashTrimB = 0.40f;
+
+                a.bareUpperArm = true;
+                a.sleeveR = a.skinR; a.sleeveG = a.skinG; a.sleeveB = a.skinB;
+                a.hasBracer = false; a.hasHandWraps = false;
+                a.gloveR = a.skinR; a.gloveG = a.skinG; a.gloveB = a.skinB;
+                a.hasGauntlet = false;
+
+                a.pantsR = 0.18f; a.pantsG = 0.15f; a.pantsB = 0.20f; // Midnight silk leggings
+                a.pantsShadowR = 0.12f; a.pantsShadowG = 0.10f; a.pantsShadowB = 0.14f;
+                a.hasGreaves = false;
+
+                a.bootR = 0.72f; a.bootG = 0.16f; a.bootB = 0.28f; // Rose silk martial boots
+                a.bootSoleR = 0.25f; a.bootSoleG = 0.15f; a.bootSoleB = 0.18f;
+                a.bootTrimR = 0.98f; a.bootTrimG = 0.82f; a.bootTrimB = 0.25f;
+                break;
+            }
+
+            case CharacterId::SPEAR_WARRIOR: { // Takeda - Colossus Spear Samurai
+                a.isFemale = false; a.isHeavyWarrior = true;
+                a.skinR = 0.80f; a.skinG = 0.64f; a.skinB = 0.50f;
+                a.skinShadowR = 0.66f; a.skinShadowG = 0.50f; a.skinShadowB = 0.38f;
+                a.irisR = 0.24f; a.irisG = 0.17f; a.irisB = 0.12f;
+                a.browR = 0.15f; a.browG = 0.12f; a.browB = 0.10f;
+                a.hasLips = false; a.hasNinjaMask = false;
+                a.hasKabuto = true;
+                a.helmR = 0.20f; a.helmG = 0.20f; a.helmB = 0.24f; // Iron kabuto helmet
+                a.crestR = 0.96f; a.crestG = 0.80f; a.crestB = 0.22f; // Golden crescent moon
+
+                a.hairR = 0.12f; a.hairG = 0.12f; a.hairB = 0.14f;
+
+                a.bareChest = false;
+                a.chestR = 0.50f; a.chestG = 0.14f; a.chestB = 0.14f; // Lacquered crimson cuirass
+                a.chestShadowR = 0.35f; a.chestShadowG = 0.10f; a.chestShadowB = 0.10f;
+                a.chestTrimR = 0.94f; a.chestTrimG = 0.78f; a.chestTrimB = 0.22f; // Gold armor lacing bands
+
+                a.sashR = 0.45f; a.sashG = 0.12f; a.sashB = 0.12f;
+                a.sashTrimR = 0.94f; a.sashTrimG = 0.78f; a.sashTrimB = 0.22f;
+
+                a.bareUpperArm = false;
+                a.sleeveR = 0.18f; a.sleeveG = 0.20f; a.sleeveB = 0.26f;
+                a.hasBracer = false; a.hasHandWraps = false;
+                a.hasGauntlet = true;
+                a.gauntletR = 0.30f; a.gauntletG = 0.32f; a.gauntletB = 0.36f; // Iron kote
+                a.gloveR = a.gauntletR; a.gloveG = a.gauntletG; a.gloveB = a.gauntletB;
+
+                a.pantsR = 0.18f; a.pantsG = 0.20f; a.pantsB = 0.26f; // Samurai hakama
+                a.pantsShadowR = 0.12f; a.pantsShadowG = 0.14f; a.pantsShadowB = 0.18f;
+                a.hasGreaves = true;
+                a.greaveR = 0.30f; a.greaveG = 0.32f; a.greaveB = 0.36f; // Iron suneate greaves
+
+                a.bootR = 0.24f; a.bootG = 0.25f; a.bootB = 0.28f;
+                a.bootSoleR = 0.15f; a.bootSoleG = 0.16f; a.bootSoleB = 0.18f;
+                a.bootTrimR = 0.94f; a.bootTrimG = 0.78f; a.bootTrimB = 0.22f;
+                break;
+            }
+            case CharacterId::COUNT: break;
+        }
+        return a;
+    }
+
     void drawHumanBoot(const Renderer& renderer, Vec2 ankle, Vec2 toe, float dir, const BodyBuild& b,
-                       float r, float g, float bCol) {
+                       const CharacterAppearance& app, bool isBack, float hitFlash) {
+        float r = isBack ? (app.bootR * 0.84f) : app.bootR;
+        float g = isBack ? (app.bootG * 0.84f) : app.bootG;
+        float bCol = isBack ? (app.bootB * 0.84f) : app.bootB;
+        if (hitFlash > 0.0f) {
+            r = r * (1.0f - hitFlash) + 0.95f * hitFlash;
+            g = g * (1.0f - hitFlash) + 0.20f * hitFlash;
+            bCol = bCol * (1.0f - hitFlash) + 0.20f * hitFlash;
+        }
+
         float heelBack = b.isFemale ? 5.2f : (b.isHeavyWarrior ? 8.6f : 7.4f);
         float soleDrop = b.isFemale ? 3.5f : (b.isHeavyWarrior ? 5.0f : 4.2f);
         float frontTop = b.isFemale ? 7.6f : (b.isHeavyWarrior ? 11.8f : 10.0f);
@@ -417,10 +709,23 @@ namespace {
             ankle.y + 1.5f
         };
         renderer.drawPolygon(xs, ys, 6, r, g, bCol);
+
+        // Boot sole tread line
+        float sR = app.bootSoleR, sG = app.bootSoleG, sB = app.bootSoleB;
+        renderer.drawLine(ankle.x - dir * (heelBack + 1.5f), soleY + 0.6f,
+                          toe.x + dir * (b.isHeavyWarrior ? 4.2f : 2.8f), soleY + 0.6f,
+                          sR, sG, sB, 0.95f, b.isHeavyWarrior ? 2.8f : 2.0f);
+
+        // Boot cuff / trim / cloth wrap
+        float cR = app.hasHandWraps ? app.wrapR : app.bootTrimR;
+        float cG = app.hasHandWraps ? app.wrapG : app.bootTrimG;
+        float cB = app.hasHandWraps ? app.wrapB : app.bootTrimB;
+        renderer.drawCircle(ankle.x, ankle.y + (b.isFemale ? 4.5f : 6.0f), b.bootCuffR * 0.92f, cR, cG, cB, 1.0f, 12);
     }
 
     void drawHumanLeg(const Renderer& renderer, Vec2 hip, Vec2 knee, Vec2 ankle, Vec2 toe,
-                      float dir, const BodyBuild& b, float r, float g, float bCol) {
+                      float dir, const BodyBuild& b, const CharacterAppearance& app,
+                      bool isBack, float hitFlash) {
         Vec2 midThigh = {
             (hip.x + knee.x) * 0.5f + dir * (b.isFemale ? 2.4f : 2.0f),
             (hip.y + knee.y) * 0.5f + 1.0f
@@ -430,16 +735,47 @@ namespace {
             (knee.y + ankle.y) * 0.5f + 5.0f
         };
 
+        float pR = isBack ? app.pantsShadowR : app.pantsR;
+        float pG = isBack ? app.pantsShadowG : app.pantsG;
+        float pB = isBack ? app.pantsShadowB : app.pantsB;
+        if (hitFlash > 0.0f) {
+            pR = pR * (1.0f - hitFlash) + 0.95f * hitFlash;
+            pG = pG * (1.0f - hitFlash) + 0.20f * hitFlash;
+            pB = pB * (1.0f - hitFlash) + 0.20f * hitFlash;
+        }
+
+        // Sculpted human thigh (Pants / Leggings)
         renderer.drawSculptedLimb(hip.x, hip.y, midThigh.x, midThigh.y, knee.x, knee.y,
-                                  b.thighTopR, b.thighMidR, b.kneeR, r, g, bCol);
+                                  b.thighTopR, b.thighMidR, b.kneeR, pR, pG, pB);
+
+        // Sculpted human calf (Hakama / Leggings / Shin Wraps / Greaves)
+        float calfR = pR, calfG = pG, calfB = pB;
+        if (app.hasGreaves) {
+            calfR = isBack ? (app.greaveR * 0.85f) : app.greaveR;
+            calfG = isBack ? (app.greaveG * 0.85f) : app.greaveG;
+            calfB = isBack ? (app.greaveB * 0.85f) : app.greaveB;
+        } else if (app.hasHandWraps) {
+            calfR = isBack ? (app.wrapR * 0.88f) : app.wrapR;
+            calfG = isBack ? (app.wrapG * 0.88f) : app.wrapG;
+            calfB = isBack ? (app.wrapB * 0.88f) : app.wrapB;
+        }
         renderer.drawSculptedLimb(knee.x, knee.y, midCalf.x, midCalf.y, ankle.x, ankle.y,
-                                  b.calfTopR, b.calfMidR, b.ankleR, r, g, bCol);
-        renderer.drawCircle(ankle.x, ankle.y + (b.isFemale ? 5.5f : 7.5f), b.bootCuffR, r, g, bCol, 1.0f, 12);
-        drawHumanBoot(renderer, ankle, toe, dir, b, r, g, bCol);
+                                  b.calfTopR, b.calfMidR, b.ankleR, calfR, calfG, calfB);
+
+        // Greave gold rib or cloth wrap bands
+        if (app.hasGreaves) {
+            renderer.drawLine(knee.x + dir * 2.0f, knee.y - 2.0f, ankle.x + dir * 2.0f, ankle.y + 4.0f,
+                              0.94f, 0.78f, 0.22f, 0.90f, 1.8f);
+        } else if (app.hasHandWraps) {
+            renderer.drawLine(knee.x - dir * 2.0f, knee.y - 6.0f, ankle.x + dir * 2.0f, ankle.y + 6.0f,
+                              0.78f, 0.78f, 0.82f, 0.85f, 1.2f);
+        }
+
+        drawHumanBoot(renderer, ankle, toe, dir, b, app, isBack, hitFlash);
     }
 
     void drawHumanHand(const Renderer& renderer, Vec2 elbow, Vec2 hand, float dir, const BodyBuild& b,
-                       float r, float g, float bCol) {
+                       const CharacterAppearance& app, bool isBack, float hitFlash) {
         float dx = hand.x - elbow.x;
         float dy = hand.y - elbow.y;
         float len = std::sqrt(dx * dx + dy * dy);
@@ -463,11 +799,27 @@ namespace {
             hand.y + uy * 4.8f * s + ny * 5.2f * s,
             hand.y + ny * 4.4f * s
         };
+
+        float r = app.skinR, g = app.skinG, bCol = app.skinB;
+        if (app.hasHandWraps) {
+            r = app.wrapR; g = app.wrapG; bCol = app.wrapB;
+        } else if (app.hasNinjaMask) {
+            r = app.gloveR; g = app.gloveG; bCol = app.gloveB;
+        } else if (app.hasKabuto) {
+            r = app.gauntletR; g = app.gauntletG; bCol = app.gauntletB;
+        }
+        if (isBack) { r *= 0.85f; g *= 0.85f; bCol *= 0.85f; }
+        if (hitFlash > 0.0f) {
+            r = r * (1.0f - hitFlash) + 0.95f * hitFlash;
+            g = g * (1.0f - hitFlash) + 0.20f * hitFlash;
+            bCol = bCol * (1.0f - hitFlash) + 0.20f * hitFlash;
+        }
         renderer.drawPolygon(xs, ys, 5, r, g, bCol);
     }
 
     void drawHumanArm(const Renderer& renderer, Vec2 shoulder, Vec2 elbow, Vec2 hand,
-                      float dir, const BodyBuild& b, float r, float g, float bCol) {
+                      float dir, const BodyBuild& b, const CharacterAppearance& app,
+                      bool isBack, float hitFlash) {
         Vec2 midUpper = {
             (shoulder.x + elbow.x) * 0.5f + dir * (b.isFemale ? 0.8f : 2.2f),
             (shoulder.y + elbow.y) * 0.5f + 2.0f
@@ -477,17 +829,68 @@ namespace {
             (elbow.y + hand.y) * 0.5f + 1.5f
         };
 
+        // Upper arm (Athletic Skin or Cloth Sleeve)
+        float uR, uG, uB;
+        if (app.bareUpperArm) {
+            uR = isBack ? app.skinShadowR : app.skinR;
+            uG = isBack ? app.skinShadowG : app.skinG;
+            uB = isBack ? app.skinShadowB : app.skinB;
+        } else {
+            uR = isBack ? (app.sleeveR * 0.85f) : app.sleeveR;
+            uG = isBack ? (app.sleeveG * 0.85f) : app.sleeveG;
+            uB = isBack ? (app.sleeveB * 0.85f) : app.sleeveB;
+        }
+        if (hitFlash > 0.0f) {
+            uR = uR * (1.0f - hitFlash) + 0.95f * hitFlash;
+            uG = uG * (1.0f - hitFlash) + 0.20f * hitFlash;
+            uB = uB * (1.0f - hitFlash) + 0.20f * hitFlash;
+        }
         renderer.drawSculptedLimb(shoulder.x, shoulder.y, midUpper.x, midUpper.y, elbow.x, elbow.y,
-                                  b.bicepHipR, b.bicepMidR, b.elbowR, r, g, bCol);
+                                  b.bicepHipR, b.bicepMidR, b.elbowR, uR, uG, uB);
+
+        // Forearm (Skin / Bracer / Wraps / Gauntlet)
+        float fR, fG, fB;
+        if (app.hasHandWraps) {
+            fR = isBack ? (app.wrapR * 0.88f) : app.wrapR;
+            fG = isBack ? (app.wrapG * 0.88f) : app.wrapG;
+            fB = isBack ? (app.wrapB * 0.88f) : app.wrapB;
+        } else if (app.hasBracer) {
+            fR = isBack ? (app.bracerR * 0.85f) : app.bracerR;
+            fG = isBack ? (app.bracerG * 0.85f) : app.bracerG;
+            fB = isBack ? (app.bracerB * 0.85f) : app.bracerB;
+        } else if (app.hasGauntlet) {
+            fR = isBack ? (app.gauntletR * 0.85f) : app.gauntletR;
+            fG = isBack ? (app.gauntletG * 0.85f) : app.gauntletG;
+            fB = isBack ? (app.gauntletB * 0.85f) : app.gauntletB;
+        } else {
+            fR = isBack ? app.skinShadowR : app.skinR;
+            fG = isBack ? app.skinShadowG : app.skinG;
+            fB = isBack ? app.skinShadowB : app.skinB;
+        }
+        if (hitFlash > 0.0f) {
+            fR = fR * (1.0f - hitFlash) + 0.95f * hitFlash;
+            fG = fG * (1.0f - hitFlash) + 0.20f * hitFlash;
+            fB = fB * (1.0f - hitFlash) + 0.20f * hitFlash;
+        }
         renderer.drawSculptedLimb(elbow.x, elbow.y, midFore.x, midFore.y, hand.x, hand.y,
-                                  b.foreTopR, b.foreMidR, b.wristR, r, g, bCol);
-        drawHumanHand(renderer, elbow, hand, dir, b, r, g, bCol);
+                                  b.foreTopR, b.foreMidR, b.wristR, fR, fG, fB);
+
+        // Details on forearm:
+        if (app.isFemale && !app.hasBracer) {
+            renderer.drawCircle(hand.x - dir * 2.0f, hand.y, b.wristR * 1.15f, app.ribbonR, app.ribbonG, app.ribbonB, 1.0f, 10);
+        } else if (app.hasBracer) {
+            renderer.drawLine(midFore.x, midFore.y + 2.0f, midFore.x, midFore.y - 2.0f, 0.88f, 0.72f, 0.30f, 0.90f, 1.5f);
+        } else if (app.hasGauntlet) {
+            renderer.drawCircle(midFore.x, midFore.y, 2.0f, 0.92f, 0.78f, 0.25f, 1.0f, 6);
+        }
+
+        drawHumanHand(renderer, elbow, hand, dir, b, app, isBack, hitFlash);
     }
 
     void drawHumanTorso(const Renderer& renderer, Vec2 chest, Vec2 waist, Vec2 hips,
                         Vec2 shoulderF, Vec2 shoulderB, Vec2 neck, float dir, const BodyBuild& b,
-                        CharacterId charId, FighterState state, float stateTime,
-                        float r, float g, float bCol, float backR, float backG, float backB) {
+                        const CharacterAppearance& app, CharacterId charId,
+                        FighterState state, float stateTime, float hitFlash) {
         if (b.isFemale) {
             // Real-life woman hourglass figure: smooth upper chest -> curved bust -> under-bust -> narrow waist -> curved glutes & hips
             float upperChestY = chest.y + 3.0f;
@@ -520,30 +923,72 @@ namespace {
                 ribMidY,
                 upperChestY - 4.0f
             };
-            renderer.drawPolygon(xs, ys, 10, r, g, bCol);
 
-            // Soft rounded bust & curved glute contour smoothing so side profile looks completely organic
-            renderer.drawCircle(chest.x + dir * 11.5f, chest.y - 9.0f, 7.6f, r, g, bCol, 1.0f, 16);
-            renderer.drawCircle(hips.x - dir * 8.0f, hips.y - 1.5f, 10.6f, r, g, bCol, 1.0f, 16);
-            renderer.drawCircle(hips.x + dir * 5.0f, hips.y - 2.0f, 9.6f, r, g, bCol, 1.0f, 16);
+            float cR = app.chestR, cG = app.chestG, cB = app.chestB;
+            if (hitFlash > 0.0f) {
+                cR = cR * (1.0f - hitFlash) + 0.95f * hitFlash;
+                cG = cG * (1.0f - hitFlash) + 0.20f * hitFlash;
+                cB = cB * (1.0f - hitFlash) + 0.20f * hitFlash;
+            }
 
-            // Feminine shoulders & graceful neck
-            renderer.drawCircle(shoulderF.x, shoulderF.y, b.deltoidR, r, g, bCol, 1.0f, 14);
-            renderer.drawCircle(shoulderB.x, shoulderB.y, b.deltoidR * 0.92f, backR, backG, backB, 1.0f, 14);
+            // Tunic / Dress polygon
+            renderer.drawPolygon(xs, ys, 10, cR, cG, cB);
+
+            // Rounded feminine bust projection
+            renderer.drawCircle(chest.x + dir * 11.5f, chest.y - 9.0f, 7.6f, cR, cG, cB, 1.0f, 16);
+
+            // Hips & glutes in fitted leggings
+            float pR = app.pantsR, pG = app.pantsG, pB = app.pantsB;
+            if (hitFlash > 0.0f) {
+                pR = pR * (1.0f - hitFlash) + 0.95f * hitFlash;
+                pG = pG * (1.0f - hitFlash) + 0.20f * hitFlash;
+                pB = pB * (1.0f - hitFlash) + 0.20f * hitFlash;
+            }
+            renderer.drawCircle(hips.x - dir * 8.0f, hips.y - 1.5f, 10.6f, pR, pG, pB, 1.0f, 16);
+            renderer.drawCircle(hips.x + dir * 5.0f, hips.y - 2.0f, 9.6f, pR, pG, pB, 1.0f, 16);
+
+            // Graceful feminine neck & exposed collarbone skin
+            float skR = app.skinR, skG = app.skinG, skB = app.skinB;
+            if (hitFlash > 0.0f) {
+                skR = skR * (1.0f - hitFlash) + 0.95f * hitFlash;
+                skG = skG * (1.0f - hitFlash) + 0.20f * hitFlash;
+                skB = skB * (1.0f - hitFlash) + 0.20f * hitFlash;
+            }
+            renderer.drawLimb(neck.x, neck.y - 5.0f, neck.x + dir * 1.5f, neck.y + 10.0f, b.neckBotR, b.neckTopR, skR, skG, skB);
+            renderer.drawTriangle(neck.x - dir * 3.5f, upperChestY + 1.0f,
+                                  neck.x + dir * 4.5f, upperChestY + 1.0f,
+                                  chest.x + dir * 5.5f, upperChestY - 6.5f,
+                                  skR, skG, skB);
+
+            // Golden decorative embroidery trim / leather piping
+            renderer.drawLine(neck.x - dir * 4.0f, upperChestY + 1.0f, chest.x + dir * 5.5f, upperChestY - 6.5f,
+                              app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.95f, 1.8f);
+            renderer.drawLine(chest.x + dir * 5.5f, upperChestY - 6.5f, chest.x + dir * 11.2f, upperChestY,
+                              app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.95f, 1.8f);
+            renderer.drawLine(chest.x + dir * 2.0f, underBustY, waist.x + dir * b.waistFront, waist.y,
+                              app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.85f, 1.6f);
+
+            // Feminine shoulders in soft skin tone
+            renderer.drawCircle(shoulderF.x, shoulderF.y, b.deltoidR, skR, skG, skB, 1.0f, 14);
+            renderer.drawCircle(shoulderB.x, shoulderB.y, b.deltoidR * 0.92f, app.skinShadowR, app.skinShadowG, app.skinShadowB, 1.0f, 14);
             renderer.drawTriangle(shoulderB.x, shoulderB.y + 1.5f,
                                   shoulderF.x, shoulderF.y + 1.5f,
-                                  neck.x, neck.y + 2.0f, r, g, bCol);
-            renderer.drawLimb(neck.x, neck.y - 5.0f, neck.x + dir * 1.5f, neck.y + 10.0f, b.neckBotR, b.neckTopR, r, g, bCol);
+                                  neck.x, neck.y + 2.0f, skR, skG, skB);
 
-            // Light fluttering martial waist ribbon (trails behind without hiding waist-hip curves)
+            // Waist sash & fluttering martial ribbon tails
+            renderer.drawRect(waist.x - dir * b.waistBack, waist.y - 2.5f, (b.waistBack + b.waistFront) * 1.05f, 5.0f,
+                              app.sashR, app.sashG, app.sashB);
+            renderer.drawLine(waist.x - dir * b.waistBack, waist.y + 2.5f, waist.x + dir * b.waistFront, waist.y + 2.5f,
+                              app.sashTrimR, app.sashTrimG, app.sashTrimB, 0.95f, 1.2f);
             if (state != FighterState::DEAD) {
                 float sway = std::sin(stateTime * 8.5f) * 5.0f;
                 renderer.drawQuad(waist.x - dir * 6.0f, waist.y + 2.0f,
                                   waist.x - dir * 9.0f, waist.y - 3.0f,
                                   hips.x - dir * (22.0f + sway), hips.y - 22.0f,
                                   hips.x - dir * (16.0f + sway), hips.y - 19.0f,
-                                  backR, backG, backB);
+                                  app.sashR, app.sashG, app.sashB);
             }
+
         } else {
             // Real muscular man V-taper torso: broad pecs & lats -> strong ribcage -> athletic waist -> muscular hips
             float pecY  = chest.y - 9.0f;
@@ -573,46 +1018,150 @@ namespace {
                 ribY,
                 pecY
             };
-            renderer.drawPolygon(xs, ys, 10, r, g, bCol);
 
-            // Broad muscular chest fill & pelvis connection
-            renderer.drawCircle(chest.x + dir * (b.chestFront * 0.35f), pecY + 1.0f, b.chestFront * 0.52f, r, g, bCol, 1.0f, 16);
-            renderer.drawCircle(hips.x, hips.y - 2.0f, b.hipFront * 0.72f, r, g, bCol, 1.0f, 16);
+            if (app.bareChest) {
+                // KAI: BARE MUSCULAR CHEST & SIX-PACK ABS
+                float skR = app.skinR, skG = app.skinG, skB = app.skinB;
+                if (hitFlash > 0.0f) {
+                    skR = skR * (1.0f - hitFlash) + 0.95f * hitFlash;
+                    skG = skG * (1.0f - hitFlash) + 0.20f * hitFlash;
+                    skB = skB * (1.0f - hitFlash) + 0.20f * hitFlash;
+                }
+                renderer.drawPolygon(xs, ys, 10, skR, skG, skB);
+                renderer.drawCircle(chest.x + dir * (b.chestFront * 0.35f), pecY + 1.0f, b.chestFront * 0.52f, skR, skG, skB, 1.0f, 16);
 
-            // Heavy trapezius muscles sloping from thick neck into broad shoulders
-            float trapLift = b.isHeavyWarrior ? 8.5f : 5.5f;
-            renderer.drawTriangle(shoulderB.x - dir * 3.0f, shoulderB.y + 2.0f,
-                                  shoulderF.x + dir * 3.0f, shoulderF.y + 2.0f,
-                                  neck.x, neck.y + trapLift, r, g, bCol);
-            renderer.drawLimb(neck.x, neck.y - 6.0f, neck.x + dir * 1.5f, neck.y + 11.0f,
-                              b.neckBotR, b.neckTopR, r, g, bCol);
+                // Pectoral muscle separation & lower pec lines
+                float shR = app.skinShadowR, shG = app.skinShadowG, shB = app.skinShadowB;
+                renderer.drawLine(chest.x - dir * 2.0f, pecY + 6.0f, chest.x + dir * (b.chestFront * 0.80f), pecY - 2.0f,
+                                  shR, shG, shB, 0.85f, 1.8f);
+                renderer.drawLine(chest.x + dir * 4.0f, pecY + 8.0f, chest.x + dir * 4.0f, ribY + 4.0f,
+                                  shR, shG, shB, 0.80f, 1.5f);
 
-            // Muscular rounded deltoid / warrior shoulder armor domes clearly framing arms
-            renderer.drawCircle(shoulderF.x, shoulderF.y + 1.5f, b.deltoidR, r, g, bCol, 1.0f, 18);
-            renderer.drawCircle(shoulderB.x, shoulderB.y + 1.5f, b.deltoidR * 0.94f, backR, backG, backB, 1.0f, 18);
+                // Abdominal six-pack grooves
+                for (int ab = 0; ab < 3; ++ab) {
+                    float abY = ribY + 2.0f - (float)ab * 8.0f;
+                    renderer.drawLine(waist.x - dir * 4.0f, abY, waist.x + dir * (b.waistFront * 0.75f), abY,
+                                      shR, shG, shB, 0.75f, 1.4f);
+                }
 
-            // Warrior obi & armored waist tassets (heavier & wider for Takeda heavy spear warrior)
-            if (state != FighterState::DEAD) {
-                float sway = std::sin(stateTime * 6.0f) * 3.0f;
-                float flairOut = b.isHeavyWarrior ? 25.0f : (charId == CharacterId::CHAIN_WARRIOR ? 21.0f : 18.0f);
-                float tassetDrop = b.isHeavyWarrior ? 22.0f : 16.0f;
-                renderer.drawQuad(waist.x - dir * (b.waistBack + 2.0f), waist.y + 2.0f,
-                                  waist.x + dir * (b.waistFront + 2.0f), waist.y + 2.0f,
-                                  hips.x + dir * flairOut, hips.y - tassetDrop,
-                                  hips.x - dir * (flairOut + 2.0f + sway), hips.y - (tassetDrop + 2.0f),
-                                  r, g, bCol);
+                // Muscular neck & strong traps
+                renderer.drawLimb(neck.x, neck.y - 6.0f, neck.x + dir * 1.5f, neck.y + 11.0f, b.neckBotR, b.neckTopR, skR, skG, skB);
+                renderer.drawCircle(shoulderF.x, shoulderF.y + 1.5f, b.deltoidR, skR, skG, skB, 1.0f, 18);
+                renderer.drawCircle(shoulderB.x, shoulderB.y + 1.5f, b.deltoidR * 0.94f, shR, shG, shB, 1.0f, 18);
+
+                // Vibrant Cyan Obi Sash & Gi Pants at hips
+                renderer.drawCircle(hips.x, hips.y - 2.0f, b.hipFront * 0.72f, app.pantsR, app.pantsG, app.pantsB, 1.0f, 16);
+                renderer.drawRect(waist.x - dir * (b.waistBack + 1.0f), waist.y - 3.0f, (b.waistBack + b.waistFront + 2.0f), 7.0f,
+                                  app.sashR, app.sashG, app.sashB);
+                renderer.drawLine(waist.x - dir * (b.waistBack + 1.0f), waist.y + 4.0f, waist.x + dir * (b.waistFront + 1.0f), waist.y + 4.0f,
+                                  app.sashTrimR, app.sashTrimG, app.sashTrimB, 0.95f, 1.4f);
+
+                // Fluttering sash knot tails
+                if (state != FighterState::DEAD) {
+                    float w = std::sin(stateTime * 7.5f) * 4.0f;
+                    renderer.drawQuad(waist.x + dir * (b.waistFront - 2.0f), waist.y + 2.0f,
+                                      waist.x + dir * (b.waistFront + 3.0f), waist.y - 1.0f,
+                                      waist.x + dir * (b.waistFront + 16.0f + w), waist.y - 16.0f,
+                                      waist.x + dir * (b.waistFront + 11.0f + w), waist.y - 18.0f,
+                                      app.sashR, app.sashG, app.sashB);
+                }
+
+            } else if (charId == CharacterId::CHAIN_WARRIOR) {
+                // KURO: SHINOBI VEST WITH FORGED STEEL CHESTPLATE
+                float vR = app.chestR, vG = app.chestG, vB = app.chestB;
+                if (hitFlash > 0.0f) {
+                    vR = vR * (1.0f - hitFlash) + 0.95f * hitFlash;
+                    vG = vG * (1.0f - hitFlash) + 0.20f * hitFlash;
+                    vB = vB * (1.0f - hitFlash) + 0.20f * hitFlash;
+                }
+                renderer.drawPolygon(xs, ys, 10, vR, vG, vB);
+                renderer.drawCircle(chest.x + dir * (b.chestFront * 0.35f), pecY + 1.0f, b.chestFront * 0.52f, vR, vG, vB, 1.0f, 16);
+
+                // Steel chest protector plate across upper chest
+                renderer.drawQuad(chest.x - dir * 10.0f, pecY + 10.0f,
+                                  chest.x + dir * (b.chestFront * 0.92f), pecY + 8.0f,
+                                  chest.x + dir * (b.chestFront * 0.75f), ribY + 6.0f,
+                                  chest.x - dir * 8.0f, ribY + 8.0f,
+                                  app.chestTrimR, app.chestTrimG, app.chestTrimB);
+                renderer.drawLine(chest.x - dir * 8.0f, pecY + 9.0f, chest.x + dir * (b.chestFront * 0.88f), pecY + 7.0f,
+                                  0.85f, 0.90f, 0.98f, 0.90f, 1.6f);
+
+                // Diagonal leather harness straps
+                renderer.drawLine(shoulderB.x, shoulderB.y + 2.0f, waist.x + dir * 6.0f, waist.y,
+                                  0.35f, 0.22f, 0.15f, 0.95f, 2.4f);
+
+                // Ninja cowl neck
+                renderer.drawLimb(neck.x, neck.y - 6.0f, neck.x + dir * 1.5f, neck.y + 11.0f, b.neckBotR, b.neckTopR,
+                                  app.maskR, app.maskG, app.maskB);
+                renderer.drawCircle(shoulderF.x, shoulderF.y + 1.5f, b.deltoidR, vR, vG, vB, 1.0f, 18);
+                renderer.drawCircleOutline(shoulderF.x, shoulderF.y + 1.5f, b.deltoidR, app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.90f, 1.8f);
+                renderer.drawCircle(shoulderB.x, shoulderB.y + 1.5f, b.deltoidR * 0.94f, app.chestShadowR, app.chestShadowG, app.chestShadowB, 1.0f, 18);
+
+                // Utility belt with silver buckle
+                renderer.drawRect(waist.x - dir * (b.waistBack + 1.0f), waist.y - 3.0f, (b.waistBack + b.waistFront + 2.0f), 6.5f,
+                                  app.sashR, app.sashG, app.sashB);
+                renderer.drawRect(waist.x + dir * 2.0f, waist.y - 3.0f, 5.0f, 6.5f, 0.80f, 0.84f, 0.90f);
+                renderer.drawCircle(hips.x, hips.y - 2.0f, b.hipFront * 0.72f, app.pantsR, app.pantsG, app.pantsB, 1.0f, 16);
+
+            } else {
+                // TAKEDA: HEAVY LACQUERED CRIMSON SAMURAI DŌ CUIRASS & GOLD LAMES
+                float aR = app.chestR, aG = app.chestG, aB = app.chestB;
+                if (hitFlash > 0.0f) {
+                    aR = aR * (1.0f - hitFlash) + 0.95f * hitFlash;
+                    aG = aG * (1.0f - hitFlash) + 0.20f * hitFlash;
+                    aB = aB * (1.0f - hitFlash) + 0.20f * hitFlash;
+                }
+                renderer.drawPolygon(xs, ys, 10, aR, aG, aB);
+                renderer.drawCircle(chest.x + dir * (b.chestFront * 0.35f), pecY + 1.0f, b.chestFront * 0.52f, aR, aG, aB, 1.0f, 16);
+
+                // Horizontal gold armor lacing bands
+                for (int lame = 0; lame < 4; ++lame) {
+                    float lameY = pecY + 6.0f - (float)lame * 9.5f;
+                    renderer.drawLine(chest.x - dir * (b.chestBack * 0.85f), lameY,
+                                      chest.x + dir * (b.chestFront * 0.85f), lameY,
+                                      app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.95f, 2.2f);
+                }
+
+                // Armored neck throat guard
+                renderer.drawLimb(neck.x, neck.y - 6.0f, neck.x + dir * 1.5f, neck.y + 11.0f, b.neckBotR, b.neckTopR,
+                                  0.25f, 0.25f, 0.28f);
+
+                // Layered sodé samurai shoulder armor pauldrons
+                renderer.drawCircle(shoulderF.x, shoulderF.y + 2.0f, b.deltoidR * 1.05f, aR, aG, aB, 1.0f, 18);
+                renderer.drawCircleOutline(shoulderF.x, shoulderF.y + 2.0f, b.deltoidR * 1.05f,
+                                           app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.95f, 2.2f);
+                renderer.drawCircle(shoulderB.x, shoulderB.y + 2.0f, b.deltoidR * 0.98f, app.chestShadowR, app.chestShadowG, app.chestShadowB, 1.0f, 18);
+
+                // Armored kusazuri skirt plates over hakama pants
+                renderer.drawCircle(hips.x, hips.y - 2.0f, b.hipFront * 0.72f, app.pantsR, app.pantsG, app.pantsB, 1.0f, 16);
+                if (state != FighterState::DEAD) {
+                    float flairOut = 25.0f;
+                    float tassetDrop = 22.0f;
+                    renderer.drawQuad(waist.x - dir * (b.waistBack + 2.0f), waist.y + 2.0f,
+                                      waist.x + dir * (b.waistFront + 2.0f), waist.y + 2.0f,
+                                      hips.x + dir * flairOut, hips.y - tassetDrop,
+                                      hips.x - dir * (flairOut + 2.0f), hips.y - (tassetDrop + 2.0f),
+                                      aR, aG, aB);
+                    renderer.drawLine(hips.x - dir * (flairOut + 2.0f), hips.y - (tassetDrop + 2.0f),
+                                      hips.x + dir * flairOut, hips.y - tassetDrop,
+                                      app.chestTrimR, app.chestTrimG, app.chestTrimB, 0.95f, 2.0f);
+                }
             }
         }
     }
 
     void drawHumanHead(const Renderer& renderer, Vec2 headCenter, Vec2 chest,
-                       float dir, const BodyBuild& b, CharacterId charId,
-                       FighterState state, float stateTime,
-                       float r, float g, float bCol, float backR, float backG, float backB) {
-        renderer.drawCircle(headCenter.x - dir * 1.0f, headCenter.y + 1.0f, b.craniumR, r, g, bCol, 1.0f, 20);
-
-        // Sculpted human facial jaw, brow, nose & chin silhouette profile facing dir
+                       float dir, const BodyBuild& b, const CharacterAppearance& app,
+                       CharacterId charId, FighterState state, float stateTime, float hitFlash) {
         float fs = b.faceScale;
+
+        // 1. Cranium Base
+        float crR = app.hasKabuto ? app.helmR : (app.hasNinjaMask ? app.maskR : app.hairR);
+        float crG = app.hasKabuto ? app.helmG : (app.hasNinjaMask ? app.maskG : app.hairG);
+        float crB = app.hasKabuto ? app.helmB : (app.hasNinjaMask ? app.maskB : app.hairB);
+        renderer.drawCircle(headCenter.x - dir * 1.0f, headCenter.y + 1.0f, b.craniumR, crR, crG, crB, 1.0f, 20);
+
+        // 2. Sculpted Human Facial Profile (Forehead, Brow, Sculpted Nose, Lips, Chin)
         float fxs[5] = {
             headCenter.x + dir * 3.0f * fs,
             headCenter.x + dir * 12.2f * fs,
@@ -627,70 +1176,150 @@ namespace {
             headCenter.y - 10.6f * fs,
             headCenter.y - 8.6f * fs
         };
-        renderer.drawPolygon(fxs, fys, 5, r, g, bCol);
 
+        float skR = app.skinR, skG = app.skinG, skB = app.skinB;
+        if (hitFlash > 0.0f) {
+            skR = skR * (1.0f - hitFlash) + 0.95f * hitFlash;
+            skG = skG * (1.0f - hitFlash) + 0.20f * hitFlash;
+            skB = skB * (1.0f - hitFlash) + 0.20f * hitFlash;
+        }
+        renderer.drawPolygon(fxs, fys, 5, skR, skG, skB);
+
+        // 3. Ninja Mask covering lower face for Kuro
+        if (app.hasNinjaMask) {
+            float mxs[4] = {
+                headCenter.x + dir * 2.0f * fs,
+                headCenter.x + dir * 12.0f * fs,
+                headCenter.x + dir * 9.0f * fs,
+                headCenter.x - dir * 1.0f * fs
+            };
+            float mys[4] = {
+                headCenter.y - 1.0f * fs,
+                headCenter.y - 2.5f * fs,
+                headCenter.y - 10.6f * fs,
+                headCenter.y - 8.6f * fs
+            };
+            renderer.drawPolygon(mxs, mys, 4, app.maskR, app.maskG, app.maskB);
+        }
+
+        // 4. Lifelike Human Eyes (White Sclera + Colored Iris + Dark Pupil + Catchlight Glint)
+        float eyeX = headCenter.x + dir * 6.2f * fs;
+        float eyeY = headCenter.y + 1.6f * fs;
+        renderer.drawCircle(eyeX, eyeY, 2.5f * fs, app.eyeWhiteR, app.eyeWhiteG, app.eyeWhiteB, 1.0f, 10);
+        renderer.drawCircle(eyeX + dir * 0.7f, eyeY, 1.6f * fs, app.irisR, app.irisG, app.irisB, 1.0f, 8);
+        renderer.drawCircle(eyeX + dir * 0.8f, eyeY, 0.9f * fs, app.pupilR, app.pupilG, app.pupilB, 1.0f, 6);
+        renderer.drawCircle(eyeX + dir * 0.5f, eyeY + 0.6f * fs, 0.5f * fs, 1.0f, 1.0f, 1.0f, 0.95f, 4);
+
+        // 5. Defined Martial / Feminine Eyebrow
+        renderer.drawLine(eyeX - dir * 2.2f * fs, eyeY + 3.2f * fs,
+                          eyeX + dir * 3.5f * fs, eyeY + 2.8f * fs,
+                          app.browR, app.browG, app.browB, 0.95f, 1.5f);
+
+        // 6. Realistic Lips for Female Characters (Akari & Mei-Ling)
+        if (app.hasLips) {
+            float lipX = headCenter.x + dir * 10.6f * fs;
+            float lipY = headCenter.y - 5.5f * fs;
+            renderer.drawCircle(lipX, lipY + 0.8f, 1.6f * fs, app.lipR, app.lipG, app.lipB, 1.0f, 8);
+            renderer.drawCircle(lipX - dir * 0.8f, lipY - 1.0f, 1.8f * fs, app.lipR * 0.92f, app.lipG * 0.92f, app.lipB * 0.92f, 1.0f, 8);
+            renderer.drawLine(lipX - dir * 2.2f * fs, lipY, lipX + dir * 1.5f * fs, lipY,
+                              app.lipR * 0.65f, app.lipG * 0.65f, app.lipB * 0.65f, 0.90f, 1.0f);
+        } else if (charId == CharacterId::SPEAR_WARRIOR) {
+            renderer.drawLine(headCenter.x + dir * 3.0f * fs, headCenter.y - 7.5f * fs,
+                              headCenter.x + dir * 9.0f * fs, headCenter.y - 10.0f * fs,
+                              0.52f, 0.40f, 0.30f, 0.75f, 1.8f);
+        }
+
+        // 7. Distinctive Hair, Headgear, and Accessories
         if (charId == CharacterId::BRAWLER) {
-            // Kai: Martial cowl + knotted dark headband + fluttering tails
+            // KAI: Topknot hair + Knotted martial headband with fluttering tails
+            renderer.drawCircle(headCenter.x - dir * 2.0f, headCenter.y + 10.5f, 5.0f, app.hairR, app.hairG, app.hairB);
+            renderer.drawLine(headCenter.x - dir * 8.0f, headCenter.y + 4.5f,
+                              headCenter.x + dir * 8.5f, headCenter.y + 4.5f,
+                              app.ribbonR, app.ribbonG, app.ribbonB, 1.0f, 3.2f);
             if (state != FighterState::DEAD) {
                 float w1 = std::sin(stateTime * 10.0f) * 4.5f;
                 float w2 = std::cos(stateTime * 8.0f)  * 5.0f;
-                renderer.drawCircle(headCenter.x - dir * 11.5f, headCenter.y + 3.0f, 4.0f, r, g, bCol);
+                renderer.drawCircle(headCenter.x - dir * 11.5f, headCenter.y + 3.0f, 4.0f, app.ribbonR, app.ribbonG, app.ribbonB);
                 renderer.drawQuad(headCenter.x - dir * 11.5f, headCenter.y + 5.0f,
                                   headCenter.x - dir * 11.5f, headCenter.y + 1.0f,
                                   headCenter.x - dir * 33.0f, headCenter.y - 4.0f + w1,
-                                  headCenter.x - dir * 33.0f, headCenter.y + 1.0f + w1, r, g, bCol);
+                                  headCenter.x - dir * 33.0f, headCenter.y + 1.0f + w1,
+                                  app.ribbonR, app.ribbonG, app.ribbonB);
                 renderer.drawQuad(headCenter.x - dir * 11.5f, headCenter.y + 3.0f,
                                   headCenter.x - dir * 11.5f, headCenter.y - 1.0f,
                                   headCenter.x - dir * 39.0f, headCenter.y - 12.0f + w2,
-                                  headCenter.x - dir * 39.0f, headCenter.y - 7.0f  + w2, backR, backG, backB);
+                                  headCenter.x - dir * 39.0f, headCenter.y - 7.0f  + w2,
+                                  app.ribbonR * 0.85f, app.ribbonG * 0.85f, app.ribbonB * 0.85f);
             }
+
         } else if (charId == CharacterId::CHAIN_WARRIOR) {
-            // Kuro: Exact horned samurai/oni silhouette from reference image + strapped back hilt
+            // KURO: Horned demon crest + steel forehead plate + strapped back hilt
             renderer.drawTriangle(headCenter.x + dir * 2.0f, headCenter.y + 8.0f,
                                   headCenter.x + dir * 7.8f, headCenter.y + 8.0f,
-                                  headCenter.x + dir * 10.4f, headCenter.y + 25.0f, r, g, bCol);
+                                  headCenter.x + dir * 10.4f, headCenter.y + 25.0f,
+                                  0.55f, 0.62f, 0.72f);
             renderer.drawTriangle(headCenter.x - dir * 2.5f, headCenter.y + 8.0f,
                                   headCenter.x + dir * 2.5f, headCenter.y + 8.0f,
-                                  headCenter.x + dir * 4.2f, headCenter.y + 22.0f, backR, backG, backB);
+                                  headCenter.x + dir * 4.2f, headCenter.y + 22.0f,
+                                  0.42f, 0.48f, 0.58f);
             renderer.drawQuad(headCenter.x - dir * 4.0f, headCenter.y + 2.0f,
                               headCenter.x - dir * 14.5f, headCenter.y - 11.5f,
                               headCenter.x - dir * 10.5f, headCenter.y - 14.5f,
-                              headCenter.x + dir * 1.0f, headCenter.y - 5.0f, r, g, bCol);
+                              headCenter.x + dir * 1.0f, headCenter.y - 5.0f,
+                              app.maskR, app.maskG, app.maskB);
             if (state != FighterState::DEAD) {
                 renderer.drawQuad(chest.x - dir * 11.0f, chest.y + 4.0f,
                                   chest.x - dir * 5.0f, chest.y + 2.0f,
                                   chest.x - dir * 19.0f, chest.y + 28.0f,
-                                  chest.x - dir * 25.0f, chest.y + 25.0f, r, g, bCol);
+                                  chest.x - dir * 25.0f, chest.y + 25.0f,
+                                  0.35f, 0.25f, 0.18f);
             }
+
         } else if (charId == CharacterId::ARCHER) {
-            // Akari (Female): High tied sweeping ponytail silhouette
+            // AKARI: High tied sweeping brunette ponytail with fluttering crimson ribbon
+            renderer.drawCircle(headCenter.x - dir * 4.0f, headCenter.y + 6.0f, 6.5f, app.hairR, app.hairG, app.hairB);
             if (state != FighterState::DEAD) {
                 float hairWave = std::sin(stateTime * 9.5f) * 4.8f;
-                renderer.drawCircle(headCenter.x - dir * 10.5f, headCenter.y + 6.0f, 4.4f, r, g, bCol);
+                renderer.drawCircle(headCenter.x - dir * 10.5f, headCenter.y + 6.0f, 4.4f, app.ribbonR, app.ribbonG, app.ribbonB);
                 renderer.drawQuad(headCenter.x - dir * 10.5f, headCenter.y + 8.5f,
                                   headCenter.x - dir * 10.5f, headCenter.y + 2.5f,
                                   headCenter.x - dir * 35.0f, headCenter.y - 16.0f + hairWave,
-                                  headCenter.x - dir * 31.0f, headCenter.y - 5.0f + hairWave, r, g, bCol);
+                                  headCenter.x - dir * 31.0f, headCenter.y - 5.0f + hairWave,
+                                  app.hairR, app.hairG, app.hairB);
             }
+
         } else if (charId == CharacterId::FAN_DANCER) {
-            // Mei-Ling (Female): Twin elegant chignon hair buns + crossed hairpin silhouettes
-            renderer.drawCircle(headCenter.x - dir * 7.5f, headCenter.y + 10.5f, 5.2f, r, g, bCol);
-            renderer.drawCircle(headCenter.x + dir * 1.5f, headCenter.y + 11.5f, 4.6f, r, g, bCol);
-            if (state != FighterState::DEAD) {
-                renderer.drawLine(headCenter.x - dir * 15.0f, headCenter.y + 17.5f,
-                                  headCenter.x + dir * 3.0f,  headCenter.y + 7.5f, r, g, bCol, 1.0f, 2.0f);
-                renderer.drawLine(headCenter.x - dir * 3.0f,  headCenter.y + 19.0f,
-                                  headCenter.x + dir * 10.5f, headCenter.y + 8.5f, r, g, bCol, 1.0f, 2.0f);
-            }
+            // MEI-LING: Twin odango chignon buns with golden floral hairpins & dangling beads
+            renderer.drawCircle(headCenter.x - dir * 7.5f, headCenter.y + 10.5f, 5.2f, app.hairR, app.hairG, app.hairB);
+            renderer.drawCircle(headCenter.x + dir * 1.5f, headCenter.y + 11.5f, 4.6f, app.hairR, app.hairG, app.hairB);
+            renderer.drawLine(headCenter.x - dir * 15.0f, headCenter.y + 17.5f,
+                              headCenter.x + dir * 3.0f,  headCenter.y + 7.5f,
+                              app.pinR, app.pinG, app.pinB, 1.0f, 2.2f);
+            renderer.drawLine(headCenter.x - dir * 3.0f,  headCenter.y + 19.0f,
+                              headCenter.x + dir * 10.5f, headCenter.y + 8.5f,
+                              app.pinR, app.pinG, app.pinB, 1.0f, 2.2f);
+            renderer.drawCircle(headCenter.x - dir * 15.0f, headCenter.y + 17.5f, 2.0f, 0.92f, 0.22f, 0.32f, 1.0f, 6);
+            renderer.drawCircle(headCenter.x + dir * 10.5f, headCenter.y + 8.5f, 2.0f, 0.92f, 0.22f, 0.32f, 1.0f, 6);
+
         } else {
-            // Takeda: Heavy imperial Kabuto war helmet + sweeping crest + thick neck shikoro armor plates
+            // TAKEDA: Imperial Kabuto samurai helmet + sweeping golden crescent moon crest + neck shikoro
             renderer.drawTriangle(headCenter.x - dir * 15.0f, headCenter.y + 6.5f,
                                   headCenter.x + dir * 13.0f, headCenter.y + 6.5f,
-                                  headCenter.x + dir * 2.0f,  headCenter.y + 27.5f, r, g, bCol);
+                                  headCenter.x + dir * 2.0f,  headCenter.y + 27.5f,
+                                  app.helmR, app.helmG, app.helmB);
+            renderer.drawTriangle(headCenter.x + dir * 1.0f, headCenter.y + 16.0f,
+                                  headCenter.x + dir * 7.0f, headCenter.y + 16.0f,
+                                  headCenter.x + dir * 9.0f, headCenter.y + 34.0f,
+                                  app.crestR, app.crestG, app.crestB);
+            renderer.drawTriangle(headCenter.x - dir * 4.0f, headCenter.y + 16.0f,
+                                  headCenter.x + dir * 2.0f, headCenter.y + 16.0f,
+                                  headCenter.x - dir * 3.0f, headCenter.y + 32.0f,
+                                  app.crestR * 0.85f, app.crestG * 0.85f, app.crestB * 0.85f);
             renderer.drawQuad(headCenter.x - dir * 3.0f, headCenter.y + 2.0f,
                               headCenter.x - dir * 18.0f, headCenter.y - 14.0f,
                               headCenter.x - dir * 13.0f, headCenter.y - 17.0f,
-                              headCenter.x + dir * 1.0f, headCenter.y - 6.0f, r, g, bCol);
+                              headCenter.x + dir * 1.0f, headCenter.y - 6.0f,
+                              0.48f, 0.14f, 0.14f);
         }
     }
 }
@@ -1480,23 +2109,16 @@ void Fighter::draw(const Renderer& renderer) const {
     Pose pose = Animation::getPose(state, stateTime, getCurrentAttack(), hitStunDuration);
     AttackPhase phase = getAttackPhase();
     const CharacterProfile& prof = getProfile();
+    CharacterAppearance app = getCharacterAppearance(characterId);
 
-    float bodyR = colorR, bodyG = colorG, bodyB = colorB;
-    if (state == FighterState::HIT) {
-        bodyR = 0.95f; bodyG = 0.20f; bodyB = 0.20f;
-    } else if (state == FighterState::SPECIAL && phase == AttackPhase::STARTUP) {
-        bodyR = 0.40f; bodyG = 0.85f; bodyB = 1.0f;
-    }
-
+    float hitFlash = (state == FighterState::HIT) ? 0.40f : 0.0f;
     if (state == FighterState::DEAD) {
-        bodyR *= 0.35f; bodyG *= 0.35f; bodyB *= 0.35f;
+        app.skinR *= 0.60f; app.skinG *= 0.60f; app.skinB *= 0.60f;
+        app.chestR *= 0.55f; app.chestG *= 0.55f; app.chestB *= 0.55f;
+        app.pantsR *= 0.55f; app.pantsG *= 0.55f; app.pantsB *= 0.55f;
     } else if (isInvulnerable() && ((int)(invulnerableTimer / BLINK_INTERVAL) % 2 == 0)) {
-        bodyR *= 0.45f; bodyG *= 0.45f; bodyB *= 0.45f;
+        hitFlash = 0.50f;
     }
-
-    float backR = std::min(1.0f, bodyR + 0.032f);
-    float backG = std::min(1.0f, bodyG + 0.032f);
-    float backB = std::min(1.0f, bodyB + 0.038f);
 
     float drawW = width  * pose.scaleX;
     float drawH = height * pose.scaleY;
@@ -1985,21 +2607,20 @@ void Fighter::draw(const Renderer& renderer) const {
     // =========================================================================
     // LAYER 1: BACK LIMBS (Real Sculpted Human Back Leg & Arm)
     // =========================================================================
-    drawHumanLeg(renderer, hipB, kneeB, ankleB, toeB, dir, build, backR, backG, backB);
-    drawHumanArm(renderer, shoulderB, elbowB, handB, dir, build, backR, backG, backB);
+    drawHumanLeg(renderer, hipB, kneeB, ankleB, toeB, dir, build, app, true, hitFlash);
+    drawHumanArm(renderer, shoulderB, elbowB, handB, dir, build, app, true, hitFlash);
 
     // =========================================================================
-    // LAYER 2: REAL MALE / FEMALE TORSO & WAIST SILHOUETTE
+    // LAYER 2: REAL MALE / FEMALE TORSO & WAIST CLOTHING / ARMOR
     // =========================================================================
     drawHumanTorso(renderer, chest, waist, hips, shoulderF, shoulderB, neck,
-                   dir, build, characterId, state, stateTime,
-                   bodyR, bodyG, bodyB, backR, backG, backB);
+                   dir, build, app, characterId, state, stateTime, hitFlash);
 
     // =========================================================================
-    // LAYER 3: FRONT LIMBS & WEAPON SILHOUETTE
+    // LAYER 3: FRONT LIMBS & AUTHENTIC WEAPONS
     // =========================================================================
-    drawHumanLeg(renderer, hipF, kneeF, ankleF, toeF, dir, build, bodyR, bodyG, bodyB);
-    drawHumanArm(renderer, shoulderF, elbowF, handF, dir, build, bodyR, bodyG, bodyB);
+    drawHumanLeg(renderer, hipF, kneeF, ankleF, toeF, dir, build, app, false, hitFlash);
+    drawHumanArm(renderer, shoulderF, elbowF, handF, dir, build, app, false, hitFlash);
 
     if (state != FighterState::DEAD) {
         bool hideFan1 = (characterId == CharacterId::FAN_DANCER && state == FighterState::SPECIAL && fan1Fired && fanSpecialStage == 0);
@@ -2008,15 +2629,15 @@ void Fighter::draw(const Renderer& renderer) const {
 
         drawWeapon(renderer, *this, prof.weapon, handF, elbowF, handB, chest, dir,
                    state, phase, stateTime, pose.actionProgress,
-                   bodyR, bodyG, bodyB, accentR, accentG, accentB,
+                   app.chestR, app.chestG, app.chestB, prof.accentR, prof.accentG, prof.accentB,
                    hideFan1, hideFan2, hideSpear);
     }
 
     // =========================================================================
-    // LAYER 4: REAL HUMAN CRANIUM, JAW PROFILE & HAIR / HELM SILHOUETTE
+    // LAYER 4: REAL HUMAN CRANIUM, JAW PROFILE, EYES, LIPS, HAIR & HELMET
     // =========================================================================
-    drawHumanHead(renderer, headCenter, chest, dir, build, characterId,
-                  state, stateTime, bodyR, bodyG, bodyB, backR, backG, backB);
+    drawHumanHead(renderer, headCenter, chest, dir, build, app, characterId,
+                  state, stateTime, hitFlash);
 
     // =========================================================================
     // LAYER 5: COMBAT AURAS, STUN STARS & ELECTRIC SHOCK ARCS
