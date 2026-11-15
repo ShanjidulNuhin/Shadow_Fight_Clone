@@ -224,9 +224,12 @@ Every binding below can be changed from **Options → Game Controls**.
 - **freeglut** and OpenGL libraries (`freeglut`, `opengl32`, `glu32`)
 
 ### Option 1: Just play (Windows)
-1. Go to the **[Releases](../../releases)** page (or the `Shadow_Fight_Clone/bin/Debug/` folder)
-2. Download and run `Shadow_Fight_Clone.exe`
-3. Keep `freeglut.dll` in the same folder as the `.exe`
+
+1. Go to the [Releases page](https://github.com/ShanjidulNuhin/Shadow_Fight_Clone/releases/latest)
+2. Download `Shadow_Fight_Clone_v1.0.zip` and extract it
+3. Run the `.exe` inside the extracted folder
+
+> If Windows shows "Windows protected your PC", click **More info → Run anyway**.
 
 ### Option 2: Build from source with Code::Blocks
 ```bash
