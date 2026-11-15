@@ -146,7 +146,7 @@
 
 1794500936 d:\games\shadow_fight_clone\shadow_fight_clone\attackdata.h
 
-1794500936 source:d:\games\shadow_fight_clone\shadow_fight_clone\background.cpp
+1794657870 source:d:\games\shadow_fight_clone\shadow_fight_clone\background.cpp
 	"Background.h"
 	"Renderer.h"
 	"Config.h"
@@ -196,7 +196,7 @@
 	"Fighter.h"
 	"Config.h"
 
-1794510534 source:d:\games\shadow_fight_clone\shadow_fight_clone\fighter.cpp
+1794657964 source:d:\games\shadow_fight_clone\shadow_fight_clone\fighter.cpp
 	"Fighter.h"
 	"Renderer.h"
 	"Animation.h"
@@ -268,7 +268,7 @@
 	<GL/glut.h>
 	<cmath>
 
-1794513812 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
+1794657844 source:d:\games\shadow_fight_clone\shadow_fight_clone\ui.cpp
 	"UI.h"
 	"Fighter.h"
 	"Enemy.h"
