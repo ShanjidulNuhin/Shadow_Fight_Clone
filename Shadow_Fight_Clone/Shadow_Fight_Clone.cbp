@@ -45,6 +45,7 @@
 		</Compiler>
 		<Linker>
 			<Add option="-static" />
+			<Add option="-static-libgcc -static-libstdc++ -static" />
 			<Add directory="lib" />
 		</Linker>
 		<Unit filename="Animation.cpp" />
